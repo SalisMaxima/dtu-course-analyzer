@@ -12,9 +12,9 @@ function parseMessage(request, sender, sendResponse) {
 	}
 	
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-		chrome.tabs.sendMessage(rtab, resp);
+		chrome.scripting.executescript(rtab, resp);
 	});
 }
 chrome.browserAction.onClicked.addListener(function(tab) {
-	chrome.tabs.create({ url: chrome.runtime.getURL('db.html') });
+	chrome.windows.create({ url: chrome.runtime.getURL('db.html') });
 });
