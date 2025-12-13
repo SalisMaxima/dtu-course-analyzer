@@ -14,47 +14,43 @@ BASE_URL = "http://kurser.dtu.dk"
 # ---------------------
 
 logger = get_scraper_logger()
-start_time = time.time()
 now = datetime.datetime.now()
 
-# Load Course Numbers
-try:
-    with open("coursenumbers.txt", 'r') as file:
-        courses = file.read().split(",")
-    logger.info(f"Loaded {len(courses)} course numbers from coursenumbers.txt")
-except FileNotFoundError:
-    logger.error("coursenumbers.txt not found. Run getCourseNumbers.py first.")
-    exit(1)
+# Session is initialized lazily when running as main script
+session = None
 
-# Load Session Cookie
-try:
-    with open("secret.txt", 'r') as file:
-        key = file.read().strip()
-    logger.info("Session cookie loaded from secret.txt")
-except FileNotFoundError:
-    logger.error("secret.txt not found. Run auth.py first.")
-    exit(1)
-
-# Initialize Global Session for Connection Reuse
-session = requests.Session()
-session.cookies.set('ASP.NET_SessionId', key)
-session.headers.update({
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-})
+gradeHTMLNames = ["Ej m&#248;dt", "Syg", "Best&#229;et", "Ikke best&#229;et", "-3", "00", "02", "4", "7", "10", "12"]
+grades = ["absent", "sick", "p", "np", "-3", "00", "02", "4", "7", "10", "12"]
 
 
-def respObj(url: str) -> str | bool:
+def init_session(cookie: str) -> requests.Session:
+    """Initialize and return a configured session."""
+    sess = requests.Session()
+    sess.cookies.set('ASP.NET_SessionId', cookie)
+    sess.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    })
+    return sess
+
+
+def respObj(url: str, sess: requests.Session = None) -> str | bool:
     """
     Fetch a URL and return HTML content.
 
     Args:
         url: The URL to fetch
+        sess: Optional session to use (uses global session if not provided)
 
     Returns:
         HTML content as string, or False on failure
     """
+    use_session = sess if sess is not None else session
+    if use_session is None:
+        logger.error("No session available. Initialize session first.")
+        return False
+
     try:
-        r = session.get(url, timeout=TIMEOUT)
+        r = use_session.get(url, timeout=TIMEOUT)
         if r.status_code == 200:
             return r.text
         logger.warning(f"HTTP {r.status_code} for {url}")
@@ -97,10 +93,6 @@ def parse_year(year_str: str) -> str:
     except ValueError:
         logger.warning(f"Invalid year format: {year_str}")
         return year_str
-
-
-gradeHTMLNames = ["Ej m&#248;dt", "Syg", "Best&#229;et", "Ikke best&#229;et", "-3", "00", "02", "4", "7", "10", "12"]
-grades = ["absent", "sick", "p", "np", "-3", "00", "02", "4", "7", "10", "12"]
 
 
 class Course:
@@ -336,8 +328,33 @@ def process_single_course(courseN: str) -> tuple | None:
         return None
 
 
-# --- MAIN EXECUTION ---
-if __name__ == "__main__":
+def main():
+    """Main entry point for the scraper."""
+    global session
+
+    start_time = time.time()
+
+    # Load Course Numbers
+    try:
+        with open("coursenumbers.txt", 'r') as file:
+            courses = file.read().split(",")
+        logger.info(f"Loaded {len(courses)} course numbers from coursenumbers.txt")
+    except FileNotFoundError:
+        logger.error("coursenumbers.txt not found. Run getCourseNumbers.py first.")
+        return 1
+
+    # Load Session Cookie
+    try:
+        with open("secret.txt", 'r') as file:
+            key = file.read().strip()
+        logger.info("Session cookie loaded from secret.txt")
+    except FileNotFoundError:
+        logger.error("secret.txt not found. Run auth.py first.")
+        return 1
+
+    # Initialize session
+    session = init_session(key)
+
     courseDic = {}
     logger.info(f"Starting scrape of {len(courses)} courses using {MAX_WORKERS} threads...")
 
@@ -364,3 +381,9 @@ if __name__ == "__main__":
 
     elapsed = time.time() - start_time
     logger.info(f"Done! Data saved to coursedic.json in {elapsed:.1f} seconds.")
+    return 0
+
+
+# --- MAIN EXECUTION ---
+if __name__ == "__main__":
+    exit(main())
