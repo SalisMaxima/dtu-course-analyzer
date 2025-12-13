@@ -1,4 +1,4 @@
-// contentscript.js - Version 2.0.5
+// contentscript.js - Version 2.1.0
 
 // 1. Configuration (Must be defined BEFORE running logic)
 const outputArr = [
@@ -11,18 +11,42 @@ const outputArr = [
 ];
 
 // 2. Extract course ID from URL
-const courseMatch = window.location.href.match(
-  /^http.:\/\/kurser.dtu.dk\/course\/(?:[0-9-]*\/)?([0-9]{5})/
-);
-const courseId = courseMatch ? courseMatch[1] : null;
+function getCourseId() {
+  const courseMatch = window.location.href.match(
+    /^http.:\/\/kurser.dtu.dk\/course\/(?:[0-9-]*\/)?([0-9]{5})/
+  );
+  return courseMatch ? courseMatch[1] : null;
+}
 
-// 3. UI Generation Functions
+// 3. Wait for data to be available (handles race condition)
+function waitForData(callback, maxAttempts = 20) {
+  let attempts = 0;
+
+  function check() {
+    attempts++;
+    if (typeof window.data !== 'undefined' && window.data !== null) {
+      callback(window.data);
+    } else if (attempts < maxAttempts) {
+      setTimeout(check, 50);
+    } else {
+      console.warn("DTU Analyzer: Data not loaded after " + (maxAttempts * 50) + "ms");
+      callback(null);
+    }
+  }
+
+  check();
+}
+
+// 4. UI Generation Functions
 function presentData(data) {
   // Vanilla JS selector: Find the table inside .box.information
   const infoBoxTable = document.querySelector(".box.information > table");
-  
+
   // Guard clause if the page structure changes or element isn't found
-  if (!infoBoxTable) return;
+  if (!infoBoxTable) {
+    console.warn("DTU Analyzer: Could not find .box.information > table - page structure may have changed");
+    return;
+  }
 
   // Create the container table
   const table = document.createElement("table");
@@ -39,19 +63,26 @@ function presentData(data) {
   addRow(tbody, headerText);
 
   if (data) {
-    outputArr.forEach(([label, key, unit, maxVal]) => {
-      let val = data[key];
+    let hasData = false;
 
-      if (typeof val !== "undefined" && !isNaN(val)) {
-        val = Math.round(val * 10) / 10;
-        
+    outputArr.forEach(([label, key, unit, maxVal]) => {
+      const val = data[key];
+
+      if (typeof val !== "undefined" && val !== null && !isNaN(val)) {
+        hasData = true;
+        const rounded = Math.round(val * 10) / 10;
+
         // Create label span
         const labelSpan = document.createElement("span");
         labelSpan.textContent = label;
 
-        addRow(tbody, labelSpan, val, unit, true, maxVal);
+        addRow(tbody, labelSpan, rounded, unit, true, maxVal);
       }
     });
+
+    if (!hasData) {
+      addRow(tbody, "Data available but no metrics found");
+    }
   } else {
     addRow(tbody, "No data found for this course");
   }
@@ -60,11 +91,11 @@ function presentData(data) {
   const link = document.createElement("a");
   link.href = "https://github.com/SMKIDRaadet/dtu-course-analyzer";
   link.target = "_blank";
-  
+
   const linkLabel = document.createElement("label");
   linkLabel.textContent = "What is this?";
-  linkLabel.style.cursor = "pointer"; // Make it look clickable
-  
+  linkLabel.style.cursor = "pointer";
+
   link.appendChild(linkLabel);
   addRow(tbody, link);
 }
@@ -77,8 +108,11 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   const b = document.createElement("b");
   if (typeof contentLeft === "string") {
     b.textContent = contentLeft;
-  } else {
+  } else if (contentLeft instanceof Node) {
     b.appendChild(contentLeft);
+  } else {
+    console.warn("DTU Analyzer: Invalid content type for row:", typeof contentLeft);
+    return;
   }
   tdLeft.appendChild(b);
   tr.appendChild(tdLeft);
@@ -88,9 +122,8 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   const span = document.createElement("span");
   span.textContent = value + unit;
 
-  if (colored) {
+  if (colored && maxVal > 0) {
     span.style.backgroundColor = getColor(value / maxVal);
-    // Add some padding/radius to make it look like the original chips
     span.style.padding = "2px 6px";
     span.style.borderRadius = "4px";
   }
@@ -109,19 +142,35 @@ function getColor(value) {
   return `hsl(${hue}, 100%, 50%)`;
 }
 
-// 4. Main Execution Logic (Must be at the BOTTOM)
-if (courseId && courseId.length === 5) {
-  // DIRECT INJECTION STRATEGY:
-  // Because manifest.json loads "db/data.js" BEFORE this script,
-  // the variable 'window.data' should already exist in the global scope.
-  const db = window.data; 
+// 5. Main Execution Logic
+function main() {
+  const courseId = getCourseId();
 
-  if (db && db[courseId]) {
-    // Data found! Render the table.
-    presentData(db[courseId]);
-  } else {
-    // Debugging help: If this triggers, it means data.js didn't load or variable name is wrong
-    console.error("DTU Analyzer: Course data not found. Ensure db/data.js starts with 'window.data = ...'");
-    presentData(null);
+  if (!courseId || courseId.length !== 5) {
+    // Not on a course page, silently exit
+    return;
   }
+
+  waitForData((db) => {
+    if (!db) {
+      console.error("DTU Analyzer: Course data not loaded. Ensure db/data.js is included in manifest.");
+      presentData(null);
+      return;
+    }
+
+    const courseData = db[courseId];
+    if (courseData) {
+      presentData(courseData);
+    } else {
+      console.info("DTU Analyzer: No data available for course " + courseId);
+      presentData(null);
+    }
+  });
+}
+
+// Run when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", main);
+} else {
+  main();
 }

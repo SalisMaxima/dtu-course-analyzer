@@ -38,6 +38,9 @@ jobs:
       - name: Run Scraper
         run: python scraper.py
 
+      - name: Validate Scraped Data
+        run: python validator.py coursedic.json
+
       - name: Analyze Data
         # Generates the new data.js and data.json
         run: python analyzer.py extension
