@@ -249,7 +249,7 @@ try:
         json.dump(db, outfile)
 
     with PrependToFile(extFilename) as f:
-        f.write_line('var data = ')
+        f.write_line('window.data = ')
 
     logger.info(f"Wrote extension data to {extFilename}")
 except IOError as e:
