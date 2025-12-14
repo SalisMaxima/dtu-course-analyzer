@@ -33,7 +33,7 @@ jobs:
         run: python getCourseNumbers.py
 
       - name: Run Scraper
-        run: python scraper_async.py
+        run: python scraper.py
 
       - name: Validate Scraped Data
         run: python validator.py coursedic.json
