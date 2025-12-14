@@ -1,9 +1,6 @@
 name: Update Course Data
 
 on:
-  schedule:
-    # Run at 00:00 on Sunday
-    - cron: '0 0 * * 0'
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
 jobs:
@@ -17,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.12.3'
 
       - name: Install dependencies
         run: |
@@ -37,6 +34,9 @@ jobs:
 
       - name: Run Scraper
         run: python scraper.py
+
+      - name: Validate Scraped Data
+        run: python validator.py coursedic.json
 
       - name: Analyze Data
         # Generates the new data.js and data.json

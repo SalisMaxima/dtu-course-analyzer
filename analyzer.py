@@ -1,191 +1,329 @@
+"""
+Course data analyzer for DTU Course Analyzer extension.
+
+This module processes scraped course data, calculates percentiles,
+and generates the extension data files.
+"""
+
 import json
 import sys
-import pprint
-from Prepender import *
+from Prepender import PrependToFile
+from logger_config import get_analyzer_logger
+
+logger = get_analyzer_logger()
 
 if len(sys.argv) != 2:
-    print('usage: ' + sys.argv[0] + ' <extension-folder-name>')
-    sys.exit()
+    logger.error(f'Usage: {sys.argv[0]} <extension-folder-name>')
+    sys.exit(1)
 
-pp = pprint.PrettyPrinter(indent=2)
-
-with open('coursedic.json') as file:
-    courseDic = json.load(file)
+# Load raw scraped data
+try:
+    with open('coursedic.json') as file:
+        courseDic = json.load(file)
+    logger.info(f"Loaded {len(courseDic)} courses from coursedic.json")
+except FileNotFoundError:
+    logger.error("coursedic.json not found. Run scraper.py first.")
+    sys.exit(1)
+except json.JSONDecodeError as e:
+    logger.error(f"Invalid JSON in coursedic.json: {e}")
+    sys.exit(1)
 
 db = {}
 grades = ["-3", "00", "02", "4", "7", "10", "12"]
 
+# Collection lists for percentile calculation
 pass_percentages = []
 workloads = []
 qualityscores = []
 avg = []
 
-def calcScore(dic, bestOptionFirst):
+
+def calcScore(dic: dict, bestOptionFirst: bool) -> float:
+    """
+    Calculate weighted score from survey responses.
+
+    Args:
+        dic: Dictionary of question responses
+        bestOptionFirst: True if higher response index = worse
+
+    Returns:
+        Weighted average score (1-5 scale)
+    """
     score = 0
     total_votes = 0
 
     for id, votes in dic.items():
-        if id != "question":
-            if bestOptionFirst: 
-                score += (5 - int(id)) * int(votes)
+        if id == "question":
+            continue
+        try:
+            vote_count = int(votes)
+            option_id = int(id)
+            if bestOptionFirst:
+                score += (5 - option_id) * vote_count
             else:
-                score += (1 + int(id)) * int(votes)
-            total_votes += int(votes)
+                score += (1 + option_id) * vote_count
+            total_votes += vote_count
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Could not parse vote data: {id}={votes}, error: {e}")
+            continue
+
+    if total_votes == 0:
+        raise ValueError("No valid votes found")
+
     return score / total_votes
 
 
+def select_best_sheet(sheets: list) -> dict | None:
+    """
+    Select the most representative data sheet from multiple semesters.
+
+    Prefers sheets with more participants, but also considers
+    minimum sample sizes.
+
+    Args:
+        sheets: List of semester data sheets
+
+    Returns:
+        Best sheet, or None if no valid sheet found
+    """
+    if not sheets:
+        return None
+
+    sheet = sheets[0]
+
+    # If there's a second sheet with significantly more participants, use it
+    if len(sheets) >= 2:
+        if sheets[1]["participants"] > sheets[0]["participants"] * 2 or sheets[0]["participants"] < 5:
+            sheet = sheets[1]
+
+    # Require minimum sample size
+    if sheet.get("participants", 0) < 5:
+        return None
+
+    return sheet
+
+
+# Process each course
 for courseN, course in courseDic.items():
-    print("Course: " + courseN)
+    logger.debug(f"Processing course: {courseN}")
     db[courseN] = {}
     db_sheet = db[courseN]
-    for categoryN, sheets in course.items():
 
+    for categoryN, sheets in course.items():
         if categoryN == "name":
             db_sheet["name"] = sheets
             continue
-        sheet = sheets[0]
-        if (len(sheets) >= 2):
-            if (sheets[1]["participants"] > sheets[0]["participants"] * 2 or sheets[0]["participants"] < 5):
-                sheet = sheets[1]
 
-        if (sheet["participants"] < 5):
+        sheet = select_best_sheet(sheets)
+        if sheet is None:
             continue
 
         if categoryN == "grades":
-            # pp.pprint(category)
+            # Extract pass percentage (required)
+            if "pass_percentage" not in sheet:
+                logger.debug(f"Course {courseN}: No pass_percentage in grades")
+                continue
+
             db_sheet["passpercent"] = sheet["pass_percentage"]
-            try:
-                db_sheet["avg"] = sheet["avg"]
-                avg.append([courseN, sheet["avg"]])
-            except Exception:
-                pass
-            # print(sheet["pass_percentage"])
             pass_percentages.append([courseN, sheet["pass_percentage"]])
 
+            # Extract average grade (optional)
+            if "avg" in sheet:
+                try:
+                    avg_val = float(sheet["avg"])
+                    db_sheet["avg"] = avg_val
+                    avg.append([courseN, avg_val])
+                except (ValueError, TypeError) as e:
+                    logger.debug(f"Course {courseN}: Invalid avg value: {e}")
+
+            # Extract individual grades (optional)
             db_sheet["grades"] = {}
-            try:
-                for grade in grades:
+            for grade in grades:
+                if grade in sheet:
                     db_sheet["grades"][grade] = sheet[grade]
-                # print(grade,sheet[grade])
-            except Exception:
-                pass
 
-        if categoryN == "reviews":
+        elif categoryN == "reviews":
+            # Determine scoring direction
             bestOptionFirst = None
-            if sheet["firstOption"] == "Helt uenig":
+            firstOption = sheet.get("firstOption", "")
+
+            if firstOption == "Helt uenig":
                 bestOptionFirst = False
-            elif sheet["firstOption"] == "Helt enig":
+            elif firstOption == "Helt enig":
                 bestOptionFirst = True
-            try:
-                workloads.append([courseN, calcScore(sheet["2.1"], True)])
-                qualityscores.append([courseN, calcScore(sheet["1.1"], bestOptionFirst)])
-            except Exception as e:
-                #print("Error in calculating scores:", str(e))            
-                pass
+            else:
+                logger.debug(f"Course {courseN}: Unknown firstOption '{firstOption}', skipping reviews")
+                continue
 
-def insertPercentile(lst, tag):
+            # Calculate workload score (question 2.1)
+            if "2.1" in sheet:
+                try:
+                    workload_score = calcScore(sheet["2.1"], True)
+                    workloads.append([courseN, workload_score])
+                except (ValueError, KeyError) as e:
+                    logger.debug(f"Course {courseN}: Could not calculate workload: {e}")
+
+            # Calculate quality score (question 1.1)
+            if "1.1" in sheet:
+                try:
+                    quality_score = calcScore(sheet["1.1"], bestOptionFirst)
+                    qualityscores.append([courseN, quality_score])
+                except (ValueError, KeyError) as e:
+                    logger.debug(f"Course {courseN}: Could not calculate quality score: {e}")
+
+
+def insertPercentile(lst: list, tag: str) -> list:
+    """
+    Calculate and insert percentile rankings for a metric.
+
+    Modifies the global `db` dictionary with percentile values.
+
+    Args:
+        lst: List of [courseN, value] pairs
+        tag: Key name for storing percentile in db
+
+    Returns:
+        The modified list with percentile values appended
+    """
     global db
-    lst.sort(key=lambda sublist: sublist[0], reverse=True)
-    lst.sort(key=lambda sublist: sublist[1])
 
-    prev_val = -1
+    if not lst:
+        logger.warning(f"No data to calculate percentiles for '{tag}'")
+        return lst
+
+    # Sort by course number first (tie-breaker), then by value
+    lst.sort(key=lambda x: x[0], reverse=True)
+    lst.sort(key=lambda x: x[1])
+
+    # Assign rank indices (same value = same rank)
+    prev_val = None
     index = -1
-    for i, course in enumerate(lst):
+    for course in lst:
         val = course[1]
-        if val > prev_val:
+        if val != prev_val:
             index += 1
         course.append(index)
-
         prev_val = val
-    # pass_percentages[1][2] = 1337
 
-    for i, course in enumerate(lst):
-        course.append(round(100 * course[2] / (index), 1))
-        db[course[0]][tag] = course[3]
+    # Calculate percentiles
+    max_index = index if index > 0 else 1  # Avoid division by zero
+    for course in lst:
+        percentile = round(100 * course[2] / max_index, 1)
+        course.append(percentile)
+        db[course[0]][tag] = percentile
+
+    logger.info(f"Calculated {tag} percentiles for {len(lst)} courses")
     return lst
 
 
-# pp.pprint(db)
+# Calculate all percentiles
 insertPercentile(pass_percentages, "pp")
 insertPercentile(avg, "avgp")
 insertPercentile(qualityscores, "qualityscore")
 insertPercentile(workloads, "workload")
 
+# Calculate lazy score (combination of pass rate and low workload)
 lazyscores = []
 for courseN, course in db.items():
-    try:
+    if "pp" in course and "workload" in course:
         lazyscores.append([courseN, course['pp'] + course['workload']])
-    except Exception:
-        pass
-
-# pp.pprint(lazyscores)
 
 insertPercentile(lazyscores, "lazyscore")
 
-# print("a:"+str(pass_percentages[1][1]))
-
+# Remove courses with no data
 empty_keys = [k for k, v in db.items() if not v]
 for k in empty_keys:
     del db[k]
 
+logger.info(f"Final dataset contains {len(db)} courses with data")
+
+# Generate extension data file
 folder = sys.argv[1]
-extFilename = folder + '/db/data.js'
-with open(extFilename, 'w') as outfile:
-    json.dump(db, outfile)
+extFilename = f'{folder}/db/data.js'
 
-with PrependToFile(extFilename) as f:
-    f.write_line('var data = ')
+try:
+    with open(extFilename, 'w') as outfile:
+        json.dump(db, outfile)
 
-with open('data.json', 'w') as outfile:
-    json.dump(db, outfile)
+    with PrependToFile(extFilename) as f:
+        f.write_line('var data = ')
 
-table = ''
-headNames = [["name", "Name"], ["avg", "Average Grade"], ["avgp", "Average Grade Percentile"], ["passpercent", "Percent Passed"],
-             ["qualityscore", "Course Rating"], ["workload", "Workload"], ["lazyscore", "Lazy Score Percentile"]]
-table += '<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>'
+    logger.info(f"Wrote extension data to {extFilename}")
+except IOError as e:
+    logger.error(f"Failed to write extension data: {e}")
+    sys.exit(1)
+
+# Also save as plain JSON for debugging
+try:
+    with open('data.json', 'w') as outfile:
+        json.dump(db, outfile, indent=2)
+    logger.info("Wrote formatted data to data.json")
+except IOError as e:
+    logger.warning(f"Failed to write data.json: {e}")
+
+# Generate HTML table for dashboard
+headNames = [
+    ["name", "Name"],
+    ["avg", "Average Grade"],
+    ["avgp", "Average Grade Percentile"],
+    ["passpercent", "Percent Passed"],
+    ["qualityscore", "Course Rating"],
+    ["workload", "Workload"],
+    ["lazyscore", "Lazy Score Percentile"]
+]
+
+table = '<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>'
 table += '<th>Course</th>'
 for header in headNames:
-    table += '<th>' + header[1] + '</th>'
+    table += f'<th>{header[1]}</th>'
 table += '</tr></thead><tbody>'
 
 for course, data in db.items():
     table += '<tr>'
-    table += '<td>' + '<a href="http://kurser.dtu.dk/course/' + course + '">' + course + '</a></td>'
+    table += f'<td><a href="http://kurser.dtu.dk/course/{course}">{course}</a></td>'
     for header in headNames:
         key = header[0]
-        val = ""
-        if key in data:
-            val = str(data[key])
-
-        table += '<td>' + val + '</td>'
+        val = str(data.get(key, ""))
+        table += f'<td>{val}</td>'
     table += '</tr>'
 table += '</tbody></table>'
 
+# Read template and generate db.html
+try:
+    with open("templates/db.html", 'r') as file:
+        content = file.read()
 
-file = open("templates/db.html", 'r')
-content=file.read()
-file.close()
+    content = content.replace('$table', table)
 
-content = content.replace('$table', table)
+    with open(f"{folder}/db.html", 'w') as file:
+        file.write(content)
 
-file = open(folder + "/db.html", 'w')
-content=file.write(content)
-file.close()
+    logger.info(f"Generated {folder}/db.html")
+except IOError as e:
+    logger.error(f"Failed to generate db.html: {e}")
+    sys.exit(1)
 
-file = open("templates/init_table.js", 'r')
-content=file.read()
-file.close()
+# Generate init_table.js
+try:
+    with open("templates/init_table.js", 'r') as file:
+        content = file.read()
 
-searchable_columns = '{ "bSearchable": true, "aTargets": [ 0 ] }'
-for i in range(0, len(headNames)):
-    if i > 0:
-        sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
-    else:
-        sort_str = '"bSearchable": true,'
-    searchable_columns += ', { type: "non-empty", ' + sort_str + '"aTargets": [ ' + str(i+1) + ' ] }'
+    searchable_columns = '{ "bSearchable": true, "aTargets": [ 0 ] }'
+    for i in range(len(headNames)):
+        if i > 0:
+            sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
+        else:
+            sort_str = '"bSearchable": true,'
+        searchable_columns += f', {{ type: "non-empty", {sort_str}"aTargets": [ {i+1} ] }}'
 
-content = content.replace('$searchable_columns', searchable_columns)
+    content = content.replace('$searchable_columns', searchable_columns)
 
-file = open(folder + "/js/init_table.js", 'w')
-content=file.write(content)
-file.close()
+    with open(f"{folder}/js/init_table.js", 'w') as file:
+        file.write(content)
+
+    logger.info(f"Generated {folder}/js/init_table.js")
+except IOError as e:
+    logger.error(f"Failed to generate init_table.js: {e}")
+    sys.exit(1)
+
+logger.info("Analysis complete!")

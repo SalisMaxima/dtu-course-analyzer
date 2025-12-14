@@ -3,4 +3,5 @@ urllib3
 requests
 tqdm
 playwright
+pytest
 pytest-playwright

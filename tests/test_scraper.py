@@ -1,0 +1,280 @@
+"""
+Unit tests for the DTU Course Analyzer scraper module.
+"""
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from scraper import (
+    removeWhitespace,
+    parse_year,
+    Course,
+    grades,
+    init_session,
+    respObj,
+)
+
+
+class TestRemoveWhitespace:
+    """Tests for the removeWhitespace function."""
+
+    def test_removes_spaces(self):
+        assert removeWhitespace("hello world") == "helloworld"
+
+    def test_removes_tabs_and_newlines(self):
+        assert removeWhitespace("hello\t\nworld") == "helloworld"
+
+    def test_handles_empty_string(self):
+        assert removeWhitespace("") == ""
+
+    def test_handles_only_whitespace(self):
+        assert removeWhitespace("   \t\n   ") == ""
+
+    def test_preserves_non_whitespace(self):
+        assert removeWhitespace("abc123") == "abc123"
+
+
+class TestParseYear:
+    """Tests for the parse_year function."""
+
+    def test_two_digit_year_2000s(self):
+        assert parse_year("24") == "2024"
+        assert parse_year("00") == "2000"
+        assert parse_year("49") == "2049"
+
+    def test_two_digit_year_1900s(self):
+        assert parse_year("50") == "1950"
+        assert parse_year("99") == "1999"
+
+    def test_four_digit_year(self):
+        assert parse_year("2024") == "2024"
+        assert parse_year("2023") == "2023"
+
+    def test_invalid_year_returns_original(self):
+        assert parse_year("abc") == "abc"
+        assert parse_year("") == ""
+
+
+class TestInitSession:
+    """Tests for the init_session function."""
+
+    def test_creates_session_with_cookie(self):
+        session = init_session("test_cookie_123")
+        assert session is not None
+        assert "ASP.NET_SessionId" in session.cookies.keys()
+
+    def test_sets_user_agent(self):
+        session = init_session("test_cookie")
+        assert "User-Agent" in session.headers
+        assert "Chrome" in session.headers["User-Agent"]
+
+
+class TestCourseClass:
+    """Tests for the Course class."""
+
+    def test_init_creates_empty_links(self):
+        course = Course("12345")
+        assert course.courseN == "12345"
+        assert course.reviewLinks == []
+        assert course.gradeLinks == []
+
+    def test_init_creates_grade_dict(self):
+        course = Course("12345")
+        for grade in grades:
+            assert grade in course.dic
+            assert course.dic[grade] == 0
+
+
+class TestRespObj:
+    """Tests for the respObj function."""
+
+    def test_returns_false_when_no_session(self):
+        # respObj should return False if no session is provided and global is None
+        result = respObj("http://example.com", sess=None)
+        # Since global session is None, it should return False
+        assert result is False
+
+    def test_returns_text_on_success(self):
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = "<html>content</html>"
+        mock_session.get.return_value = mock_response
+
+        result = respObj("http://example.com", sess=mock_session)
+
+        assert result == "<html>content</html>"
+
+    def test_returns_false_on_non_200(self):
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_session.get.return_value = mock_response
+
+        result = respObj("http://example.com", sess=mock_session)
+
+        assert result is False
+
+    def test_returns_false_on_timeout(self):
+        import requests
+        mock_session = Mock()
+        mock_session.get.side_effect = requests.Timeout()
+
+        result = respObj("http://example.com", sess=mock_session)
+
+        assert result is False
+
+    def test_returns_false_on_connection_error(self):
+        import requests
+        mock_session = Mock()
+        mock_session.get.side_effect = requests.ConnectionError()
+
+        result = respObj("http://example.com", sess=mock_session)
+
+        assert result is False
+
+
+class TestExtractGrades:
+    """Tests for the Course.extractGrades method."""
+
+    @patch('scraper.respObj')
+    def test_returns_false_when_no_html(self, mock_resp):
+        mock_resp.return_value = False
+
+        course = Course("12345")
+        result = course.extractGrades("http://example.com/grades")
+
+        assert result is False
+
+    @patch('scraper.respObj')
+    def test_returns_false_when_not_enough_tables(self, mock_resp):
+        mock_resp.return_value = "<html><body><table></table></body></html>"
+
+        course = Course("12345")
+        result = course.extractGrades("http://example.com/grades")
+
+        assert result is False
+
+    @patch('scraper.respObj')
+    def test_extracts_timestamp_from_url(self, mock_resp):
+        # Mock HTML with 3 tables (minimum required)
+        html = """
+        <html><body>
+            <table>
+                <tr><th>Header</th></tr>
+                <tr><td>Key</td><td>100</td></tr>
+                <tr><td>Pass</td><td>80 (80%)</td></tr>
+                <tr><td>Avg</td><td>7.5 (B)</td></tr>
+            </table>
+            <table></table>
+            <table>
+                <tr><th>Grade</th><th>Count</th></tr>
+                <tr><td>12</td><td>10</td></tr>
+            </table>
+        </body></html>
+        """
+        mock_resp.return_value = html
+
+        course = Course("12345")
+        result = course.extractGrades("http://example.com/grades/E-24")
+
+        assert result is not False
+        assert "timestamp" in result
+
+
+class TestExtractReviews:
+    """Tests for the Course.extractReviews method."""
+
+    @patch('scraper.respObj')
+    def test_returns_false_when_no_html(self, mock_resp):
+        mock_resp.return_value = False
+
+        course = Course("12345")
+        result = course.extractReviews("http://example.com/reviews")
+
+        assert result is False
+
+    @patch('scraper.respObj')
+    def test_returns_false_when_no_public_container(self, mock_resp):
+        mock_resp.return_value = "<html><body><div>No reviews here</div></body></html>"
+
+        course = Course("12345")
+        result = course.extractReviews("http://example.com/reviews")
+
+        assert result is False
+
+
+class TestGather:
+    """Tests for the Course.gather method."""
+
+    def test_returns_false_when_no_data(self):
+        course = Course("12345")
+        # No links added, so gather should return False
+        result = course.gather()
+        assert result is False
+
+    @patch('scraper.respObj')
+    def test_returns_dict_when_grades_found(self, mock_resp):
+        # Mock HTML with proper structure
+        html = """
+        <html><body>
+            <table>
+                <tr><th>Header</th></tr>
+                <tr><td>Key</td><td>100</td></tr>
+                <tr><td>Pass</td><td>80 (80%)</td></tr>
+                <tr><td>Avg</td><td>7.5 (B)</td></tr>
+            </table>
+            <table></table>
+            <table>
+                <tr><th>Grade</th><th>Count</th></tr>
+                <tr><td>12</td><td>10</td></tr>
+            </table>
+        </body></html>
+        """
+        mock_resp.return_value = html
+
+        course = Course("12345")
+        course.gradeLinks = ["http://example.com/grades/E-24"]
+        result = course.gather()
+
+        assert result is not False
+        assert "grades" in result
+        assert len(result["grades"]) == 1
+
+
+class TestProcessSingleCourse:
+    """Tests for the process_single_course function."""
+
+    @patch('scraper.respObj')
+    def test_returns_none_when_no_overview(self, mock_resp):
+        from scraper import process_single_course
+        mock_resp.return_value = False
+
+        result = process_single_course("12345")
+
+        assert result is None
+
+    @patch('scraper.respObj')
+    def test_returns_none_when_no_links_found(self, mock_resp):
+        from scraper import process_single_course
+        # Return HTML with no grade/review links
+        mock_resp.return_value = "<html><body><a href='/other'>Other</a></body></html>"
+
+        result = process_single_course("12345")
+
+        assert result is None
+
+
+class TestMain:
+    """Tests for the main function."""
+
+    @patch('builtins.open', side_effect=FileNotFoundError())
+    def test_returns_error_when_coursenumbers_missing(self, mock_open):
+        from scraper import main
+        result = main()
+        assert result == 1
