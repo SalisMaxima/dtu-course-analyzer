@@ -1,0 +1,5 @@
+2025-12-14 21:10:01 - validator - INFO - Found 1417 courses
+2025-12-14 21:10:01 - validator - INFO - Data quality: 95.8% have grades, 97.0% have reviews, 100.0% have names
+2025-12-14 21:10:01 - validator - INFO - Name translations: 1/1417 (0.1%) have unique Danish names
+2025-12-14 21:10:01 - validator - WARNING - Name translation issue: 99.9% of courses have identical Danish/English names. Check that scraper is using ?lang=da-DK parameter.
+2025-12-14 21:10:01 - validator - INFO - Validation PASSED with 1 warnings
