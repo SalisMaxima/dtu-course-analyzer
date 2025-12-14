@@ -25,8 +25,17 @@ BASE_URL = "http://kurser.dtu.dk"
 logger = get_scraper_logger()
 now = datetime.datetime.now()
 
+# Global flag to track if a timeout has occurred
+timeout_occurred = False
+timeout_url = None
+
 gradeHTMLNames = ["Ej m&#248;dt", "Syg", "Best&#229;et", "Ikke best&#229;et", "-3", "00", "02", "4", "7", "10", "12"]
 grades = ["absent", "sick", "p", "np", "-3", "00", "02", "4", "7", "10", "12"]
+
+
+class TimeoutException(Exception):
+    """Raised when a request times out."""
+    pass
 
 
 def removeWhitespace(txt: str) -> str:
@@ -69,14 +78,22 @@ async def fetch_url(session: aiohttp.ClientSession, url: str) -> str | None:
 
     Returns:
         HTML content as string, or None on failure
+
+    Raises:
+        TimeoutException: If the request times out
     """
+    global timeout_occurred, timeout_url
+
     try:
         async with session.get(url, timeout=aiohttp.ClientTimeout(total=TIMEOUT)) as response:
             if response.status == 200:
                 return await response.text()
             logger.warning(f"HTTP {response.status} for {url}")
     except asyncio.TimeoutError:
-        logger.warning(f"Timeout fetching {url}")
+        timeout_occurred = True
+        timeout_url = url
+        logger.error(f"TIMEOUT: {url}")
+        raise TimeoutException(f"Timeout fetching {url}")
     except aiohttp.ClientError as e:
         logger.warning(f"Client error for {url}: {e}")
     except Exception as e:
@@ -390,14 +407,28 @@ async def main_async():
         tasks = [process_single_course(session, semaphore, c) for c in courses]
 
         # Process with progress bar
-        for coro in tqdm.as_completed(tasks, total=len(courses)):
-            try:
+        try:
+            for coro in tqdm.as_completed(tasks, total=len(courses)):
+                # Check if timeout occurred in another task
+                if timeout_occurred:
+                    logger.error(f"Stopping due to timeout on: {timeout_url}")
+                    logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                    return 1
+
                 result = await coro
                 if result:
                     c_num, c_data = result
                     courseDic[c_num] = c_data
-            except Exception as e:
-                logger.error(f"Task failed: {e}")
+        except TimeoutException as e:
+            logger.error(f"FAILED: {e}")
+            logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+            return 1
+        except Exception as e:
+            if timeout_occurred:
+                logger.error(f"FAILED: Timeout occurred on {timeout_url}")
+                logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                return 1
+            logger.error(f"Task failed: {e}")
 
     logger.info(f"Scraping finished. Found data for {len(courseDic)} courses.")
 
