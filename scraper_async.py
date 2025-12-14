@@ -17,7 +17,7 @@ from tqdm.asyncio import tqdm
 from logger_config import get_scraper_logger
 
 # --- CONFIGURATION ---
-MAX_CONCURRENT = 5  # Number of concurrent requests. Keep reasonable to avoid rate limiting.
+MAX_CONCURRENT = 2  # Number of concurrent requests. Keep reasonable to avoid rate limiting.
 TIMEOUT = 30         # Seconds to wait for a page before giving up
 BASE_URL = "http://kurser.dtu.dk"
 # ---------------------
