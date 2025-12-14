@@ -12,3 +12,10 @@
 2025-12-13 22:03:55 - scraper - WARNING - Timeout fetching http://example.com
 2025-12-13 22:03:55 - scraper - WARNING - Connection error for http://example.com: 
 2025-12-13 22:03:55 - scraper - ERROR - coursenumbers.txt not found. Run getCourseNumbers.py first.
+2025-12-14 07:48:42 - scraper - WARNING - Invalid year format: abc
+2025-12-14 07:48:42 - scraper - WARNING - Invalid year format: 
+2025-12-14 07:48:42 - scraper - ERROR - No session available. Initialize session first.
+2025-12-14 07:48:42 - scraper - WARNING - HTTP 404 for http://example.com
+2025-12-14 07:48:42 - scraper - WARNING - Timeout fetching http://example.com
+2025-12-14 07:48:42 - scraper - WARNING - Connection error for http://example.com: 
+2025-12-14 07:48:42 - scraper - ERROR - coursenumbers.txt not found. Run getCourseNumbers.py first.
