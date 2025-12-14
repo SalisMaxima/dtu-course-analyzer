@@ -308,7 +308,7 @@ def process_single_course(courseN: str) -> tuple | None:
             logger.debug(f"No data found for course {courseN}")
             return None
 
-        # Fetch course name
+        # Fetch course name (Danish - default)
         nameResp = respObj(f"{BASE_URL}/course/{courseN}")
         if nameResp:
             nameSoup = BeautifulSoup(nameResp, "html.parser")
@@ -319,7 +319,20 @@ def process_single_course(courseN: str) -> tuple | None:
                     parts = content.split(" ", 1)
                     crawl["name"] = parts[1] if len(parts) > 1 else content
                 except (IndexError, AttributeError) as e:
-                    logger.debug(f"Could not extract name for {courseN}: {e}")
+                    logger.debug(f"Could not extract Danish name for {courseN}: {e}")
+
+        # Fetch course name (English)
+        nameRespEn = respObj(f"{BASE_URL}/course/{courseN}?lang=en-GB")
+        if nameRespEn:
+            nameSoupEn = BeautifulSoup(nameRespEn, "html.parser")
+            h2_tags_en = nameSoupEn.find_all('h2')
+            if h2_tags_en:
+                try:
+                    content_en = h2_tags_en[0].get_text().strip()
+                    parts_en = content_en.split(" ", 1)
+                    crawl["name_en"] = parts_en[1] if len(parts_en) > 1 else content_en
+                except (IndexError, AttributeError) as e:
+                    logger.debug(f"Could not extract English name for {courseN}: {e}")
 
         return (courseN, crawl)
 

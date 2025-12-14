@@ -13,10 +13,85 @@
 
 <link rel="stylesheet" type="text/css" href="css/fixedHeader.dataTables.css">
 
+<style>
+  .hidden-col {
+    display: none;
+  }
+
+  .language-toggle-container {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .language-toggle-btn {
+    padding: 8px 16px;
+    border: 1px solid #990000;
+    background-color: #fff;
+    color: #990000;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+  }
+
+  .language-toggle-btn:hover {
+    background-color: #990000;
+    color: #fff;
+  }
+
+  .language-toggle-btn.active {
+    background-color: #990000;
+    color: #fff;
+  }
+
+  .language-label {
+    font-size: 14px;
+    color: #666;
+  }
+</style>
 
 </head>
 <body>
+
+<div class="language-toggle-container">
+  <span class="language-label">Display language:</span>
+  <button id="lang-da" class="language-toggle-btn active" onclick="toggleLanguage('da')">Dansk</button>
+  <button id="lang-en" class="language-toggle-btn" onclick="toggleLanguage('en')">English</button>
+</div>
+
 $table
+
+<script>
+function toggleLanguage(lang) {
+  var table = $('#example').DataTable();
+
+  if (lang === 'en') {
+    // Show English name (column 2), hide Danish name (column 1)
+    table.column(1).visible(false);
+    table.column(2).visible(true);
+    document.getElementById('lang-en').classList.add('active');
+    document.getElementById('lang-da').classList.remove('active');
+    localStorage.setItem('dtu-analyzer-lang', 'en');
+  } else {
+    // Show Danish name (column 1), hide English name (column 2)
+    table.column(1).visible(true);
+    table.column(2).visible(false);
+    document.getElementById('lang-da').classList.add('active');
+    document.getElementById('lang-en').classList.remove('active');
+    localStorage.setItem('dtu-analyzer-lang', 'da');
+  }
+}
+
+// Restore language preference on page load
+$(document).ready(function() {
+  setTimeout(function() {
+    var savedLang = localStorage.getItem('dtu-analyzer-lang') || 'da';
+    toggleLanguage(savedLang);
+  }, 100);
+});
+</script>
 
 </body>
 </html>

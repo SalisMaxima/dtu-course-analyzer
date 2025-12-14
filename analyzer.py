@@ -113,6 +113,9 @@ for courseN, course in courseDic.items():
         if categoryN == "name":
             db_sheet["name"] = sheets
             continue
+        if categoryN == "name_en":
+            db_sheet["name_en"] = sheets
+            continue
 
         sheet = select_best_sheet(sheets)
         if sheet is None:
@@ -262,20 +265,23 @@ except IOError as e:
     logger.warning(f"Failed to write data.json: {e}")
 
 # Generate HTML table for dashboard
+# Note: name_en is hidden but searchable for bilingual search
 headNames = [
-    ["name", "Name"],
-    ["avg", "Average Grade"],
-    ["avgp", "Average Grade Percentile"],
-    ["passpercent", "Percent Passed"],
-    ["qualityscore", "Course Rating"],
-    ["workload", "Workload"],
-    ["lazyscore", "Lazy Score Percentile"]
+    ["name", "Name", False],           # Danish name (visible by default)
+    ["name_en", "Name (EN)", True],    # English name (hidden, for search)
+    ["avg", "Average Grade", False],
+    ["avgp", "Average Grade Percentile", False],
+    ["passpercent", "Percent Passed", False],
+    ["qualityscore", "Course Rating", False],
+    ["workload", "Workload", False],
+    ["lazyscore", "Lazy Score Percentile", False]
 ]
 
 table = '<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>'
 table += '<th>Course</th>'
 for header in headNames:
-    table += f'<th>{header[1]}</th>'
+    hidden_class = ' class="hidden-col"' if header[2] else ''
+    table += f'<th{hidden_class}>{header[1]}</th>'
 table += '</tr></thead><tbody>'
 
 for course, data in db.items():
@@ -284,7 +290,8 @@ for course, data in db.items():
     for header in headNames:
         key = header[0]
         val = str(data.get(key, ""))
-        table += f'<td>{val}</td>'
+        hidden_class = ' class="hidden-col"' if header[2] else ''
+        table += f'<td{hidden_class}>{val}</td>'
     table += '</tr>'
 table += '</tbody></table>'
 
@@ -308,13 +315,22 @@ try:
     with open("templates/init_table.js", 'r') as file:
         content = file.read()
 
+    # Column 0: Course code (searchable)
     searchable_columns = '{ "bSearchable": true, "aTargets": [ 0 ] }'
     for i in range(len(headNames)):
-        if i > 0:
-            sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
-        else:
+        col_idx = i + 1
+        key = headNames[i][0]
+        is_hidden = headNames[i][2]
+
+        # Both name columns (Danish and English) are searchable
+        if key in ["name", "name_en"]:
             sort_str = '"bSearchable": true,'
-        searchable_columns += f', {{ type: "non-empty", {sort_str}"aTargets": [ {i+1} ] }}'
+            if is_hidden:
+                # Hidden column for search only
+                sort_str = '"bSearchable": true, "bVisible": false,'
+        else:
+            sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
+        searchable_columns += f', {{ type: "non-empty", {sort_str}"aTargets": [ {col_idx} ] }}'
 
     content = content.replace('$searchable_columns', searchable_columns)
 
