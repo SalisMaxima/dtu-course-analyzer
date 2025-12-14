@@ -5,6 +5,7 @@
 <script src="js/jquery.js" type="text/javascript"></script>
 <script src="js/jquery.dataTables.js" type="text/javascript"></script>
 <script src="js/init_table.js" type="text/javascript"></script>
+<script src="js/language-toggle.js" type="text/javascript"></script>
 
 <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.css">
 
@@ -57,41 +58,11 @@
 
 <div class="language-toggle-container">
   <span class="language-label">Display language:</span>
-  <button id="lang-da" class="language-toggle-btn active" onclick="toggleLanguage('da')">Dansk</button>
-  <button id="lang-en" class="language-toggle-btn" onclick="toggleLanguage('en')">English</button>
+  <button id="lang-da" class="language-toggle-btn">Dansk</button>
+  <button id="lang-en" class="language-toggle-btn active">English</button>
 </div>
 
 $table
-
-<script>
-function toggleLanguage(lang) {
-  var table = $('#example').DataTable();
-
-  if (lang === 'en') {
-    // Show English name (column 2), hide Danish name (column 1)
-    table.column(1).visible(false);
-    table.column(2).visible(true);
-    document.getElementById('lang-en').classList.add('active');
-    document.getElementById('lang-da').classList.remove('active');
-    localStorage.setItem('dtu-analyzer-lang', 'en');
-  } else {
-    // Show Danish name (column 1), hide English name (column 2)
-    table.column(1).visible(true);
-    table.column(2).visible(false);
-    document.getElementById('lang-da').classList.add('active');
-    document.getElementById('lang-en').classList.remove('active');
-    localStorage.setItem('dtu-analyzer-lang', 'da');
-  }
-}
-
-// Restore language preference on page load
-$(document).ready(function() {
-  setTimeout(function() {
-    var savedLang = localStorage.getItem('dtu-analyzer-lang') || 'da';
-    toggleLanguage(savedLang);
-  }, 100);
-});
-</script>
 
 </body>
 </html>

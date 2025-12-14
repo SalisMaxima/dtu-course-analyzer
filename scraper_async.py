@@ -298,7 +298,8 @@ async def process_single_course(
             review_tasks = [fetch_url(session, url) for url in review_links]
 
             # Also fetch course names (Danish and English) concurrently
-            name_da_task = fetch_url(session, f"{BASE_URL}/course/{courseN}")
+            # Must explicitly set lang parameter - default may be English
+            name_da_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=da-DK")
             name_en_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=en-GB")
 
             # Await all tasks

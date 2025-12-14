@@ -308,8 +308,8 @@ def process_single_course(courseN: str) -> tuple | None:
             logger.debug(f"No data found for course {courseN}")
             return None
 
-        # Fetch course name (Danish - default)
-        nameResp = respObj(f"{BASE_URL}/course/{courseN}")
+        # Fetch course name (Danish - must explicitly set lang parameter)
+        nameResp = respObj(f"{BASE_URL}/course/{courseN}?lang=da-DK")
         if nameResp:
             nameSoup = BeautifulSoup(nameResp, "html.parser")
             h2_tags = nameSoup.find_all('h2')

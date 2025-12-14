@@ -323,11 +323,10 @@ try:
         is_hidden = headNames[i][2]
 
         # Both name columns (Danish and English) are searchable
+        # Note: Do NOT use bVisible: false - it removes column from DOM
+        # Use CSS hidden-col class instead for initial hiding
         if key in ["name", "name_en"]:
             sort_str = '"bSearchable": true,'
-            if is_hidden:
-                # Hidden column for search only
-                sort_str = '"bSearchable": true, "bVisible": false,'
         else:
             sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
         searchable_columns += f', {{ type: "non-empty", {sort_str}"aTargets": [ {col_idx} ] }}'
