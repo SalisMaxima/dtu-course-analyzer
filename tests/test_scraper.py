@@ -269,6 +269,86 @@ class TestProcessSingleCourse:
 
         assert result is None
 
+    @patch('scraper.respObj')
+    def test_fetches_danish_name_with_lang_parameter(self, mock_resp):
+        """Test that Danish course name is fetched with ?lang=da-DK parameter."""
+        from scraper import process_single_course, BASE_URL
+
+        # Track all URLs that respObj is called with
+        called_urls = []
+
+        def track_urls(url, sess=None):
+            called_urls.append(url)
+            # Return minimal valid HTML for overview page
+            if "/info" in url:
+                return "<html><body><a href='/course/12345/karakterer/E-24'>Grades</a></body></html>"
+            # Return valid grade HTML
+            if "/karakterer/" in url:
+                return """
+                <html><body>
+                    <table><tr><td>Key</td><td>100</td></tr><tr><td>Pass</td><td>80 (80%)</td></tr><tr><td>Avg</td><td>7.5</td></tr></table>
+                    <table></table>
+                    <table><tr><td>12</td><td>10</td></tr></table>
+                </body></html>
+                """
+            # Return course name HTML
+            if "?lang=" in url:
+                return "<html><body><h2>12345 Test Course</h2></body></html>"
+            return "<html><body><h2>12345 Test Course</h2></body></html>"
+
+        mock_resp.side_effect = track_urls
+
+        result = process_single_course("12345")
+
+        # Verify Danish URL was called with ?lang=da-DK
+        danish_url = f"{BASE_URL}/course/12345?lang=da-DK"
+        assert danish_url in called_urls, f"Expected {danish_url} in {called_urls}"
+
+        # Verify English URL was called with ?lang=en-GB
+        english_url = f"{BASE_URL}/course/12345?lang=en-GB"
+        assert english_url in called_urls, f"Expected {english_url} in {called_urls}"
+
+    @patch('scraper.respObj')
+    def test_stores_different_danish_and_english_names(self, mock_resp):
+        """Test that Danish and English names are stored separately and can differ."""
+        from scraper import process_single_course, BASE_URL
+
+        def return_language_specific_html(url, sess=None):
+            # Return minimal valid HTML for overview page
+            if "/info" in url:
+                return "<html><body><a href='/course/12345/karakterer/E-24'>Grades</a></body></html>"
+            # Return valid grade HTML
+            if "/karakterer/" in url:
+                return """
+                <html><body>
+                    <table><tr><td>Key</td><td>100</td></tr><tr><td>Pass</td><td>80 (80%)</td></tr><tr><td>Avg</td><td>7.5</td></tr></table>
+                    <table></table>
+                    <table><tr><td>12</td><td>10</td></tr></table>
+                </body></html>
+                """
+            # Return DIFFERENT names for Danish and English
+            if "?lang=da-DK" in url:
+                return "<html><body><h2>12345 Matematik og Statistik</h2></body></html>"
+            if "?lang=en-GB" in url:
+                return "<html><body><h2>12345 Mathematics and Statistics</h2></body></html>"
+            return "<html><body><h2>12345 Default Name</h2></body></html>"
+
+        mock_resp.side_effect = return_language_specific_html
+
+        result = process_single_course("12345")
+
+        # Verify both names are captured
+        assert result is not None
+        course_num, course_data = result
+
+        assert "name" in course_data, "Danish name should be stored in 'name'"
+        assert "name_en" in course_data, "English name should be stored in 'name_en'"
+
+        # Verify they are different (as mocked)
+        assert course_data["name"] == "Matematik og Statistik"
+        assert course_data["name_en"] == "Mathematics and Statistics"
+        assert course_data["name"] != course_data["name_en"], "Danish and English names should be different"
+
 
 class TestMain:
     """Tests for the main function."""

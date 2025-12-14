@@ -214,6 +214,42 @@ class CourseDataValidator:
         if name_pct < 90:
             self.warnings.append(f"Only {name_pct:.1f}% of courses have names")
 
+        # Check name translation quality
+        self._validate_name_translations()
+
+    def _validate_name_translations(self):
+        """Check that Danish and English names are properly differentiated."""
+        courses_with_both = 0
+        courses_with_same_name = 0
+        courses_with_different_name = 0
+
+        for course_id, course in self.data.items():
+            has_danish = "name" in course and course["name"]
+            has_english = "name_en" in course and course["name_en"]
+
+            if has_danish and has_english:
+                courses_with_both += 1
+                if course["name"] == course["name_en"]:
+                    courses_with_same_name += 1
+                else:
+                    courses_with_different_name += 1
+
+        if courses_with_both == 0:
+            self.warnings.append("No courses have both Danish and English names")
+            return
+
+        same_pct = 100 * courses_with_same_name / courses_with_both
+        diff_pct = 100 * courses_with_different_name / courses_with_both
+
+        logger.info(f"Name translations: {courses_with_different_name}/{courses_with_both} ({diff_pct:.1f}%) have unique Danish names")
+
+        # If more than 95% have identical names, the scraper probably isn't fetching Danish properly
+        if same_pct > 95:
+            self.warnings.append(
+                f"Name translation issue: {same_pct:.1f}% of courses have identical Danish/English names. "
+                f"Check that scraper is using ?lang=da-DK parameter."
+            )
+
     def get_summary(self) -> dict:
         """
         Get validation summary.
