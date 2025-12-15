@@ -4,7 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into a Chrome extension that students can use to search and compare courses.
+DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into browser extensions (Chrome and Firefox) that students can use to search and compare courses.
+
+## Branch Structure
+
+- **master**: Chrome extension version (uses `service_worker` in manifest.json)
+- **firefox**: Firefox extension version (uses `scripts: ["background.js"]` in manifest.json, includes `browser_specific_settings`)
+
+**IMPORTANT**: The **source-code/** folder is maintained on the **firefox branch only**. Firefox Add-ons requires source code submission for review, so the source-code folder must be kept up-to-date on firefox branch with all necessary build files and instructions. When updating the extension, remember to update source-code/ on the firefox branch.
 
 ## Essential Commands
 
