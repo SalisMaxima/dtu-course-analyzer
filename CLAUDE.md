@@ -4,7 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+**Current Version: 2.1.1**
+
 DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into browser extensions (Chrome and Firefox) that students can use to search and compare courses.
+
+**Latest Release (2.1.1):**
+- Bilingual support with Danish/English language toggle
+- 1,418 courses with 94.3% Danish name translations
+- Updated data from 2024-2025 academic year
 
 ## Branch Structure
 
@@ -93,14 +100,18 @@ The production scraper uses aiohttp for concurrent I/O:
 The extension supports both Danish and English course names:
 
 - **Data Collection**: Fetches both `name` (Danish) and `name_en` (English)
-  - Danish: `BASE_URL/course/{courseN}`
+  - Danish: `BASE_URL/course/{courseN}?lang=da-DK` (**CRITICAL**: Must include `?lang=da-DK`)
   - English: `BASE_URL/course/{courseN}?lang=en-GB`
-- **Search Implementation**: Uses DataTables hidden column pattern
-  - English column has `bVisible: false, bSearchable: true`
-  - Both languages indexed for search, only one displayed
-- **Language Toggle**: JavaScript toggle in [extension/db.html](extension/db.html)
-  - Uses `column().visible()` to switch displayed language
-  - Preference persisted in localStorage
+  - Without language parameters, DTU returns English by default
+- **Column Visibility**: Uses CSS class for hiding, NOT DataTables bVisible
+  - Both columns always present in DOM with `hidden-col` CSS class
+  - `bSearchable: true` on both name columns for bilingual search
+  - **Never use `bVisible: false`** - it breaks the language toggle
+- **Language Toggle**: JavaScript in [extension/js/language-toggle.js](extension/js/language-toggle.js)
+  - External file for CSP compliance (no inline scripts allowed)
+  - Uses `style.display = 'table-cell'` or `'none'` to show/hide columns
+  - Preference persisted in localStorage with key `'dtu-analyzer-lang'`
+  - Default: English ('en')
 
 ### Grade Data Parsing
 
@@ -184,9 +195,10 @@ BASE_URL = "http://kurser.dtu.dk"
 
 ## Common Pitfalls
 
-1. **Rate Limiting**: Do not increase MAX_CONCURRENT above 5
-   - DTU's server will timeout and abort the entire scrape
-   - Even 10 concurrent requests causes occasional timeouts
+1. **Rate Limiting**: MAX_CONCURRENT should be 2 (was 5, but caused timeouts)
+   - DTU's server will timeout with higher concurrency
+   - Current setting of 2 provides reliable scraping without rate limiting
+   - If you get timeouts, DO NOT increase concurrency - it makes it worse
 
 2. **Authentication**: secret.txt expires after a period
    - If scraper gets 403/401 errors, re-run auth.py
@@ -195,14 +207,25 @@ BASE_URL = "http://kurser.dtu.dk"
 3. **Data Validation**: Always run validator.py before analyzer.py
    - Invalid data causes analyzer to crash
    - Validation catches missing fields, wrong types, etc.
+   - Validator now checks name translations (warns if >95% identical DA/EN names)
 
 4. **Year Parsing**: The `parse_year()` function handles 2-digit years
    - Future instances should not modify this logic without testing
    - Edge case: years > current_year + 2 trigger warnings
 
-5. **Column Indices**: When modifying DataTables in db.html template
-   - Column indices are 0-based and must match headNames order
-   - Language toggle assumes: column 1 = Danish, column 2 = English
+5. **DataTables Column Visibility**: NEVER use `bVisible: false` in column definitions
+   - It removes columns from DOM entirely, breaking CSS nth-child selectors
+   - Use CSS `hidden-col` class instead for hiding columns
+   - Language toggle depends on columns remaining in DOM
+
+6. **Chrome Extension CSP**: No inline scripts or onclick handlers allowed
+   - All JavaScript must be in external files (e.g., language-toggle.js)
+   - Use addEventListener() instead of onclick attributes
+   - This applies to both Chrome and Firefox Manifest V3
+
+7. **Version Management**: Keep version numbers in sync across branches
+   - Update manifest.json on both master and firefox branches
+   - Remember to update source-code/ folder on firefox branch after version bumps
 
 ## Testing Strategy
 
