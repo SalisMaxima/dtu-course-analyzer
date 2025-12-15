@@ -113,6 +113,9 @@ for courseN, course in courseDic.items():
         if categoryN == "name":
             db_sheet["name"] = sheets
             continue
+        if categoryN == "name_en":
+            db_sheet["name_en"] = sheets
+            continue
 
         sheet = select_best_sheet(sheets)
         if sheet is None:
@@ -262,6 +265,7 @@ except IOError as e:
     logger.warning(f"Failed to write data.json: {e}")
 
 # Generate HTML table for dashboard
+# Note: name_en is hidden but searchable for bilingual search
 headNames = [
     ["name", "Name", False],           # Danish name (visible by default)
     ["name_en", "Name (EN)", True],    # English name (hidden, for search)
