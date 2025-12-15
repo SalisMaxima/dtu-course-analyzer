@@ -9,10 +9,10 @@ function toggleLanguage(lang) {
   if (lang === 'en') {
     // Show English name (column 3), hide Danish name (column 2)
     danishCells.forEach(function(cell) {
-      cell.style.display = 'table-cell';
+      cell.style.display = 'none';
     });
     englishCells.forEach(function(cell) {
-      cell.style.display = 'none';
+      cell.style.display = 'table-cell';
     });
 
     document.getElementById('lang-en').classList.add('active');
@@ -21,10 +21,10 @@ function toggleLanguage(lang) {
   } else {
     // Show Danish name (column 2), hide English name (column 3)
     danishCells.forEach(function(cell) {
-      cell.style.display = 'none';
+      cell.style.display = 'table-cell';
     });
     englishCells.forEach(function(cell) {
-      cell.style.display = 'table-cell';
+      cell.style.display = 'none';
     });
 
     document.getElementById('lang-da').classList.add('active');
