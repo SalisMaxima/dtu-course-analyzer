@@ -50,6 +50,8 @@ function presentData(data) {
 
   // Create the container table
   const table = document.createElement("table");
+  table.style.width = "100%";
+  table.style.minWidth = "280px";
   const tbody = document.createElement("tbody");
   tbody.id = "DTU-Course-Analyzer";
   table.appendChild(tbody);
@@ -60,10 +62,23 @@ function presentData(data) {
   // Add Header Row
   const headerText = document.createElement("span");
   headerText.textContent = "—DTU Course Analyzer—";
+  headerText.style.whiteSpace = "nowrap";
   addRow(tbody, headerText);
 
   if (data) {
     let hasData = false;
+
+    // Add combined participant count at the top (if available)
+    const gradeParticipants = data["grade_participants"];
+    const reviewParticipants = data["review_participants"];
+
+    if (typeof gradeParticipants !== "undefined" && typeof reviewParticipants !== "undefined") {
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = "Students/Feedback count";
+      labelSpan.style.whiteSpace = "nowrap";
+      addRow(tbody, labelSpan, `${gradeParticipants}/${reviewParticipants}`, "", false);
+      hasData = true;
+    }
 
     outputArr.forEach(([label, key, unit, maxVal]) => {
       const val = data[key];
@@ -119,6 +134,7 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
 
   // Right Column (Value)
   const tdRight = document.createElement("td");
+  tdRight.style.paddingLeft = "15px";
   const span = document.createElement("span");
   span.textContent = value + unit;
 
