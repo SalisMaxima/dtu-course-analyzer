@@ -22,7 +22,12 @@ DTU Course Analyzer is a web scraper and browser extension that collects and ana
 
 ## Essential Commands
 
+**IMPORTANT**: Always activate the virtual environment before running any commands:
+
 ```bash
+# Activate virtual environment (REQUIRED before any Python command)
+source /media/salismaxima/41827d46-03ee-4c8d-9636-12e2cf1281c3/Projects/dtu-course-analyzer/.venv/bin/activate
+
 # Install dependencies
 pip install -r requirements.txt
 playwright install chromium
@@ -195,35 +200,40 @@ BASE_URL = "http://kurser.dtu.dk"
 
 ## Common Pitfalls
 
-1. **Rate Limiting**: MAX_CONCURRENT should be 2 (was 5, but caused timeouts)
+1. **Virtual Environment**: ALWAYS activate the virtual environment before running Python commands
+   - Command: `source /media/salismaxima/41827d46-03ee-4c8d-9636-12e2cf1281c3/Projects/dtu-course-analyzer/.venv/bin/activate`
+   - Without activation, wrong Python version or missing dependencies will cause failures
+   - This is required for ALL Python commands (auth.py, scraper_async.py, analyzer.py, etc.)
+
+2. **Rate Limiting**: MAX_CONCURRENT should be 2 (was 5, but caused timeouts)
    - DTU's server will timeout with higher concurrency
    - Current setting of 2 provides reliable scraping without rate limiting
    - If you get timeouts, DO NOT increase concurrency - it makes it worse
 
-2. **Authentication**: secret.txt expires after a period
+3. **Authentication**: secret.txt expires after a period
    - If scraper gets 403/401 errors, re-run auth.py
    - GitHub Actions uses DTU_USERNAME and DTU_PASSWORD secrets
 
-3. **Data Validation**: Always run validator.py before analyzer.py
+4. **Data Validation**: Always run validator.py before analyzer.py
    - Invalid data causes analyzer to crash
    - Validation catches missing fields, wrong types, etc.
    - Validator now checks name translations (warns if >95% identical DA/EN names)
 
-4. **Year Parsing**: The `parse_year()` function handles 2-digit years
+5. **Year Parsing**: The `parse_year()` function handles 2-digit years
    - Future instances should not modify this logic without testing
    - Edge case: years > current_year + 2 trigger warnings
 
-5. **DataTables Column Visibility**: NEVER use `bVisible: false` in column definitions
+6. **DataTables Column Visibility**: NEVER use `bVisible: false` in column definitions
    - It removes columns from DOM entirely, breaking CSS nth-child selectors
    - Use CSS `hidden-col` class instead for hiding columns
    - Language toggle depends on columns remaining in DOM
 
-6. **Chrome Extension CSP**: No inline scripts or onclick handlers allowed
+7. **Chrome Extension CSP**: No inline scripts or onclick handlers allowed
    - All JavaScript must be in external files (e.g., language-toggle.js)
    - Use addEventListener() instead of onclick attributes
    - This applies to both Chrome and Firefox Manifest V3
 
-7. **Version Management**: Keep version numbers in sync across branches
+8. **Version Management**: Keep version numbers in sync across branches
    - Update manifest.json on both master and firefox branches
    - Remember to update source-code/ folder on firefox branch after version bumps
 
@@ -232,6 +242,10 @@ BASE_URL = "http://kurser.dtu.dk"
 - **Unit Tests**: Located in tests/ directory (pytest)
 - **Integration Test**: Run full pipeline locally before pushing
   ```bash
+  # Activate virtual environment first
+  source /media/salismaxima/41827d46-03ee-4c8d-9636-12e2cf1281c3/Projects/dtu-course-analyzer/.venv/bin/activate
+
+  # Run the full pipeline
   python auth.py
   python getCourseNumbers.py
   python scraper_async.py
