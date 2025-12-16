@@ -1,4 +1,4 @@
-// contentscript.js - Chrome Version 2.1.0
+// contentscript.js - Chrome Version 2.2.0
 
 // 1. Configuration (Must be defined BEFORE running logic)
 const outputArr = [

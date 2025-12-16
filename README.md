@@ -1,8 +1,13 @@
 # DTU Course Analyzer
 
-**Version 2.1.1** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+**Version 2.2.0** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
 
-**New in 2.1.1:**
+**New in 2.2.0:**
+- **Participant Statistics**: Shows total students enrolled and feedback response counts
+- Helps assess reliability of course ratings and workload scores
+- Displays as "Students/Feedback count: 576/327" in course info box and table
+
+**Version 2.1.1:**
 - Bilingual support: Toggle between Danish and English course names
 - Updated data from 2024-2025 academic year
 - 1,418 courses with 94.3% Danish name translations
@@ -32,6 +37,12 @@ An alternative Firefox version is also available [here](https://addons.mozilla.o
 **Bilingual Support:**
 - Toggle between Danish and English course names
 - Language preference saved in browser storage
+
+**Participant Statistics:**
+- **Total Students**: Number of students who took the exam/course
+- **Feedback Count**: Number of students who completed the evaluation survey
+- Helps assess reliability of feedback-based metrics (course rating, workload)
+- Example: A rating based on 97/202 responses is more reliable than 8/20 responses
 
 **Metrics Calculated:**
 All metrics are calculated based on historical data (higher is better):
