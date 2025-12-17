@@ -1,7 +1,7 @@
 {
     "name": "DTU Course Analyzer",
     "description": "Analyzes and scores courses on kurser.dtu.dk",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "manifest_version": 3,
     "icons": {
         "16": "icon16.png",

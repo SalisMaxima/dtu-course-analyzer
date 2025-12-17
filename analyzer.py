@@ -139,6 +139,10 @@ for courseN, course in courseDic.items():
                 except (ValueError, TypeError) as e:
                     logger.debug(f"Course {courseN}: Invalid avg value: {e}")
 
+            # Extract participants (total course attendees)
+            if "participants" in sheet:
+                db_sheet["grade_participants"] = sheet["participants"]
+
             # Extract individual grades (optional)
             db_sheet["grades"] = {}
             for grade in grades:
@@ -157,6 +161,10 @@ for courseN, course in courseDic.items():
             else:
                 logger.debug(f"Course {courseN}: Unknown firstOption '{firstOption}', skipping reviews")
                 continue
+
+            # Extract participants (people who gave feedback)
+            if "participants" in sheet:
+                db_sheet["review_participants"] = sheet["participants"]
 
             # Calculate workload score (question 2.1)
             if "2.1" in sheet:
@@ -272,6 +280,8 @@ headNames = [
     ["avg", "Average Grade", False],
     ["avgp", "Average Grade Percentile", False],
     ["passpercent", "Percent Passed", False],
+    ["grade_participants", "Total Students", False],
+    ["review_participants", "Feedback Count", False],
     ["qualityscore", "Course Rating", False],
     ["workload", "Workload", False],
     ["lazyscore", "Lazy Score Percentile", False]
