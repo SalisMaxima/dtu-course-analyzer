@@ -6,10 +6,15 @@ Creates sample data and runs it through the processing pipeline to ensure
 everything works together correctly.
 """
 
+import sys
 import json
 import tempfile
 import shutil
 from pathlib import Path
+
+# Add project root to Python path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 def create_sample_data():
     """Create realistic sample course data for testing."""

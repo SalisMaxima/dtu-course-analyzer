@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dtu-course-analyzer"
+version = "2.2.0"
+description = "Web scraper and browser extension for DTU course grade distributions and evaluations"
+readme = "README.md"
+authors = [
+    {name = "DTU Course Analyzer Contributors"}
+]
+maintainers = [
+    {name = "SalisMaxima", email = "salismaxima@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Topic :: Education",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+keywords = ["dtu", "education", "scraper", "grades", "courses", "denmark", "university"]
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "playwright>=1.40.0",
+    "requests>=2.31.0",
+    "tqdm>=4.66.0",
+    "urllib3>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.1.0",
+    "mypy>=1.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/SalisMaxima/dtu-course-analyzer"
+Repository = "https://github.com/SalisMaxima/dtu-course-analyzer"
+Issues = "https://github.com/SalisMaxima/dtu-course-analyzer/issues"
+Documentation = "https://github.com/SalisMaxima/dtu-course-analyzer#readme"
+
+[project.scripts]
+dtu-auth = "dtu_analyzer.auth.authenticator:main"
+dtu-get-courses = "dtu_analyzer.scripts.get_course_numbers:main"
+dtu-scrape = "dtu_analyzer.scrapers.async_scraper:main"
+dtu-scrape-threaded = "dtu_analyzer.scrapers.threaded_scraper:main"
+dtu-validate = "dtu_analyzer.validation.validator:main"
+dtu-analyze = "dtu_analyzer.analysis.analyzer:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dtu_analyzer*"]
+exclude = ["tests*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py312']
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "validate_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
