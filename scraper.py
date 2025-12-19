@@ -118,7 +118,7 @@ class Course:
             return False
 
         try:
-            soup = BeautifulSoup(html, 'html.parser')
+            soup = BeautifulSoup(html, 'lxml')
             tables = soup.find_all('table')
             if len(tables) < 3:
                 logger.debug(f"Not enough tables on {url}")
@@ -187,7 +187,7 @@ class Course:
             return False
 
         try:
-            soup = BeautifulSoup(html, 'html.parser')
+            soup = BeautifulSoup(html, 'lxml')
             publicContainer = soup.find("div", {"id": "CourseResultsPublicContainer"})
 
             if not publicContainer:
@@ -307,7 +307,7 @@ def process_single_course(courseN: str) -> tuple | None:
             return None
 
         # Parse links from overview page
-        soup = BeautifulSoup(overviewResp, "html.parser")
+        soup = BeautifulSoup(overviewResp, "lxml")
         for link in soup.find_all('a'):
             href = link.get('href')
             if not href:
@@ -326,7 +326,7 @@ def process_single_course(courseN: str) -> tuple | None:
         # Fetch course name (Danish - must explicitly set lang parameter)
         nameResp = respObj(f"{BASE_URL}/course/{courseN}?lang=da-DK")
         if nameResp:
-            nameSoup = BeautifulSoup(nameResp, "html.parser")
+            nameSoup = BeautifulSoup(nameResp, "lxml")
             h2_tags = nameSoup.find_all('h2')
             if h2_tags:
                 try:
@@ -339,7 +339,7 @@ def process_single_course(courseN: str) -> tuple | None:
         # Fetch course name (English)
         nameRespEn = respObj(f"{BASE_URL}/course/{courseN}?lang=en-GB")
         if nameRespEn:
-            nameSoupEn = BeautifulSoup(nameRespEn, "html.parser")
+            nameSoupEn = BeautifulSoup(nameRespEn, "lxml")
             h2_tags_en = nameSoupEn.find_all('h2')
             if h2_tags_en:
                 try:

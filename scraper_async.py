@@ -113,7 +113,7 @@ def parse_grades(html: str, url: str) -> dict | None:
         Dictionary with grade data, or None on failure
     """
     try:
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'lxml')
         tables = soup.find_all('table')
         if len(tables) < 3:
             logger.debug(f"Not enough tables on {url}")
@@ -177,7 +177,7 @@ def parse_reviews(html: str, url: str) -> dict | None:
         Dictionary with review data, or None on failure
     """
     try:
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'lxml')
         publicContainer = soup.find("div", {"id": "CourseResultsPublicContainer"})
 
         if not publicContainer:
@@ -265,107 +265,109 @@ async def process_single_course(
 
     Args:
         session: aiohttp ClientSession
-        semaphore: Semaphore to limit concurrent requests
+        semaphore: Semaphore to limit concurrent overview page requests
         courseN: 5-digit course number
 
     Returns:
         Tuple of (courseN, data) on success, None on failure
     """
-    async with semaphore:
-        try:
-            # Fetch main course page to get links
+    try:
+        # Only hold semaphore for the initial overview fetch
+        # This allows grade/review fetches to happen in parallel without blocking other courses
+        async with semaphore:
             overview_html = await fetch_url(session, f"{BASE_URL}/course/{courseN}/info")
             if not overview_html:
                 logger.debug(f"Could not fetch overview for {courseN}")
                 return None
 
-            # Parse links from overview page
-            soup = BeautifulSoup(overview_html, "html.parser")
-            review_links = []
-            grade_links = []
+        # Parse links from overview page (no semaphore needed)
+        soup = BeautifulSoup(overview_html, "lxml")
+        review_links = []
+        grade_links = []
 
-            for link in soup.find_all('a'):
-                href = link.get('href')
-                if not href:
-                    continue
-                if "evaluering" in href:
-                    review_links.append(href)
-                elif "karakterer" in href:
-                    grade_links.append(href)
+        for link in soup.find_all('a'):
+            href = link.get('href')
+            if not href:
+                continue
+            if "evaluering" in href:
+                review_links.append(href)
+            elif "karakterer" in href:
+                grade_links.append(href)
 
-            # Fetch all grade and review pages concurrently
-            grade_tasks = [fetch_url(session, url) for url in grade_links]
-            review_tasks = [fetch_url(session, url) for url in review_links]
+        # Fetch all grade and review pages concurrently (no semaphore needed)
+        # This allows multiple courses to fetch their data in parallel
+        grade_tasks = [fetch_url(session, url) for url in grade_links]
+        review_tasks = [fetch_url(session, url) for url in review_links]
 
-            # Also fetch course names (Danish and English) concurrently
-            # Must explicitly set lang parameter - default may be English
-            name_da_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=da-DK")
-            name_en_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=en-GB")
+        # Also fetch course names (Danish and English) concurrently
+        # Must explicitly set lang parameter - default may be English
+        name_da_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=da-DK")
+        name_en_task = fetch_url(session, f"{BASE_URL}/course/{courseN}?lang=en-GB")
 
-            # Await all tasks
-            all_results = await asyncio.gather(
-                *grade_tasks,
-                *review_tasks,
-                name_da_task,
-                name_en_task,
-                return_exceptions=True
-            )
+        # Await all tasks
+        all_results = await asyncio.gather(
+            *grade_tasks,
+            *review_tasks,
+            name_da_task,
+            name_en_task,
+            return_exceptions=True
+        )
 
-            # Split results
-            num_grades = len(grade_links)
-            num_reviews = len(review_links)
+        # Split results
+        num_grades = len(grade_links)
+        num_reviews = len(review_links)
 
-            grade_htmls = all_results[:num_grades]
-            review_htmls = all_results[num_grades:num_grades + num_reviews]
-            name_da_html = all_results[-2]
-            name_en_html = all_results[-1]
+        grade_htmls = all_results[:num_grades]
+        review_htmls = all_results[num_grades:num_grades + num_reviews]
+        name_da_html = all_results[-2]
+        name_en_html = all_results[-1]
 
-            # Parse grades
-            crawl = {}
-            grades_list = []
-            for html, url in zip(grade_htmls, grade_links):
-                if html and not isinstance(html, Exception):
-                    data = parse_grades(html, url)
-                    if data:
-                        data["url"] = url
-                        grades_list.append(data)
+        # Parse grades
+        crawl = {}
+        grades_list = []
+        for html, url in zip(grade_htmls, grade_links):
+            if html and not isinstance(html, Exception):
+                data = parse_grades(html, url)
+                if data:
+                    data["url"] = url
+                    grades_list.append(data)
 
-            if grades_list:
-                crawl["grades"] = grades_list
+        if grades_list:
+            crawl["grades"] = grades_list
 
-            # Parse reviews
-            reviews_list = []
-            for html, url in zip(review_htmls, review_links):
-                if html and not isinstance(html, Exception):
-                    data = parse_reviews(html, url)
-                    if data:
-                        data["url"] = url
-                        reviews_list.append(data)
+        # Parse reviews
+        reviews_list = []
+        for html, url in zip(review_htmls, review_links):
+            if html and not isinstance(html, Exception):
+                data = parse_reviews(html, url)
+                if data:
+                    data["url"] = url
+                    reviews_list.append(data)
 
-            if reviews_list:
-                crawl["reviews"] = reviews_list
+        if reviews_list:
+            crawl["reviews"] = reviews_list
 
-            # If no data found, return None
-            if not crawl:
-                logger.debug(f"No data found for course {courseN}")
-                return None
-
-            # Parse course names
-            if name_da_html and not isinstance(name_da_html, Exception):
-                name_da = parse_course_name(name_da_html, courseN, "da")
-                if name_da:
-                    crawl["name"] = name_da
-
-            if name_en_html and not isinstance(name_en_html, Exception):
-                name_en = parse_course_name(name_en_html, courseN, "en")
-                if name_en:
-                    crawl["name_en"] = name_en
-
-            return (courseN, crawl)
-
-        except Exception as e:
-            logger.error(f"Error processing course {courseN}: {e}")
+        # If no data found, return None
+        if not crawl:
+            logger.debug(f"No data found for course {courseN}")
             return None
+
+        # Parse course names
+        if name_da_html and not isinstance(name_da_html, Exception):
+            name_da = parse_course_name(name_da_html, courseN, "da")
+            if name_da:
+                crawl["name"] = name_da
+
+        if name_en_html and not isinstance(name_en_html, Exception):
+            name_en = parse_course_name(name_en_html, courseN, "en")
+            if name_en:
+                crawl["name_en"] = name_en
+
+        return (courseN, crawl)
+
+    except Exception as e:
+        logger.error(f"Error processing course {courseN}: {e}")
+        return None
 
 
 async def main_async():
