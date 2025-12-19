@@ -287,23 +287,27 @@ headNames = [
     ["lazyscore", "Lazy Score Percentile", False]
 ]
 
-table = '<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>'
-table += '<th>Course</th>'
+# Build table using list for efficient string concatenation
+table_parts = ['<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>']
+table_parts.append('<th>Course</th>')
 for header in headNames:
     hidden_class = ' class="hidden-col"' if header[2] else ''
-    table += f'<th{hidden_class}>{header[1]}</th>'
-table += '</tr></thead><tbody>'
+    table_parts.append(f'<th{hidden_class}>{header[1]}</th>')
+table_parts.append('</tr></thead><tbody>')
 
 for course, data in db.items():
-    table += '<tr>'
-    table += f'<td><a href="http://kurser.dtu.dk/course/{course}">{course}</a></td>'
+    table_parts.append('<tr>')
+    table_parts.append(f'<td><a href="http://kurser.dtu.dk/course/{course}">{course}</a></td>')
     for header in headNames:
         key = header[0]
         val = str(data.get(key, ""))
         hidden_class = ' class="hidden-col"' if header[2] else ''
-        table += f'<td{hidden_class}>{val}</td>'
-    table += '</tr>'
-table += '</tbody></table>'
+        table_parts.append(f'<td{hidden_class}>{val}</td>')
+    table_parts.append('</tr>')
+table_parts.append('</tbody></table>')
+
+# Join all parts into final table string
+table = ''.join(table_parts)
 
 # Read template and generate db.html
 try:

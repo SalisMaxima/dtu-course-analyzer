@@ -8,8 +8,9 @@ import concurrent.futures
 from logger_config import get_scraper_logger
 
 # --- CONFIGURATION ---
-MAX_WORKERS = 8  # Number of parallel threads. Don't go too high (e.g. >20) to avoid getting blocked.
-TIMEOUT = 30     # Seconds to wait for a page before giving up
+MAX_WORKERS = 8          # Number of parallel threads for course processing. Don't go too high to avoid getting blocked.
+MAX_GATHER_WORKERS = 3   # Number of parallel threads for grade/review fetching per course. Keep low to avoid rate limiting.
+TIMEOUT = 30             # Seconds to wait for a page before giving up
 BASE_URL = "http://kurser.dtu.dk"
 # ---------------------
 
@@ -246,6 +247,7 @@ class Course:
     def gather(self) -> dict | bool:
         """
         Gather all grade and review data for this course.
+        Uses ThreadPoolExecutor to parallelize grade/review fetching.
 
         Returns:
             Dictionary with all course data, or False if no data found
@@ -257,17 +259,30 @@ class Course:
         ]
 
         foundData = False
-        for name, urls, func in tasks:
-            lst = []
-            for link in urls:
-                data = func(link)
-                if data:
-                    data["url"] = link
-                    lst.append(data)
 
-            if lst:
-                dic[name] = lst
-                foundData = True
+        # Use ThreadPoolExecutor to parallelize grade and review fetching
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_GATHER_WORKERS) as executor:
+            for name, urls, func in tasks:
+                if not urls:
+                    continue
+
+                # Submit all URL fetches in parallel
+                future_to_url = {executor.submit(func, url): url for url in urls}
+
+                lst = []
+                for future in concurrent.futures.as_completed(future_to_url):
+                    url = future_to_url[future]
+                    try:
+                        data = future.result()
+                        if data:
+                            data["url"] = url
+                            lst.append(data)
+                    except Exception as e:
+                        logger.debug(f"Error fetching {url}: {e}")
+
+                if lst:
+                    dic[name] = lst
+                    foundData = True
 
         return dic if foundData else False
 
