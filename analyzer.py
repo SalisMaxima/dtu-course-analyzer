@@ -234,10 +234,12 @@ insertPercentile(qualityscores, "qualityscore")
 insertPercentile(workloads, "workload")
 
 # Calculate lazy score (combination of pass rate and low workload)
+# Build from workloads list instead of iterating all courses in db for efficiency
 lazyscores = []
-for courseN, course in db.items():
-    if "pp" in course and "workload" in course:
-        lazyscores.append([courseN, course['pp'] + course['workload']])
+for entry in workloads:
+    courseN = entry[0]
+    if courseN in db and "pp" in db[courseN] and "workload" in db[courseN]:
+        lazyscores.append([courseN, db[courseN]['pp'] + db[courseN]['workload']])
 
 insertPercentile(lazyscores, "lazyscore")
 
