@@ -1,7 +1,8 @@
 $(document).ready( function() {
   $('#example').dataTable( {
-        "paging": false,
-        "bInfo" : false,
+        "paging": true,
+        "pageLength": 50,
+        "bInfo" : true,
         "fixedHeader": true,
     "aoColumnDefs": [
       $searchable_columns
