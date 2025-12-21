@@ -24,9 +24,6 @@ ENV/
 /data/*.json
 /data/*.txt
 !/data/README.md
-coursenumbers.txt
-coursedic.json
-data.json
 
 # Logs
 logs/
