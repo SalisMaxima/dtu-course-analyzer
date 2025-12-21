@@ -1,0 +1,28 @@
+# DTU Course Analyzer - Configuration Example
+# Copy this file to config.yaml and update with your values
+# Most settings can also be overridden with environment variables
+
+# Scraper Configuration
+scraper:
+  # Async scraper (production)
+  max_concurrent: 2          # Keep low to avoid rate limiting (do not increase!)
+
+  # Threaded scraper (fallback)
+  max_workers: 8             # Number of courses processed in parallel
+  max_gather_workers: 3      # Number of grade/review pages fetched per course
+
+  # Common settings
+  timeout: 30                # Request timeout in seconds
+  base_url: "http://kurser.dtu.dk"
+
+# Authentication
+# IMPORTANT: Do not commit credentials! Use environment variables instead:
+#   export DTU_USERNAME="your_username"
+#   export DTU_PASSWORD="your_password"
+dtu_username: ""
+dtu_password: ""
+
+# Logging
+log_level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+
+# Note: File paths are auto-detected and don't need configuration

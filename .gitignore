@@ -14,3 +14,39 @@ Mozzila_submission
 xcuserdata/
 *.xcuserstate
 *.zip
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# Data files (generated, not committed)
+/data/*.json
+/data/*.txt
+!/data/README.md
+
+# Logs
+logs/
+*.log
+
+# Python packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
