@@ -10,7 +10,7 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scraper import (
+from dtu_analyzer.scrapers.threaded_scraper import (
     removeWhitespace,
     parse_year,
     Course,
@@ -142,7 +142,7 @@ class TestRespObj:
 class TestExtractGrades:
     """Tests for the Course.extractGrades method."""
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_false_when_no_html(self, mock_resp):
         mock_resp.return_value = False
 
@@ -151,7 +151,7 @@ class TestExtractGrades:
 
         assert result is False
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_false_when_not_enough_tables(self, mock_resp):
         mock_resp.return_value = "<html><body><table></table></body></html>"
 
@@ -160,7 +160,7 @@ class TestExtractGrades:
 
         assert result is False
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_extracts_timestamp_from_url(self, mock_resp):
         # Mock HTML with 3 tables (minimum required)
         html = """
@@ -190,7 +190,7 @@ class TestExtractGrades:
 class TestExtractReviews:
     """Tests for the Course.extractReviews method."""
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_false_when_no_html(self, mock_resp):
         mock_resp.return_value = False
 
@@ -199,7 +199,7 @@ class TestExtractReviews:
 
         assert result is False
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_false_when_no_public_container(self, mock_resp):
         mock_resp.return_value = "<html><body><div>No reviews here</div></body></html>"
 
@@ -218,7 +218,7 @@ class TestGather:
         result = course.gather()
         assert result is False
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_dict_when_grades_found(self, mock_resp):
         # Mock HTML with proper structure
         html = """
@@ -250,18 +250,18 @@ class TestGather:
 class TestProcessSingleCourse:
     """Tests for the process_single_course function."""
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_none_when_no_overview(self, mock_resp):
-        from scraper import process_single_course
+        from dtu_analyzer.scrapers.threaded_scraper import process_single_course
         mock_resp.return_value = False
 
         result = process_single_course("12345")
 
         assert result is None
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_returns_none_when_no_links_found(self, mock_resp):
-        from scraper import process_single_course
+        from dtu_analyzer.scrapers.threaded_scraper import process_single_course
         # Return HTML with no grade/review links
         mock_resp.return_value = "<html><body><a href='/other'>Other</a></body></html>"
 
@@ -269,10 +269,10 @@ class TestProcessSingleCourse:
 
         assert result is None
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_fetches_danish_name_with_lang_parameter(self, mock_resp):
         """Test that Danish course name is fetched with ?lang=da-DK parameter."""
-        from scraper import process_single_course, BASE_URL
+        from dtu_analyzer.scrapers.threaded_scraper import process_single_course, BASE_URL
 
         # Track all URLs that respObj is called with
         called_urls = []
@@ -308,10 +308,10 @@ class TestProcessSingleCourse:
         english_url = f"{BASE_URL}/course/12345?lang=en-GB"
         assert english_url in called_urls, f"Expected {english_url} in {called_urls}"
 
-    @patch('scraper.respObj')
+    @patch('dtu_analyzer.scrapers.threaded_scraper.respObj')
     def test_stores_different_danish_and_english_names(self, mock_resp):
         """Test that Danish and English names are stored separately and can differ."""
-        from scraper import process_single_course, BASE_URL
+        from dtu_analyzer.scrapers.threaded_scraper import process_single_course, BASE_URL
 
         def return_language_specific_html(url, sess=None):
             # Return minimal valid HTML for overview page
@@ -355,6 +355,6 @@ class TestMain:
 
     @patch('builtins.open', side_effect=FileNotFoundError())
     def test_returns_error_when_coursenumbers_missing(self, mock_open):
-        from scraper import main
+        from dtu_analyzer.scrapers.threaded_scraper import main
         result = main()
         assert result == 1
