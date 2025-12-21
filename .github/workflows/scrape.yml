@@ -48,7 +48,7 @@ jobs:
         run: dtu-scrape
 
       - name: Validate Scraped Data
-        run: dtu-validate coursedic.json
+        run: dtu-validate data/coursedic.json
 
       - name: Analyze Data
         run: dtu-analyze extension
@@ -57,5 +57,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Auto-update course data [skip ci]"
-          # Add extension/db.html to this list:
-          file_pattern: "extension/db/data.js data.json coursedic.json extension/db.html"
+          file_pattern: "extension/db/data.js data/data.json data/coursedic.json data/coursenumbers.txt extension/db.html"

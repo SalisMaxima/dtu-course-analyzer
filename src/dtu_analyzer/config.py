@@ -68,33 +68,37 @@ class PathConfig:
         """Directory for log files"""
         return self.root_dir / "logs"
 
-    # File paths
+    # File paths - all files now in data/ directory
     @property
     def course_numbers_file(self) -> Path:
-        """Path to course numbers file"""
-        # Check both old location (root) and new location (data/)
-        new_path = self.data_dir / "coursenumbers.txt"
-        old_path = self.root_dir / "coursenumbers.txt"
-        return new_path if new_path.exists() else old_path
+        """Path to course numbers file (data/coursenumbers.txt)"""
+        return self.data_dir / "coursenumbers.txt"
 
     @property
     def course_data_file(self) -> Path:
-        """Path to scraped course data file"""
-        new_path = self.data_dir / "coursedic.json"
-        old_path = self.root_dir / "coursedic.json"
-        return new_path if new_path.exists() else old_path
+        """Path to scraped course data file (data/coursedic.json)"""
+        return self.data_dir / "coursedic.json"
 
     @property
     def analyzed_data_file(self) -> Path:
-        """Path to analyzed data file"""
-        new_path = self.data_dir / "data.json"
-        old_path = self.root_dir / "data.json"
-        return new_path if new_path.exists() else old_path
+        """Path to analyzed data file (data/data.json)"""
+        return self.data_dir / "data.json"
 
     @property
     def secret_file(self) -> Path:
         """Path to session cookie file"""
         return self.root_dir / "secret.txt"
+
+    # Aliases for backward compatibility
+    @property
+    def template_dir(self) -> Path:
+        """Alias for templates_dir (backward compatibility)"""
+        return self.templates_dir
+
+    @property
+    def data_json_file(self) -> Path:
+        """Alias for analyzed_data_file (backward compatibility)"""
+        return self.analyzed_data_file
 
 
 @dataclass
