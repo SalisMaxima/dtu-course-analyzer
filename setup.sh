@@ -16,14 +16,21 @@ echo ""
 # Check Python version
 echo "Checking Python version..."
 python_version=$(python3 --version 2>&1 | grep -oP '\d+\.\d+' | head -1)
-required_version="3.12"
+minimum_version="3.10"
+recommended_version="3.12"
 
-if ! python3 -c "import sys; exit(0 if sys.version_info >= (3, 12) else 1)"; then
-    echo "ERROR: Python $required_version or higher is required"
+if ! python3 -c "import sys; exit(0 if sys.version_info >= (3, 10) else 1)"; then
+    echo "ERROR: Python $minimum_version or higher is required"
     echo "Current version: $python_version"
     exit 1
 fi
+
 echo "✓ Python version: $python_version"
+
+if ! python3 -c "import sys; exit(0 if sys.version_info >= (3, 12) else 1)"; then
+    echo "⚠ Note: Python $recommended_version+ is recommended (you have $python_version)"
+    echo "  Current version will work, but consider upgrading for best results"
+fi
 echo ""
 
 # Install Python dependencies
