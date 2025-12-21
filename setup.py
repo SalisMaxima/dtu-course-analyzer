@@ -35,7 +35,7 @@ setup(
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    python_requires=">=3.12",
+    python_requires=">=3.10",  # Relaxed from 3.12 for broader compatibility
     install_requires=requirements,
     classifiers=[
         "Development Status :: 4 - Beta",
