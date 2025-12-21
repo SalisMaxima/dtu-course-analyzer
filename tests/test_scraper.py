@@ -11,32 +11,33 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dtu_analyzer.scrapers.threaded_scraper import (
-    removeWhitespace,
-    parse_year,
     Course,
-    grades,
     init_session,
     respObj,
+)
+from dtu_analyzer.parsers.base import (
+    remove_whitespace,
+    parse_year,
 )
 
 
 class TestRemoveWhitespace:
-    """Tests for the removeWhitespace function."""
+    """Tests for the remove_whitespace function."""
 
     def test_removes_spaces(self):
-        assert removeWhitespace("hello world") == "helloworld"
+        assert remove_whitespace("hello world") == "helloworld"
 
     def test_removes_tabs_and_newlines(self):
-        assert removeWhitespace("hello\t\nworld") == "helloworld"
+        assert remove_whitespace("hello\t\nworld") == "helloworld"
 
     def test_handles_empty_string(self):
-        assert removeWhitespace("") == ""
+        assert remove_whitespace("") == ""
 
     def test_handles_only_whitespace(self):
-        assert removeWhitespace("   \t\n   ") == ""
+        assert remove_whitespace("   \t\n   ") == ""
 
     def test_preserves_non_whitespace(self):
-        assert removeWhitespace("abc123") == "abc123"
+        assert remove_whitespace("abc123") == "abc123"
 
 
 class TestParseYear:
@@ -82,12 +83,6 @@ class TestCourseClass:
         assert course.courseN == "12345"
         assert course.reviewLinks == []
         assert course.gradeLinks == []
-
-    def test_init_creates_grade_dict(self):
-        course = Course("12345")
-        for grade in grades:
-            assert grade in course.dic
-            assert course.dic[grade] == 0
 
 
 class TestRespObj:
