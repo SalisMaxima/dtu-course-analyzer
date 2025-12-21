@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e .  # Install package with CLI tools
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -39,25 +39,19 @@ jobs:
         env:
           DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
           DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
-        # Note: auth.py is a wrapper → src/dtu_analyzer/auth/authenticator.py
-        run: python auth.py
+        run: dtu-auth
 
       - name: Update Course Numbers
-        # Note: getCourseNumbers.py is a wrapper → src/dtu_analyzer/scripts/get_course_numbers.py
-        run: python getCourseNumbers.py
+        run: dtu-get-courses
 
       - name: Run Scraper
-        # Note: scraper_async.py is a wrapper → src/dtu_analyzer/scrapers/async_scraper.py
-        run: python scraper_async.py
+        run: dtu-scrape
 
       - name: Validate Scraped Data
-        # Note: validator.py is a wrapper → src/dtu_analyzer/validation/validator.py
-        run: python validator.py coursedic.json
+        run: dtu-validate coursedic.json
 
       - name: Analyze Data
-        # Note: analyzer.py is a wrapper → src/dtu_analyzer/analysis/analyzer.py
-        # Generates the new data.js and data.json
-        run: python analyzer.py extension
+        run: dtu-analyze extension
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v4
