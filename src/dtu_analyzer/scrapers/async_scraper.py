@@ -84,7 +84,7 @@ def parse_course_name(html: str, courseN: str, lang: str = "da") -> str | None:
         Course name string, or None on failure
     """
     try:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")  # Use fast C-based parser (5-10x faster than html.parser)
         h2_tags = soup.find_all('h2')
         if h2_tags:
             content = h2_tags[0].get_text().strip()
@@ -237,7 +237,8 @@ async def main_async():
     connector = aiohttp.TCPConnector(limit=MAX_CONCURRENT, limit_per_host=MAX_CONCURRENT)
     cookies = {'ASP.NET_SessionId': key}
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept-Encoding': 'gzip, deflate'  # Request compressed responses (30-50% bandwidth reduction)
     }
 
     courseDic = {}
