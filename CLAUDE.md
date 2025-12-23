@@ -16,12 +16,43 @@ DTU Course Analyzer is a web scraper and browser extension that collects and ana
 - Updated data from 2024-2025 academic year
 - Python 3.10+ compatible (recommended: 3.12+)
 
+## Claude Code Configuration
+
+This project includes Claude Code customizations in `.claude/`:
+
+### Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/project:update-data` | Run full data pipeline (auth → scrape → validate → analyze) |
+| `/project:bump-version` | Bump version across manifest.json, setup.py, pyproject.toml |
+| `/project:preflight` | Validate extension before testing |
+| `/project:i18n` | Context for English language support work |
+| `/project:sync-branch <to-firefox\|to-master>` | Sync branches preserving browser-specific manifests |
+
+### Subagents
+
+| Agent | Use For |
+|-------|---------|
+| `scraper-expert` | Python/BeautifulSoup/aiohttp scraping tasks |
+| `extension-dev` | Browser extension JavaScript, Manifest V3, cross-browser compat |
+
+### Response Format
+
+- Show code directly, no preamble
+- Use str_replace diffs for edits
+- Full files only when creating new
+- List all affected files upfront
+- Mention version bump if needed
+
 ## Branch Structure
 
 - **master**: Chrome extension version (uses `service_worker` in manifest.json)
 - **firefox**: Firefox extension version (uses `scripts: ["background.js"]` in manifest.json, includes `browser_specific_settings`)
 
 **IMPORTANT**: The **source-code/** folder is maintained on the **firefox branch only**. Firefox Add-ons requires source code submission for review, so the source-code folder must be kept up-to-date on firefox branch with all necessary build files and instructions. When updating the extension, remember to update source-code/ on the firefox branch.
+
+Use `/project:sync-branch to-firefox` or `/project:sync-branch to-master` to sync changes while preserving browser-specific manifest.json files.
 
 ## Repository Structure
 
@@ -41,21 +72,16 @@ dtu-course-analyzer/
 ├── extension/                 # Browser extension files
 ├── tests/                     # Test suite
 ├── docs/                      # Documentation (roadmap, test results)
+├── .claude/                   # Claude Code configuration
+│   ├── commands/              # Slash commands
+│   ├── agents/                # Subagents
+│   ├── settings.json          # Permissions
+│   └── hooks.json             # Post-edit validation
 ├── setup.py                   # Package installation (pip install -e .)
 ├── pyproject.toml            # Modern Python packaging config
 ├── setup.sh                  # Automated setup script
 └── requirements.txt          # Dependencies
 ```
-
-**Key Benefits:**
-- **Modular Architecture**: 7 well-organized modules with clear separation of concerns
-- **CLI Tools**: `dtu-auth`, `dtu-scrape`, `dtu-validate`, `dtu-analyze`, etc.
-- **Pip Installable**: `pip install -e .` for development, or publish to PyPI
-- **No Code Duplication**: Shared parsing logic eliminates ~500 lines of duplicate code
-- **Type Safety**: 120+ type hints for better IDE support and fewer bugs
-- **Backward Compatible**: All existing workflows continue to work
-
-See `docs/REFACTORING_COMPLETE.md` for complete details.
 
 ## Essential Commands
 
@@ -151,6 +177,31 @@ The system follows a strict sequential pipeline:
    - Uses CLI tools for all pipeline steps
    - Manual trigger only (workflow_dispatch)
    - Commits updated data files
+
+## Code Style — STRICT
+
+### JavaScript
+
+- **Vanilla JS only** — never suggest React/Vue/frameworks
+- `const`/`let` only, never `var`
+- Guard clauses: `if (!element) return;`
+- `document.createElement()` for DOM creation, never `innerHTML` (XSS prevention)
+- Regex for URL parsing: `/\/course\/(?:[0-9-]*\/)?([0-9]{5})/`
+
+### Python
+
+- BeautifulSoup for HTML parsing
+- aiohttp for async HTTP requests
+- List comprehensions where readable
+- `try/except` for all network operations
+- Type hints encouraged (120+ in codebase)
+
+### General
+
+- Bump version numbers for release-worthy changes
+- Update in: `manifest.json`, `setup.py`, `pyproject.toml`
+- Never add dependencies without explicit approval
+- Never suggest cloud/server components — extension is fully client-side
 
 ## Key Technical Patterns
 
@@ -341,11 +392,28 @@ BASE_URL = "http://kurser.dtu.dk"
    - Update version in setup.py, pyproject.toml, and manifest.json
    - Update manifest.json on both master and firefox branches
    - Remember to update source-code/ folder on firefox branch after version bumps
+   - Use `/project:bump-version <version>` to automate this
 
 9. **Python Version**: Package requires Python 3.10+ (recommended: 3.12+)
    - GitHub Actions uses Python 3.12.3
    - Local development: use setup.sh to check version compatibility
    - Environment variable MAX_CONCURRENT can be set to override defaults
+
+10. **Branch Sync**: When syncing master↔firefox, preserve manifest.json
+    - Use `/project:sync-branch to-firefox` or `/project:sync-branch to-master`
+    - Never merge manifest.json — each branch has browser-specific keys
+
+## DON'Ts
+
+- ❌ Suggest React/Vue/any framework
+- ❌ Add npm dependencies
+- ❌ Propose server/cloud components
+- ❌ Use `innerHTML` for user-facing content
+- ❌ Suggest changes that break Safari compatibility
+- ❌ Collect any user data (privacy policy violation)
+- ❌ Use `var` in JavaScript (use `const`/`let`)
+- ❌ Use `bVisible: false` in DataTables columns
+- ❌ Merge manifest.json between branches
 
 ## Testing Strategy
 
@@ -375,6 +443,8 @@ BASE_URL = "http://kurser.dtu.dk"
   - Test language toggle
   - Test search with both Danish and English names
   - Verify data.js loads correctly
+
+- **Pre-flight Check**: Use `/project:preflight` to validate before testing
 
 - **Test Results**: See `docs/TEST_RESULTS.md` for comprehensive test report
 
