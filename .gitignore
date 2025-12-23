@@ -21,8 +21,8 @@ venv/
 ENV/
 
 # Data files (generated, not committed)
-/data/coursedic.json
-!/data/data.json
+/data/data.json
+!/data/coursedic.json
 !/data/coursenumbers.txt
 !/data/README.md
 
