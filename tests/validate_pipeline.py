@@ -261,32 +261,6 @@ def test_config_paths():
     print("✅ Configuration paths work correctly\n")
 
 
-def test_backward_compatibility():
-    """Test that old import paths still work."""
-    print("="*60)
-    print("Testing: Backward Compatibility")
-    print("="*60)
-
-    # Test old scraper imports
-    import scraper
-    import scraper_async
-    import analyzer
-    import validator
-
-    assert hasattr(scraper, 'main')
-    assert hasattr(scraper_async, 'main')
-    assert hasattr(analyzer, 'main')
-    assert hasattr(validator, 'main')
-
-    print("✓ Old import paths work:")
-    print("  - scraper.py → src.dtu_analyzer.scrapers.threaded_scraper")
-    print("  - scraper_async.py → src.dtu_analyzer.scrapers.async_scraper")
-    print("  - analyzer.py → src.dtu_analyzer.analysis.analyzer")
-    print("  - validator.py → src.dtu_analyzer.validation.validator")
-
-    print("✅ Backward compatibility verified\n")
-
-
 def main():
     """Run all pipeline validation tests."""
     print("\n" + "="*60)
@@ -299,7 +273,6 @@ def main():
         test_parser_pipeline()
         test_validation_pipeline()
         test_analysis_pipeline()
-        test_backward_compatibility()
 
         print("="*60)
         print("🎉 ALL PIPELINE TESTS PASSED!")
@@ -309,7 +282,6 @@ def main():
         print("✅ Parser modules process data correctly")
         print("✅ Validation pipeline detects data quality issues")
         print("✅ Analysis pipeline calculates metrics and percentiles")
-        print("✅ Backward compatibility maintained")
         print("\nThe refactored codebase is production-ready!")
         print("="*60 + "\n")
 

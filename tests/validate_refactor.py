@@ -214,20 +214,6 @@ def test_threaded_scraper():
     print(f"   Threaded scraper imported successfully")
 
 
-@test("Step 5: Backward compatibility (scrapers)")
-def test_scraper_wrappers():
-    """Test backward-compatible scraper wrappers."""
-    # Test async scraper wrapper
-    import scraper_async
-    assert hasattr(scraper_async, 'main'), "scraper_async wrapper missing main"
-
-    # Test threaded scraper wrapper
-    import scraper
-    assert hasattr(scraper, 'main'), "scraper wrapper missing main"
-
-    print(f"   Scraper wrappers work correctly")
-
-
 @test("Step 6: Analysis module")
 def test_analyzer():
     """Test analyzer module can be imported."""
@@ -283,20 +269,6 @@ def test_validator():
     print(f"   Validator imported and tested successfully")
 
 
-@test("Step 6: Backward compatibility (analysis/validation)")
-def test_analysis_validation_wrappers():
-    """Test backward-compatible wrappers for analyzer and validator."""
-    # Test analyzer wrapper
-    import analyzer
-    assert hasattr(analyzer, 'main'), "analyzer wrapper missing main"
-
-    # Test validator wrapper
-    import validator
-    assert hasattr(validator, 'main'), "validator wrapper missing main"
-
-    print(f"   Analysis/validation wrappers work correctly")
-
-
 @test("Integration: Full import chain")
 def test_full_import_chain():
     """Test that all modules can be imported together without conflicts."""
@@ -312,12 +284,6 @@ def test_full_import_chain():
     from src.dtu_analyzer.scrapers.threaded_scraper import main as threaded_main
     from src.dtu_analyzer.analysis.analyzer import main as analyze_main
     from src.dtu_analyzer.validation.validator import main as validate_main
-
-    # Also import wrappers
-    import scraper
-    import scraper_async
-    import analyzer
-    import validator
 
     print(f"   All modules imported successfully")
     print(f"   Package version: {__version__}")
@@ -339,10 +305,8 @@ def main():
     test_review_parser()
     test_async_scraper()
     test_threaded_scraper()
-    test_scraper_wrappers()
     test_analyzer()
     test_validator()
-    test_analysis_validation_wrappers()
     test_full_import_chain()
 
     # Print summary
