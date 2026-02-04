@@ -121,3 +121,17 @@ dtu-analyze extension
 *   **Rate Limiting**: The DTU server is sensitive. Keep concurrency low (default: 2).
 *   **Auth Expiry**: `secret.txt` session cookies expire. Re-run `dtu-auth` if you see 401/403 errors.
 *   **DataTables**: Do NOT use `bVisible: false` to hide columns; it removes them from the DOM and breaks the language toggle. Use the CSS class `hidden-col` instead.
+
+## Release & Packaging
+
+When creating the ZIP file for Chrome Web Store or Firefox Add-ons, you **must zip the contents of the `extension` folder**, not the folder itself. The `manifest.json` file must be at the root of the archive.
+
+**Correct Command:**
+```bash
+cd extension && zip -r ../dtu-course-analyzer-vX.Y.Z.zip .
+```
+
+**Incorrect Command:**
+```bash
+zip -r dtu-course-analyzer-vX.Y.Z.zip extension/
+```
