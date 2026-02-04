@@ -2,6 +2,8 @@
 
 **Version 2.2.1** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
 
+**Last Updated:** 04/02/2026
+
 **New in 2.2.0:**
 - **Participant Statistics**: Shows total students enrolled and feedback response counts
 - Helps assess reliability of course ratings and workload scores
@@ -18,12 +20,12 @@ The extension is provided as is, with no guarantee nor responsibility for its st
 ## Installation
 
 ### Chrome
-Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/dtu-course-analyzer/bimhgdngikcnelkhjindmdghndfmdcde)
+Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/bimhgdngikcnelkhjindmdghndfmdcde?utm_source=item-share-cb). This version is maintained by the active maintainers of this repository.
 
 ### Firefox
-Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer/)
+Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer/). This version is maintained by the active maintainers of this repository.
 
-An alternative Firefox version is also available [here](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer-2023).
+An older alternative Firefox version is also available [here](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer-2023).
 
 ### Manual Installation (Chrome/Edge)
 1. Download the latest release from GitHub

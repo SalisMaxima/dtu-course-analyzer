@@ -35,7 +35,7 @@ Installation in Safari (Mac):
 ### Google Chrome (old version)
 https://chrome.google.com/webstore/detail/dtu-course-analyzer/bimhgdngikcnelkhjindmdghndfmdcde
 ### Firefox
-https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer/, an alternative version managed by [Mathias Herløv Lund](https://github.com/SalisMaxima) is available [here](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer-2023).
+https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer/, an alternative version is available [here](https://addons.mozilla.org/en-US/firefox/addon/dtu-course-analyzer-2023).
 
 ## Chrome extension
 The following is an explanation of how the values were calculated (higher is better)
