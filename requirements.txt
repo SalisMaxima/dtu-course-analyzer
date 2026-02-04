@@ -3,7 +3,7 @@ lxml
 urllib3
 requests
 tqdm
-playwright
+playwright==1.58.0
 pytest
 pytest-playwright
 aiohttp
