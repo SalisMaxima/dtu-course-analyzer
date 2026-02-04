@@ -13,17 +13,17 @@
 
 ## Phase 2: Firefox Branch
 
-- [ ] **Switch and Sync**
-    - [ ] `git checkout firefox`
-    - [ ] `git merge master`
-- [ ] **Resolve Conflicts (Crucial)**
-    - [ ] Fix `extension/manifest.json` (Keep `browser_specific_settings` & `background.scripts`, but update `version`).
-- [ ] **Update Source Code Bundle**
-    - [ ] Copy root `src/`, `README.md`, `LICENSE`, `pyproject.toml`, `setup.py`, `requirements.txt` into `source-code/`.
-    - [ ] Ensure `source-code/extension/` matches `extension/`.
-- [ ] **Package Firefox Extension**
-    - [ ] Zip `extension/` directory -> `dtu-course-analyzer-firefox-v2.2.1.zip`
-    - [ ] Zip `source-code/` directory -> `dtu-course-analyzer-source-v2.2.1.zip`
+- [x] **Switch and Sync**
+    - [x] `git checkout firefox`
+    - [x] `git merge master`
+- [x] **Resolve Conflicts (Crucial)**
+    - [x] Fix `extension/manifest.json` (Keep `browser_specific_settings` & `background.scripts`, but update `version`).
+- [x] **Update Source Code Bundle**
+    - [x] Copy root `src/`, `README.md`, `LICENSE`, `pyproject.toml`, `setup.py`, `requirements.txt` into `source-code/`.
+    - [x] Ensure `source-code/extension/` matches `extension/`.
+- [x] **Package Firefox Extension**
+    - [x] Zip `extension/` directory -> `dtu-course-analyzer-firefox-v2.2.1.zip`
+    - [x] Zip `source-code/` directory -> `dtu-course-analyzer-source-v2.2.1.zip`
 
 ## Phase 3: Finalize
 
