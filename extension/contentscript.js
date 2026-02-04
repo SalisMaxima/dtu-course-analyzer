@@ -1,4 +1,4 @@
-// contentscript.js - Version 2.2.0
+// contentscript.js - Chrome Version 2.2.0
 
 // 1. Configuration (Must be defined BEFORE running logic)
 const outputArr = [
@@ -7,7 +7,7 @@ const outputArr = [
   ["Percent passed", "passpercent", "%", 100],
   ["Course rating percentile", "qualityscore", "%", 100],
   ["Workscore percentile", "workload", "%", 100],
-  ["Lazyscore percentile 🍺", "lazyscore", "%", 100],
+  ["Lazyscore percentile", "lazyscore", "%", 100],
 ];
 
 // 2. Extract course ID from URL

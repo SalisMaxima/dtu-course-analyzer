@@ -319,7 +319,7 @@ class TestValidator:
 
     def test_validates_minimum_course_count(self):
         """Test that validator warns on low course count."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         # Less than MIN_COURSES
         data = {f"{i:05d}": {"name": f"Course {i}"} for i in range(100)}
@@ -330,7 +330,7 @@ class TestValidator:
 
     def test_validates_course_id_format(self):
         """Test course ID validation."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         data = {"abc": {"name": "Bad ID"}, "12345": {"name": "Good ID"}}
         validator = CourseDataValidator(data)
@@ -341,7 +341,7 @@ class TestValidator:
 
     def test_validates_grade_structure(self):
         """Test grade data validation."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         data = {
             "12345": {
@@ -358,7 +358,7 @@ class TestValidator:
 
     def test_catches_invalid_participants(self):
         """Test that invalid participants values are caught."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         data = {
             "12345": {
@@ -375,7 +375,7 @@ class TestValidator:
 
     def test_catches_out_of_range_pass_percentage(self):
         """Test that out-of-range pass percentage is caught."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         data = {
             "12345": {
@@ -392,7 +392,7 @@ class TestValidator:
 
     def test_get_summary(self):
         """Test summary generation."""
-        from validator import CourseDataValidator
+        from dtu_analyzer.validation.validator import CourseDataValidator
 
         data = {"12345": {"name": "Test Course"}}
         validator = CourseDataValidator(data)
