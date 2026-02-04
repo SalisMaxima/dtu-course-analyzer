@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Current Version: 2.2.0**
+**Current Version: 2.2.1**
 
 DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into browser extensions (Chrome and Firefox) that students can use to search and compare courses.
 

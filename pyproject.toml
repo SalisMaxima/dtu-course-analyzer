@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dtu-course-analyzer"
-version = "2.2.0"
+version = "2.2.1"
 description = "Web scraper and browser extension for DTU course grade distributions and evaluations"
 readme = "README.md"
 authors = [
