@@ -3,8 +3,8 @@
 
 function toggleLanguage(lang) {
   // Get all cells in both name columns (column indices: 2=Danish, 3=English in CSS nth-child)
-  var danishCells = document.querySelectorAll('#example td:nth-child(2), #example th:nth-child(2)');
-  var englishCells = document.querySelectorAll('#example td:nth-child(3), #example th:nth-child(3)');
+  const danishCells = document.querySelectorAll('#example td:nth-child(2), #example th:nth-child(2)');
+  const englishCells = document.querySelectorAll('#example td:nth-child(3), #example th:nth-child(3)');
 
   if (lang === 'en') {
     // Show English name (column 3), hide Danish name (column 2)
