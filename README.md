@@ -14,7 +14,7 @@
 - Updated data from 2024-2025 academic year
 - 1,418 courses with 94.3% Danish name translations
 
-The extension is provided as is, with no guarantee nor responsibility for its stability and correctness. For more info, see the license.
+The extension is provided as is, with no guarantee nor responsibility for its stability and correctness. For more info, see the [license](LICENSE) and [third-party licenses](docs/THIRD_PARTY_LICENSES.md).
 
 
 ## Installation
