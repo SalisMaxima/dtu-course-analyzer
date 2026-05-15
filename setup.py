@@ -57,6 +57,7 @@ setup(
             "dtu-scrape-threaded=dtu_analyzer.scrapers.threaded_scraper:main",
             "dtu-validate=dtu_analyzer.validation.validator:main",
             "dtu-analyze=dtu_analyzer.analysis.analyzer:main",
+            "dtu-check-updates=dtu_analyzer.scripts.check_for_updates:main",
         ],
     },
     keywords="dtu education scraper grades courses denmark university",
