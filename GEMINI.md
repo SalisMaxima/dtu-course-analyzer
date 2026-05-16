@@ -137,6 +137,19 @@ When creating the ZIP file for Chrome Web Store or Firefox Add-ons, you **must z
 7.  Upload the ZIP in the Chrome Developer Dashboard under "Pakker".
 8.  Publish the package and wait for Chrome Web Store approval.
 
+### Firefox Add-ons Publishing
+
+1.  Use the `firefox` branch. The scrape/update workflow does not automatically propagate data from `master` to `firefox`.
+2.  Mirror the generated release data from `master` into `extension/db/data.js`, `extension/db.html`, `extension/js/init_table.js`, and the matching files in `source-code/extension/`.
+3.  Preserve the Firefox manifest fields: `background.scripts` and `browser_specific_settings.gecko`.
+4.  Bump the version number in both `extension/manifest.json` and `source-code/extension/manifest.json`.
+5.  Update Firefox listing/release notes for the new version.
+6.  Zip the contents of `extension/`, not the folder itself, for the add-on package.
+7.  Zip the contents of `source-code/` for AMO source-code review.
+8.  Upload the extension ZIP on addons.mozilla.org.
+9.  When AMO asks whether source code is required, upload the source-code ZIP. Add reviewer notes: test URL `http://kurser.dtu.dk/course/01005`, no account needed for normal use, static bundled dataset, no analytics, and build instructions in `build.md`.
+10. Publish the package and wait for AMO approval.
+
 **Correct Command:**
 ```bash
 cd extension && zip -r ../dtu-course-analyzer-vX.Y.Z.zip .

@@ -80,3 +80,27 @@ Chrome releases are prepared from the main Chrome release branch, not automatica
     ```
 7.  Upload the ZIP under "Pakker".
 8.  Publish it and wait for Chrome Web Store approval.
+
+## 7. Firefox Add-ons Publishing
+
+Firefox releases are prepared from the `firefox` branch. The scrape and update workflow does not automatically propagate data from `master` to `firefox`; mirror the generated data and documentation to the Firefox branch while preserving the Firefox-specific manifest.
+
+1.  Make sure `extension/db/data.js`, `extension/db.html`, `extension/js/init_table.js`, and the matching files under `source-code/extension/` contain the current release data.
+2.  Confirm `extension/manifest.json` keeps the Firefox-specific fields:
+    - `background.scripts`
+    - `browser_specific_settings.gecko`
+3.  Bump the version number in `extension/manifest.json` and `source-code/extension/manifest.json`.
+4.  Update the Firefox listing/release notes for the new version.
+5.  Build the Firefox extension package by zipping the contents of `extension/`, not the folder itself:
+    ```bash
+    cd extension
+    zip -r ../dtu-course-analyzer-firefox-vX.Y.Z.zip .
+    ```
+6.  Build the source-code package for AMO review by zipping the contents of `source-code/`:
+    ```bash
+    cd source-code
+    zip -r ../dtu-course-analyzer-firefox-source-vX.Y.Z.zip .
+    ```
+7.  Submit the extension ZIP on addons.mozilla.org.
+8.  When AMO asks whether source code is required, upload the source-code ZIP. Include reviewer notes with test URL `http://kurser.dtu.dk/course/01005`, no account needed, static bundled dataset/no analytics, and build instructions in this `build.md`.
+9.  Publish the new version and wait for AMO approval.
