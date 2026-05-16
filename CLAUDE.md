@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into browser extensions (Chrome and Firefox) that students can use to search and compare courses.
 
-**Latest Release (2.2.0):**
+**Latest Release (2.2.1):**
 - Modern Python package structure with `src/dtu_analyzer/` modular architecture
 - Professional packaging (pip installable, CLI tools)
 - Bilingual support with Danish/English language toggle
@@ -123,6 +123,9 @@ dtu-validate coursedic.json
 # Generate extension data files
 dtu-analyze extension
 
+# Lightweight weekly probe — diff course list + probe new semesters, write check_report.json
+dtu-check-updates
+
 # Run tests
 pytest
 ```
@@ -177,6 +180,16 @@ The system follows a strict sequential pipeline:
    - Uses CLI tools for all pipeline steps
    - Manual trigger only (workflow_dispatch)
    - Commits updated data files
+
+7. **Weekly Update Check** ([.github/workflows/check-course-updates.yml](.github/workflows/check-course-updates.yml))
+   - Cheap probe that runs Sundays at 07:00 UTC (~09:00 Copenhagen)
+   - Calls `dtu-check-updates`: diffs the live course-number list against
+     `data/coursenumbers.txt` and probes active courses
+     for new grade semesters not in `data/coursedic.json`
+   - On change, opens (or comments on) a `course-data-update` issue with
+     diff + clickable links so the user can verify and manually trigger
+     the **Update Course Data** workflow
+   - Never runs the scraper itself — by design
 
 ## Code Style — STRICT
 
