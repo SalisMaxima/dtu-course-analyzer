@@ -71,22 +71,23 @@ jobs:
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json, pathlib
           r = json.loads(pathlib.Path("check_report.json").read_text())
+          course_base = r.get('course_info_base_url', 'http://kurser.dtu.dk/course')
           print("## DTU course-data check")
           print()
           print(f"- Checked at: `{r['checked_at']}`")
           print(f"- Baseline courses: {r['baseline_course_count']} | Current: {r['current_course_count']}")
-          print(f"- Sample size for semester probe: {r['sample_size']}")
+          print(f"- Courses probed for semester links: {r.get('probed_course_count', r.get('sample_size', 0))}")
           print(f"- **Changes detected: {r['has_changes']}**")
           print()
           if r['added_courses']:
               print(f"### Added courses ({len(r['added_courses'])})")
               for c in r['added_courses']:
-                  print(f"- [{c}](http://kurser.dtu.dk/course/{c}/info)")
+                  print(f"- [{c}]({course_base}/{c}/info)")
               print()
           if r['removed_courses']:
               print(f"### Removed courses ({len(r['removed_courses'])})")
               for c in r['removed_courses']:
-                  print(f"- [{c}](http://kurser.dtu.dk/course/{c}/info)")
+                  print(f"- [{c}]({course_base}/{c}/info)")
               print()
           if r['new_semesters']:
               print(f"### New grade semesters ({len(r['new_semesters'])})")
@@ -140,6 +141,7 @@ jobs:
             const added = report.added_courses || [];
             const removed = report.removed_courses || [];
             const semesters = report.new_semesters || [];
+            const courseBase = report.course_info_base_url || 'http://kurser.dtu.dk/course';
 
             const title = `Weekly check: ${added.length} new course(s), ` +
                           `${removed.length} removed, ${semesters.length} new semester(s) (${date})`;
@@ -148,16 +150,16 @@ jobs:
             lines.push(`Automated weekly check detected new data on kurser.dtu.dk at \`${report.checked_at}\`.`);
             lines.push('');
             lines.push(`- Baseline courses: **${report.baseline_course_count}** · Current: **${report.current_course_count}**`);
-            lines.push(`- Sample size for semester probe: **${report.sample_size}**`);
+            lines.push(`- Courses probed for semester links: **${report.probed_course_count ?? report.sample_size ?? 0}**`);
             lines.push('');
             if (added.length) {
               lines.push(`### Added courses (${added.length})`);
-              for (const c of added) lines.push(`- [\`${c}\`](http://kurser.dtu.dk/course/${c}/info)`);
+              for (const c of added) lines.push(`- [\`${c}\`](${courseBase}/${c}/info)`);
               lines.push('');
             }
             if (removed.length) {
               lines.push(`### Removed courses (${removed.length})`);
-              for (const c of removed) lines.push(`- [\`${c}\`](http://kurser.dtu.dk/course/${c}/info)`);
+              for (const c of removed) lines.push(`- [\`${c}\`](${courseBase}/${c}/info)`);
               lines.push('');
             }
             if (semesters.length) {

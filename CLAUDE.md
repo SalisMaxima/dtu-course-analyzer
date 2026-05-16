@@ -123,7 +123,7 @@ dtu-validate coursedic.json
 # Generate extension data files
 dtu-analyze extension
 
-# Lightweight weekly probe — diff course list + sample new semesters, write check_report.json
+# Lightweight weekly probe — diff course list + probe new semesters, write check_report.json
 dtu-check-updates
 
 # Run tests
@@ -184,8 +184,8 @@ The system follows a strict sequential pipeline:
 7. **Weekly Update Check** ([.github/workflows/check-course-updates.yml](.github/workflows/check-course-updates.yml))
    - Cheap probe that runs Sundays at 07:00 UTC (~09:00 Copenhagen)
    - Calls `dtu-check-updates`: diffs the live course-number list against
-     `source-code/coursenumbers.txt` and probes a sample of active courses
-     for new grade semesters not in `source-code/coursedic.json`
+     `data/coursenumbers.txt` and probes active courses
+     for new grade semesters not in `data/coursedic.json`
    - On change, opens (or comments on) a `course-data-update` issue with
      diff + clickable links so the user can verify and manually trigger
      the **Update Course Data** workflow
