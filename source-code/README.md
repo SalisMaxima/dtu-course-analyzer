@@ -1,5 +1,5 @@
 # DTU Course Analyzer
-So here it is, the brand new version of DTU Course Analyzer with data from the fall courses of 2024.
+So here it is, the brand new version of DTU Course Analyzer with the latest bundled course data.
 The extension is provided as is, with no guarentee nor responsibility for its stability and correctness. For more info, see the license.
 
 
@@ -71,4 +71,3 @@ If you are using Firefox, you can get the cookie by pressing F12, going to the s
      - Run `npm install --global web-ext`
  1. In a terminal window, `cd` into the `extension` directory within the project
  2. Run the extension using `web-ext run`
-

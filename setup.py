@@ -23,7 +23,7 @@ if requirements_file.exists():
 
 setup(
     name="dtu-course-analyzer",
-    version="2.2.1",
+    version="2.2.2",
     author="DTU Course Analyzer Contributors",
     description="Web scraper and browser extension for DTU course grade distributions and evaluations",
     long_description=long_description,
