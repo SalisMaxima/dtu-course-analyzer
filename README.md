@@ -1,6 +1,10 @@
 # DTU Course Analyzer
 
-**Version 2.2.1** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+**Version 2.2.2** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+
+**New in 2.2.2:**
+- Updated course data for the latest dataset
+- Manifest V3 extension package with the updated bundled course database
 
 **New in 2.2.0:**
 - **Participant Statistics**: Shows total students enrolled and feedback response counts
@@ -115,6 +119,24 @@ This generates:
 - `extension/db/data.js` - Extension data bundle
 - `data.json` - Analysis results
 - `extension/db.html` - DataTables HTML view
+
+## Chrome Web Store Release
+
+1. Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
+2. Make sure the course data is updated on the main Chrome release branch by running the full scrape and update workflow. The scrape usually takes about 90 minutes to finish.
+3. Generate the extension files after the scrape:
+   ```bash
+   dtu-analyze extension
+   ```
+4. Bump the version number in `extension/manifest.json`. Keep the project version files in sync when preparing a tagged release.
+5. Update the Chrome Web Store release notes in `docs/CHROME_WEB_STORE_RELEASE_NOTES.md`.
+6. Zip the contents of the `extension` folder, not the folder itself:
+   ```bash
+   cd extension
+   zip -r ../dtu-course-analyzer-vX.Y.Z.zip .
+   ```
+7. In the Chrome Developer Dashboard, upload the ZIP under "Pakker".
+8. Publish the new package and wait for Chrome Web Store approval.
  
 ## Testing
 ```bash
@@ -149,4 +171,3 @@ web-ext run
 - **firefox**: Firefox extension version (uses `scripts: ["background.js"]`, includes `browser_specific_settings`)
 
 **Note**: The `source-code/` folder is maintained on the **firefox** branch only, as required for Firefox Add-ons submission.
-

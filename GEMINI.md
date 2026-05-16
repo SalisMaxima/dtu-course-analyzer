@@ -126,6 +126,17 @@ dtu-analyze extension
 
 When creating the ZIP file for Chrome Web Store or Firefox Add-ons, you **must zip the contents of the `extension` folder**, not the folder itself. The `manifest.json` file must be at the root of the archive.
 
+### Chrome Web Store Publishing
+
+1.  Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
+2.  Make sure the course data is updated on the main Chrome release branch by running the full scrape and update workflow. This usually takes about 90 minutes.
+3.  Run `dtu-analyze extension` after the scrape so `extension/db/data.js`, `extension/db.html`, and `extension/js/init_table.js` are current.
+4.  Bump the version number in `extension/manifest.json` and keep the package metadata in sync for tagged releases.
+5.  Update the Chrome Web Store release notes in `docs/CHROME_WEB_STORE_RELEASE_NOTES.md`.
+6.  Zip the contents of `extension/`, not the folder itself.
+7.  Upload the ZIP in the Chrome Developer Dashboard under "Pakker".
+8.  Publish the package and wait for Chrome Web Store approval.
+
 **Correct Command:**
 ```bash
 cd extension && zip -r ../dtu-course-analyzer-vX.Y.Z.zip .

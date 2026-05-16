@@ -1,6 +1,10 @@
 # DTU Course Analyzer
 
-**Version 2.2.1** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+**Version 2.2.2** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+
+**New in 2.2.2:**
+- Updated course data for the latest dataset
+- Manifest V3 extension package with the updated bundled course database
 
 **New in 2.2.0:**
 - **Participant Statistics**: Shows total students enrolled and feedback response counts
@@ -149,4 +153,3 @@ web-ext run
 - **firefox**: Firefox extension version (uses `scripts: ["background.js"]`, includes `browser_specific_settings`)
 
 **Note**: The `source-code/` folder is maintained on the **firefox** branch only, as required for Firefox Add-ons submission.
-

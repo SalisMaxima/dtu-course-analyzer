@@ -60,3 +60,23 @@ To create the ZIP file for installation or submission (e.g., to Firefox Add-ons)
     ```
 
 The resulting `dtu-course-analyzer-build.zip` is ready for installation.
+
+## 6. Chrome Web Store Publishing
+
+Chrome releases are prepared from the main Chrome release branch, not automatically from the scrape itself. After updating the data there, mirror the generated data and documentation to the Firefox branch when needed.
+
+1.  Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
+2.  Make sure the course data is updated on the main Chrome release branch by running the full scrape and update workflow. The scrape usually takes about 90 minutes.
+3.  Generate the extension files after the scrape:
+    ```bash
+    dtu-analyze extension
+    ```
+4.  Bump the version number in `extension/manifest.json`.
+5.  Update the Chrome Web Store release notes in `docs/CHROME_WEB_STORE_RELEASE_NOTES.md`.
+6.  Zip the contents of the `extension` folder, not the folder itself:
+    ```bash
+    cd extension
+    zip -r ../dtu-course-analyzer-vX.Y.Z.zip .
+    ```
+7.  Upload the ZIP under "Pakker".
+8.  Publish it and wait for Chrome Web Store approval.
