@@ -70,26 +70,38 @@ jobs:
           fi
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json, pathlib
-          r = json.loads(pathlib.Path("check_report.json").read_text())
-          course_base = r.get('course_info_base_url', 'http://kurser.dtu.dk/course')
+
           print("## DTU course-data check")
           print()
-          print(f"- Checked at: `{r['checked_at']}`")
-          print(f"- Baseline courses: {r['baseline_course_count']} | Current: {r['current_course_count']}")
+          try:
+              r = json.loads(pathlib.Path("check_report.json").read_text())
+          except Exception as e:
+              print(f"Could not read `check_report.json`: `{e}`")
+              raise SystemExit(0)
+
+          course_base = r.get('course_info_base_url', 'http://kurser.dtu.dk/course')
+          print(f"- Checked at: `{r.get('checked_at', 'unknown')}`")
+          print(f"- Baseline courses: {r.get('baseline_course_count', 0)} | Current: {r.get('current_course_count', 0)}")
           print(f"- Courses probed for semester links: {r.get('probed_course_count', r.get('sample_size', 0))}")
-          print(f"- **Changes detected: {r['has_changes']}**")
+          print(f"- **Changes detected: {r.get('has_changes', False)}**")
+          if r.get('baseline_missing'):
+              print("- **Baseline missing:** course-list diff suppressed")
+          if r.get('probe_error'):
+              print(f"- **Probe error:** `{r['probe_error']}`")
+          if r.get('failure_reason'):
+              print(f"- **Failure reason:** `{r['failure_reason']}`")
           print()
-          if r['added_courses']:
+          if r.get('added_courses'):
               print(f"### Added courses ({len(r['added_courses'])})")
               for c in r['added_courses']:
                   print(f"- [{c}]({course_base}/{c}/info)")
               print()
-          if r['removed_courses']:
+          if r.get('removed_courses'):
               print(f"### Removed courses ({len(r['removed_courses'])})")
               for c in r['removed_courses']:
                   print(f"- [{c}]({course_base}/{c}/info)")
               print()
-          if r['new_semesters']:
+          if r.get('new_semesters'):
               print(f"### New grade semesters ({len(r['new_semesters'])})")
               for s in r['new_semesters']:
                   print(f"- [{s['course']} → {s['url']}]({s['url']})")
@@ -97,7 +109,7 @@ jobs:
           PY
 
       - name: Open or update tracking issue
-        if: success()
+        if: always()
         uses: actions/github-script@v7
         env:
           REPORT_PATH: check_report.json
@@ -109,7 +121,13 @@ jobs:
               core.info('No report file; nothing to do.');
               return;
             }
-            const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            let report;
+            try {
+              report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            } catch (e) {
+              core.warning(`Could not parse report: ${e}`);
+              return;
+            }
             if (!report.has_changes) {
               core.info('No changes detected; not opening an issue.');
               return;
@@ -151,6 +169,8 @@ jobs:
             lines.push('');
             lines.push(`- Baseline courses: **${report.baseline_course_count}** · Current: **${report.current_course_count}**`);
             lines.push(`- Courses probed for semester links: **${report.probed_course_count ?? report.sample_size ?? 0}**`);
+            if (report.probe_error) lines.push(`- Probe error: \`${report.probe_error}\``);
+            if (report.baseline_missing) lines.push('- Baseline missing: course-list diff suppressed');
             lines.push('');
             if (added.length) {
               lines.push(`### Added courses (${added.length})`);

@@ -8,9 +8,8 @@ Cheap probe that does NOT scrape grades. It compares:
 2. Current active courses' grade-page URLs against the URLs already stored
    in ``data/coursedic.json`` (new semesters).
 
-Writes ``check_report.json`` in the repo root and always exits 0 (the
-calling workflow branches on the JSON, not the exit status). The only
-exception is auth/setup failure, which exits non-zero.
+Writes ``check_report.json`` in the repo root whenever possible. Exits non-zero
+for setup/probe failures while still preserving any course-list diff in the report.
 """
 
 import asyncio
@@ -53,6 +52,7 @@ def resolve_baseline_file(primary: Path, legacy: Path) -> Path:
     if legacy.exists():
         logger.warning(f"{primary} missing; falling back to legacy baseline {legacy}.")
         return legacy
+    logger.error(f"No baseline found. Checked {primary} and {legacy}.")
     return primary
 
 
@@ -160,7 +160,7 @@ async def fetch_grade_links_for_course(
                     logger.warning(f"HTTP {resp.status} for {url}")
                     return course_n, set()
                 html = await resp.text()
-        except Exception as e:
+        except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as e:
             logger.warning(f"Failed to fetch {url}: {e}")
             return course_n, set()
 
@@ -195,10 +195,13 @@ async def probe_new_semesters(
     semaphore = asyncio.Semaphore(MAX_CONCURRENT)
 
     new_semesters: list[dict] = []
+    courses_with_grade_links = 0
     async with aiohttp.ClientSession(connector=connector, cookies=cookies, headers=headers) as session:
         tasks = [fetch_grade_links_for_course(session, semaphore, c) for c in probe_courses]
         for coro in asyncio.as_completed(tasks):
             course_n, found_urls = await coro
+            if found_urls:
+                courses_with_grade_links += 1
             baseline = existing_grade_urls(coursedic, course_n)
             # Compare normalized — baseline urls in coursedic may be stored
             # with or without scheme; normalize both sides.
@@ -206,12 +209,36 @@ async def probe_new_semesters(
             for url in sorted(found_urls - baseline_norm):
                 new_semesters.append({'course': course_n, 'url': url})
                 logger.info(f"New semester for {course_n}: {url}")
+    if probe_courses and courses_with_grade_links == 0:
+        raise RuntimeError("No grade links found for any probed course; session cookie may be stale.")
     return sorted(new_semesters, key=lambda item: (item['course'], item['url']))
 
 
 def write_report(report: dict) -> None:
-    REPORT_FILE.write_text(json.dumps(report, indent=2, sort_keys=True))
+    try:
+        REPORT_FILE.write_text(json.dumps(report, indent=2, sort_keys=True))
+    except (OSError, TypeError) as e:
+        logger.error(f"Failed to write report to {REPORT_FILE}: {e}")
+        raise
     logger.info(f"Wrote report to {REPORT_FILE}")
+
+
+def base_report(**overrides) -> dict:
+    """Create a report with stable defaults for workflow consumers."""
+    report = {
+        'has_changes': False,
+        'added_courses': [],
+        'removed_courses': [],
+        'new_semesters': [],
+        'checked_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'sample_size': 0,
+        'probed_course_count': 0,
+        'baseline_course_count': 0,
+        'current_course_count': 0,
+        'course_info_base_url': f"{BASE_URL}/course",
+    }
+    report.update(overrides)
+    return report
 
 
 def main() -> int:
@@ -219,19 +246,27 @@ def main() -> int:
 
     # Read the committed baseline before refreshing data/coursenumbers.txt.
     baseline_numbers_file = resolve_baseline_file(BASELINE_NUMBERS_FILE, LEGACY_NUMBERS_FILE)
+    baseline_missing = not baseline_numbers_file.exists()
     baseline = load_baseline_course_numbers(baseline_numbers_file)
 
     # Step 1: refresh course-number list (writes data/coursenumbers.txt).
     if not get_course_numbers():
         logger.error("Failed to fetch current course numbers; aborting.")
+        write_report(base_report(check_failed=True, failure_reason='course_number_refresh_failed'))
         return 1
 
     current = load_current_course_numbers()
     if not current:
         logger.error("No current course numbers found after refresh; aborting.")
+        write_report(base_report(check_failed=True, failure_reason='current_course_numbers_missing'))
         return 1
-    added = sorted(current - baseline)
-    removed = sorted(baseline - current)
+    if baseline_missing:
+        added = []
+        removed = []
+        logger.error("Course-number baseline missing; suppressing added/removed diff to avoid noisy alerts.")
+    else:
+        added = sorted(current - baseline)
+        removed = sorted(baseline - current)
     logger.info(
         f"Course list diff: {len(added)} added, {len(removed)} removed "
         f"(baseline={len(baseline)}, current={len(current)})."
@@ -258,25 +293,24 @@ def main() -> int:
             if probe_courses:
                 try:
                     new_semesters = asyncio.run(probe_new_semesters(probe_courses, coursedic))
-                except RuntimeError as e:
+                except Exception as e:
                     probe_error = str(e)
                     logger.error(probe_error)
     else:
         logger.warning(f"{baseline_coursedic_file} missing; skipping semester probe.")
 
     has_changes = bool(added or removed or new_semesters)
-    report = {
-        'has_changes': has_changes,
-        'added_courses': added,
-        'removed_courses': removed,
-        'new_semesters': new_semesters,
-        'checked_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'sample_size': len(probe_courses),
-        'probed_course_count': len(probe_courses),
-        'baseline_course_count': len(baseline),
-        'current_course_count': len(current),
-        'course_info_base_url': f"{BASE_URL}/course",
-    }
+    report = base_report(
+        has_changes=has_changes,
+        added_courses=added,
+        removed_courses=removed,
+        new_semesters=new_semesters,
+        sample_size=len(probe_courses),
+        probed_course_count=len(probe_courses),
+        baseline_course_count=len(baseline),
+        current_course_count=len(current),
+        baseline_missing=baseline_missing,
+    )
     if probe_error:
         report['probe_error'] = probe_error
     write_report(report)
