@@ -1,0 +1,223 @@
+name: Check for Course Data Updates
+
+on:
+  schedule:
+    # 07:00 UTC Sunday ≈ 09:00 Copenhagen (CEST in summer / 08:00 CET in winter)
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
+          cache: 'pip'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium
+
+      - name: Authenticate and get cookie
+        env:
+          DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
+          DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
+        run: dtu-auth
+
+      - name: Run update check
+        run: dtu-check-updates
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-report
+          path: check_report.json
+          if-no-files-found: warn
+
+      - name: Write summary
+        if: always()
+        run: |
+          if [ ! -f check_report.json ]; then
+            echo "## DTU course-data check" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No report file produced — see logs." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+
+          print("## DTU course-data check")
+          print()
+          try:
+              r = json.loads(pathlib.Path("check_report.json").read_text())
+          except Exception as e:
+              print(f"Could not read `check_report.json`: `{e}`")
+              raise SystemExit(0)
+
+          course_base = r.get('course_info_base_url', 'http://kurser.dtu.dk/course')
+          print(f"- Checked at: `{r.get('checked_at', 'unknown')}`")
+          print(f"- Baseline courses: {r.get('baseline_course_count', 0)} | Current: {r.get('current_course_count', 0)}")
+          print(f"- Courses probed for semester links: {r.get('probed_course_count', r.get('sample_size', 0))}")
+          print(f"- **Changes detected: {r.get('has_changes', False)}**")
+          if r.get('baseline_missing'):
+              print("- **Baseline missing:** course-list diff suppressed")
+          if r.get('probe_error'):
+              print(f"- **Probe error:** `{r['probe_error']}`")
+          if r.get('failure_reason'):
+              print(f"- **Failure reason:** `{r['failure_reason']}`")
+          print()
+          if r.get('added_courses'):
+              print(f"### Added courses ({len(r['added_courses'])})")
+              for c in r['added_courses']:
+                  print(f"- [{c}]({course_base}/{c}/info)")
+              print()
+          if r.get('removed_courses'):
+              print(f"### Removed courses ({len(r['removed_courses'])})")
+              for c in r['removed_courses']:
+                  print(f"- [{c}]({course_base}/{c}/info)")
+              print()
+          if r.get('new_semesters'):
+              print(f"### New grade semesters ({len(r['new_semesters'])})")
+              for s in r['new_semesters']:
+                  print(f"- [{s['course']} → {s['url']}]({s['url']})")
+              print()
+          PY
+
+      - name: Open or update tracking issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          REPORT_PATH: check_report.json
+        with:
+          script: |
+            const fs = require('fs');
+            const path = process.env.REPORT_PATH;
+            if (!fs.existsSync(path)) {
+              core.info('No report file; nothing to do.');
+              return;
+            }
+            let report;
+            try {
+              report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            } catch (e) {
+              core.warning(`Could not parse report: ${e}`);
+              return;
+            }
+            if (!report.has_changes) {
+              core.info('No changes detected; not opening an issue.');
+              return;
+            }
+
+            const label = 'course-data-update';
+            // Ensure the label exists.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  color: 'fbca04',
+                  description: 'DTU has new course data — verify and trigger Update Course Data workflow.',
+                });
+              } else {
+                throw e;
+              }
+            }
+
+            const date = report.checked_at.slice(0, 10);
+            const added = report.added_courses || [];
+            const removed = report.removed_courses || [];
+            const semesters = report.new_semesters || [];
+            const courseBase = report.course_info_base_url || 'http://kurser.dtu.dk/course';
+
+            const title = `Weekly check: ${added.length} new course(s), ` +
+                          `${removed.length} removed, ${semesters.length} new semester(s) (${date})`;
+
+            const lines = [];
+            lines.push(`Automated weekly check detected new data on kurser.dtu.dk at \`${report.checked_at}\`.`);
+            lines.push('');
+            lines.push(`- Baseline courses: **${report.baseline_course_count}** · Current: **${report.current_course_count}**`);
+            lines.push(`- Courses probed for semester links: **${report.probed_course_count ?? report.sample_size ?? 0}**`);
+            if (report.probe_error) lines.push(`- Probe error: \`${report.probe_error}\``);
+            if (report.baseline_missing) lines.push('- Baseline missing: course-list diff suppressed');
+            lines.push('');
+            if (added.length) {
+              lines.push(`### Added courses (${added.length})`);
+              for (const c of added) lines.push(`- [\`${c}\`](${courseBase}/${c}/info)`);
+              lines.push('');
+            }
+            if (removed.length) {
+              lines.push(`### Removed courses (${removed.length})`);
+              for (const c of removed) lines.push(`- [\`${c}\`](${courseBase}/${c}/info)`);
+              lines.push('');
+            }
+            if (semesters.length) {
+              lines.push(`### New grade semesters (${semesters.length})`);
+              for (const s of semesters) lines.push(`- \`${s.course}\` → [${s.url}](${s.url})`);
+              lines.push('');
+            }
+            lines.push('---');
+            lines.push('Verify the diff above. If it looks right, manually run the ' +
+                       '[**Update Course Data** workflow](../../actions/workflows/scrape.yml) ' +
+                       'to refresh the extension data.');
+            const body = lines.join('\n');
+
+            // Dedup: comment on existing open issue with the same label, else open a new one.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 10,
+            });
+
+            if (existing.data.length > 0) {
+              const issue = existing.data[0];
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Follow-up check (${report.checked_at}):\n\n${body}`,
+              });
+              core.info(`Commented on existing issue #${issue.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+              core.info(`Opened issue #${created.data.number}`);
+            }
