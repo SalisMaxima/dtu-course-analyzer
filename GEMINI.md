@@ -128,6 +128,8 @@ When creating the ZIP file for Chrome Web Store or Firefox Add-ons, you **must z
 
 ### Chrome Web Store Publishing
 
+Full checklist: `docs/CHROME_WEB_STORE_RELEASE.md`.
+
 1.  Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
 2.  Make sure the course data is updated on the main Chrome release branch by running the full scrape and update workflow. This usually takes about 90 minutes.
 3.  Run `dtu-analyze extension` after the scrape so `extension/db/data.js`, `extension/db.html`, and `extension/js/init_table.js` are current.
@@ -138,6 +140,8 @@ When creating the ZIP file for Chrome Web Store or Firefox Add-ons, you **must z
 8.  Publish the package and wait for Chrome Web Store approval.
 
 ### Firefox Add-ons Publishing
+
+Full checklist: `docs/FIREFOX_ADDONS_RELEASE.md`.
 
 1.  Use the `firefox` branch. The scrape/update workflow does not automatically propagate data from `master` to `firefox`.
 2.  Mirror the generated release data from `master` into `extension/db/data.js`, `extension/db.html`, `extension/js/init_table.js`, and the matching files in `source-code/extension/`.

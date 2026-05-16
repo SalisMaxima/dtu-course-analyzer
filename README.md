@@ -122,6 +122,8 @@ This generates:
 
 ## Chrome Web Store Release
 
+See the full checklist in `docs/CHROME_WEB_STORE_RELEASE.md`.
+
 1. Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
 2. Make sure the course data is updated on the main Chrome release branch by running the full scrape and update workflow. The scrape usually takes about 90 minutes to finish.
 3. Generate the extension files after the scrape:
@@ -139,6 +141,8 @@ This generates:
 8. Publish the new package and wait for Chrome Web Store approval.
 
 ## Firefox Add-ons Release
+
+See the full checklist in `docs/FIREFOX_ADDONS_RELEASE.md`.
 
 Firefox releases are prepared from the `firefox` branch. The scrape and update workflow does not automatically propagate data from `master` to `firefox`, so mirror the generated data and documentation to the Firefox branch while preserving the Firefox-specific manifest.
 

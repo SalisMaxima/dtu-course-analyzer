@@ -63,6 +63,8 @@ The resulting `dtu-course-analyzer-build.zip` is ready for installation.
 
 ## 6. Chrome Web Store Publishing
 
+Full checklist: `docs/CHROME_WEB_STORE_RELEASE.md`.
+
 Chrome releases are prepared from the main Chrome release branch, not automatically from the scrape itself. After updating the data there, mirror the generated data and documentation to the Firefox branch when needed.
 
 1.  Log in to the Chrome Developer Dashboard with `dtu.course.analyzer@gmail.com`.
@@ -82,6 +84,8 @@ Chrome releases are prepared from the main Chrome release branch, not automatica
 8.  Publish it and wait for Chrome Web Store approval.
 
 ## 7. Firefox Add-ons Publishing
+
+Full checklist: `docs/FIREFOX_ADDONS_RELEASE.md`.
 
 Firefox releases are prepared from the `firefox` branch. The scrape and update workflow does not automatically propagate data from `master` to `firefox`; mirror the generated data and documentation to the Firefox branch while preserving the Firefox-specific manifest.
 
