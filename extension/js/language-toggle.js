@@ -1,52 +1,35 @@
 // Language toggle functionality for DTU Course Analyzer
 // This file must be external (not inline) to comply with Chrome Extension CSP
+//
+// The table carries a lang-da/lang-en class; CSS hides the other language's
+// name column. Both columns stay in the DOM, so rows rendered later by
+// table.js automatically follow the active language.
 
-function toggleLanguage(lang) {
-  // Get all cells in both name columns (column indices: 2=Danish, 3=English in CSS nth-child)
-  const danishCells = document.querySelectorAll('#example td:nth-child(2), #example th:nth-child(2)');
-  const englishCells = document.querySelectorAll('#example td:nth-child(3), #example th:nth-child(3)');
+function applyLanguage(lang) {
+  const table = document.getElementById("course-table");
+  if (!table) return;
 
-  if (lang === 'en') {
-    // Show English name (column 3), hide Danish name (column 2)
-    danishCells.forEach(function(cell) {
-      cell.style.display = 'none';
-    });
-    englishCells.forEach(function(cell) {
-      cell.style.display = 'table-cell';
-    });
+  const isEnglish = lang === "en";
+  table.classList.toggle("lang-en", isEnglish);
+  table.classList.toggle("lang-da", !isEnglish);
 
-    document.getElementById('lang-en').classList.add('active');
-    document.getElementById('lang-da').classList.remove('active');
-    localStorage.setItem('dtu-analyzer-lang', 'en');
-  } else {
-    // Show Danish name (column 2), hide English name (column 3)
-    danishCells.forEach(function(cell) {
-      cell.style.display = 'table-cell';
-    });
-    englishCells.forEach(function(cell) {
-      cell.style.display = 'none';
-    });
+  document.getElementById("lang-en").classList.toggle("active", isEnglish);
+  document.getElementById("lang-da").classList.toggle("active", !isEnglish);
 
-    document.getElementById('lang-da').classList.add('active');
-    document.getElementById('lang-en').classList.remove('active');
-    localStorage.setItem('dtu-analyzer-lang', 'da');
-  }
+  localStorage.setItem("dtu-analyzer-lang", lang);
 }
 
-// Restore language preference on page load
-$(document).ready(function() {
-  // Add click event listeners (CSP-compliant, no inline onclick)
-  document.getElementById('lang-da').addEventListener('click', function() {
-    toggleLanguage('da');
-  });
-  document.getElementById('lang-en').addEventListener('click', function() {
-    toggleLanguage('en');
-  });
+function initLanguageToggle() {
+  const danishButton = document.getElementById("lang-da");
+  const englishButton = document.getElementById("lang-en");
+  if (!danishButton || !englishButton) return;
 
-  // Restore saved language preference after DataTables initializes
-  // Default to English ('en')
-  setTimeout(function() {
-    var savedLang = localStorage.getItem('dtu-analyzer-lang') || 'en';
-    toggleLanguage(savedLang);
-  }, 100);
-});
+  // CSP-compliant listeners, no inline onclick
+  danishButton.addEventListener("click", () => applyLanguage("da"));
+  englishButton.addEventListener("click", () => applyLanguage("en"));
+
+  // Restore saved preference (default: English)
+  applyLanguage(localStorage.getItem("dtu-analyzer-lang") || "en");
+}
+
+initLanguageToggle();

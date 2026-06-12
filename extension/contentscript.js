@@ -1,4 +1,4 @@
-// contentscript.js - Chrome Version 2.2.0
+// contentscript.js - Version 2.3.0
 
 // 1. Configuration (Must be defined BEFORE running logic)
 const outputArr = [
@@ -18,33 +18,43 @@ function getCourseId() {
   return courseMatch ? courseMatch[1] : null;
 }
 
-// 3. Wait for data to be available (handles race condition)
-function waitForData(callback, maxAttempts = 20) {
-  let attempts = 0;
-
-  function check() {
-    attempts++;
-    if (typeof window.data !== 'undefined' && window.data !== null) {
-      callback(window.data);
-    } else if (attempts < maxAttempts) {
-      setTimeout(check, 50);
-    } else {
-      console.warn("DTU Analyzer: Data not loaded after " + (maxAttempts * 50) + "ms");
-      callback(null);
+// 3. Load packaged course data (async, does not block the page)
+async function loadData() {
+  try {
+    const response = await fetch(chrome.runtime.getURL("db/data.json"));
+    if (!response.ok) {
+      console.error("DTU Analyzer: Failed to load db/data.json (HTTP " + response.status + ")");
+      return null;
     }
+    return await response.json();
+  } catch (e) {
+    console.error("DTU Analyzer: Failed to load course data:", e);
+    return null;
   }
-
-  check();
 }
 
 // 4. UI Generation Functions
-function presentData(data) {
-  // Vanilla JS selector: Find the table inside .box.information
-  const infoBoxTable = document.querySelector(".box.information > table");
 
-  // Guard clause if the page structure changes or element isn't found
-  if (!infoBoxTable) {
-    console.warn("DTU Analyzer: Could not find .box.information > table - page structure may have changed");
+// Find where to insert the stats table, with fallbacks for DTU markup changes
+function findInsertionPoint() {
+  const infoBoxTable = document.querySelector(".box.information > table");
+  if (infoBoxTable) return { element: infoBoxTable, position: "afterend" };
+
+  const infoBox = document.querySelector(".box.information");
+  if (infoBox) return { element: infoBox, position: "afterbegin" };
+
+  const main = document.querySelector("#pagecontents, main, #content");
+  if (main) return { element: main, position: "afterbegin" };
+
+  return null;
+}
+
+function presentData(data) {
+  const insertion = findInsertionPoint();
+
+  // Guard clause if the page structure changes and no anchor is found
+  if (!insertion) {
+    console.warn("DTU Analyzer: Could not find an insertion point - page structure may have changed");
     return;
   }
 
@@ -56,8 +66,7 @@ function presentData(data) {
   tbody.id = "DTU-Course-Analyzer";
   table.appendChild(tbody);
 
-  // Insert our table immediately after the existing info table
-  infoBoxTable.insertAdjacentElement("afterend", table);
+  insertion.element.insertAdjacentElement(insertion.position, table);
 
   // Add Header Row
   const headerText = document.createElement("span");
@@ -159,17 +168,17 @@ function getColor(value) {
 }
 
 // 5. Main Execution Logic
-function main() {
-  const courseId = getCourseId();
+async function main() {
+  try {
+    const courseId = getCourseId();
 
-  if (!courseId || courseId.length !== 5) {
-    // Not on a course page, silently exit
-    return;
-  }
+    if (!courseId || courseId.length !== 5) {
+      // Not on a course page, silently exit
+      return;
+    }
 
-  waitForData((db) => {
+    const db = await loadData();
     if (!db) {
-      console.error("DTU Analyzer: Course data not loaded. Ensure db/data.js is included in manifest.");
       presentData(null);
       return;
     }
@@ -181,7 +190,10 @@ function main() {
       console.info("DTU Analyzer: No data available for course " + courseId);
       presentData(null);
     }
-  });
+  } catch (e) {
+    // Never let an unexpected error escape onto DTU's page
+    console.error("DTU Analyzer: Unexpected error:", e);
+  }
 }
 
 // Run when DOM is ready
