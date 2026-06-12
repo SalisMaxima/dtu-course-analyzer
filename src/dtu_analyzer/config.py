@@ -36,8 +36,32 @@ class ScraperConfig:
     )
     """Request timeout in seconds (default: 30)"""
 
-    base_url: str = "http://kurser.dtu.dk"
+    base_url: str = "https://kurser.dtu.dk"
     """Base URL for DTU course website"""
+
+    # Polite pacing — keeps traffic burst-free so the authenticated session
+    # is never mistaken for a bot/DDoS pattern
+    request_delay_min: float = field(
+        default_factory=lambda: float(os.getenv("REQUEST_DELAY_MIN", "0.25"))
+    )
+    """Minimum random spacing between request starts, in seconds (default: 0.25).
+    Defaults keep a full scrape (~25k requests) under GitHub Actions' 6h job
+    limit (~2 req/s); raise via env for extra caution."""
+
+    request_delay_max: float = field(
+        default_factory=lambda: float(os.getenv("REQUEST_DELAY_MAX", "0.75"))
+    )
+    """Maximum random spacing between request starts, in seconds (default: 0.75)"""
+
+    max_retries: int = field(
+        default_factory=lambda: int(os.getenv("MAX_RETRIES", "3"))
+    )
+    """Retries per request on timeout/429/5xx before giving up (default: 3)"""
+
+    backoff_base: float = field(
+        default_factory=lambda: float(os.getenv("BACKOFF_BASE", "2.0"))
+    )
+    """Exponential backoff base: wait backoff_base**attempt seconds (default: 2.0)"""
 
 
 @dataclass

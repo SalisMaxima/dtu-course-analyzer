@@ -8,10 +8,13 @@ Uses threading for concurrent HTTP requests, with two-level parallelization:
 Usage: python -m dtu_analyzer.scrapers.threaded_scraper
 """
 
+import random
+import threading
 import time
 import requests
 from bs4 import BeautifulSoup
 import json
+from urllib.parse import urljoin
 from tqdm import tqdm
 import concurrent.futures
 
@@ -27,11 +30,47 @@ MAX_WORKERS = config.scraper.max_workers
 MAX_GATHER_WORKERS = config.scraper.max_gather_workers
 TIMEOUT = config.scraper.timeout
 BASE_URL = config.scraper.base_url
+REQUEST_DELAY_MIN = config.scraper.request_delay_min
+REQUEST_DELAY_MAX = config.scraper.request_delay_max
+MAX_RETRIES = config.scraper.max_retries
+BACKOFF_BASE = config.scraper.backoff_base
+
+# HTTP statuses worth retrying with backoff (rate limiting / transient errors)
+RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 logger = get_scraper_logger()
 
 # Session is initialized lazily when running as main script
 session = None
+
+# Global pacing gate shared by all worker threads: spaces request starts
+# with a random jitter so traffic never bursts
+_pace_lock = threading.Lock()
+_last_request_time = 0.0
+
+
+def normalize_url(href: str) -> str:
+    """
+    Make a scraped href absolute and force https.
+
+    The session cookie carries personal-credential access, so it must never
+    travel over cleartext http even if DTU's pages link with http:// hrefs.
+    """
+    url = urljoin(f"{BASE_URL}/", href.strip())
+    if url.startswith("http://"):
+        url = "https://" + url[len("http://"):]
+    return url
+
+
+def pace_request():
+    """Block until this request is spaced a random jitter after the previous one."""
+    global _last_request_time
+    with _pace_lock:
+        spacing = random.uniform(REQUEST_DELAY_MIN, REQUEST_DELAY_MAX)
+        wait = _last_request_time + spacing - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        _last_request_time = time.monotonic()
 
 
 def init_session(cookie: str) -> requests.Session:
@@ -48,6 +87,9 @@ def respObj(url: str, sess: requests.Session = None) -> str | bool:
     """
     Fetch a URL and return HTML content.
 
+    Paced with a global jitter gate and retried with exponential backoff
+    on timeouts, 429 and 5xx responses.
+
     Args:
         url: The URL to fetch
         sess: Optional session to use (uses global session if not provided)
@@ -60,17 +102,38 @@ def respObj(url: str, sess: requests.Session = None) -> str | bool:
         logger.error("No session available. Initialize session first.")
         return False
 
-    try:
-        r = use_session.get(url, timeout=TIMEOUT)
-        if r.status_code == 200:
-            return r.text
-        logger.warning(f"HTTP {r.status_code} for {url}")
-    except requests.Timeout:
-        logger.warning(f"Timeout fetching {url}")
-    except requests.ConnectionError as e:
-        logger.warning(f"Connection error for {url}: {e}")
-    except requests.RequestException as e:
-        logger.error(f"Request failed for {url}: {e}")
+    for attempt in range(MAX_RETRIES + 1):
+        pace_request()
+        try:
+            r = use_session.get(url, timeout=TIMEOUT)
+            if r.status_code == 200:
+                return r.text
+            if r.status_code in RETRY_STATUSES and attempt < MAX_RETRIES:
+                delay = BACKOFF_BASE ** (attempt + 1)
+                retry_after = r.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        delay = max(float(retry_after), 1.0)
+                    except ValueError:
+                        pass
+                logger.warning(
+                    f"HTTP {r.status_code} for {url}, retrying in {delay:.0f}s "
+                    f"(attempt {attempt + 1}/{MAX_RETRIES})"
+                )
+                time.sleep(delay)
+                continue
+            logger.warning(f"HTTP {r.status_code} for {url}")
+            return False
+        except (requests.Timeout, requests.ConnectionError) as e:
+            if attempt < MAX_RETRIES:
+                delay = BACKOFF_BASE ** (attempt + 1)
+                logger.warning(f"{type(e).__name__} for {url}, retrying in {delay:.0f}s")
+                time.sleep(delay)
+                continue
+            logger.warning(f"{type(e).__name__} fetching {url}: {e}")
+        except requests.RequestException as e:
+            logger.error(f"Request failed for {url}: {e}")
+            return False
     return False
 
 
@@ -208,10 +271,11 @@ def process_single_course(courseN: str) -> tuple | None:
             href = link.get('href')
             if not href:
                 continue
+            # Normalize: absolute URL, https-only (cookie must stay encrypted)
             if "evaluering" in href:
-                course.reviewLinks.append(href)
+                course.reviewLinks.append(normalize_url(href))
             elif "karakterer" in href:
-                course.gradeLinks.append(href)
+                course.gradeLinks.append(normalize_url(href))
 
         # Gather data
         crawl = course.gather()
