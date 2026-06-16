@@ -236,27 +236,30 @@ def test_main_writes_failure_report_when_course_refresh_fails(monkeypatch, tmp_p
     assert report["failure_reason"] == "course_number_refresh_failed"
 
 
-def test_main_suppresses_course_diff_when_baseline_is_missing(monkeypatch, tmp_path: Path) -> None:
-    course_numbers = tmp_path / "data" / "coursenumbers.txt"
+def test_main_suppresses_course_diff_when_current_baseline_is_missing(monkeypatch, tmp_path: Path) -> None:
+    current_numbers = tmp_path / "data" / "coursenumbers.txt"
+    legacy_numbers = tmp_path / "source-code" / "coursenumbers.txt"
     coursedic = tmp_path / "data" / "coursedic.json"
     report_file = tmp_path / "check_report.json"
-    course_numbers.parent.mkdir()
+    current_numbers.parent.mkdir()
+    legacy_numbers.parent.mkdir(parents=True)
+    legacy_numbers.write_text("11111")
     coursedic.write_text("{}")
 
     def refresh_course_numbers() -> bool:
-        course_numbers.write_text("11111,22222")
+        current_numbers.write_text("11111,22222")
         return True
 
     monkeypatch.setattr(checker, "BASELINE_NUMBERS_FILE", tmp_path / "missing-coursenumbers.txt")
     monkeypatch.setattr(checker, "BASELINE_COURSEDIC_FILE", coursedic)
-    monkeypatch.setattr(checker, "LEGACY_NUMBERS_FILE", tmp_path / "missing-legacy-coursenumbers.txt")
+    monkeypatch.setattr(checker, "LEGACY_NUMBERS_FILE", legacy_numbers)
     monkeypatch.setattr(checker, "LEGACY_COURSEDIC_FILE", tmp_path / "missing-legacy-coursedic.json")
     monkeypatch.setattr(checker, "REPORT_FILE", report_file)
     monkeypatch.setattr(checker, "get_course_numbers", refresh_course_numbers)
     monkeypatch.setattr(
         checker.config,
         "paths",
-        SimpleNamespace(course_numbers_file=course_numbers, secret_file=tmp_path / "secret.txt"),
+        SimpleNamespace(course_numbers_file=current_numbers, secret_file=tmp_path / "secret.txt"),
     )
 
     assert checker.main() == 0
@@ -264,6 +267,7 @@ def test_main_suppresses_course_diff_when_baseline_is_missing(monkeypatch, tmp_p
     report = json.loads(report_file.read_text())
     assert report["baseline_missing"] is True
     assert report["has_changes"] is False
+    assert report["baseline_course_count"] == 1
     assert report["added_courses"] == []
 
 
@@ -296,3 +300,36 @@ def test_main_reads_course_number_baseline_before_refresh(monkeypatch, tmp_path:
     report = json.loads(report_file.read_text())
     assert report["added_courses"] == ["22222"]
     assert report["removed_courses"] == []
+
+
+def test_main_skips_semester_probe_when_current_coursedic_baseline_is_missing(monkeypatch, tmp_path: Path) -> None:
+    course_numbers = tmp_path / "data" / "coursenumbers.txt"
+    legacy_coursedic = tmp_path / "source-code" / "coursedic.json"
+    report_file = tmp_path / "check_report.json"
+    course_numbers.parent.mkdir()
+    legacy_coursedic.parent.mkdir(parents=True)
+    course_numbers.write_text("11111")
+    legacy_coursedic.write_text(json.dumps({"11111": {"grades": [{"participants": 1, "url": "old"}]}}))
+
+    async def fail_probe(*_args, **_kwargs):
+        raise AssertionError("stale legacy coursedic must not be probed")
+
+    monkeypatch.setattr(checker, "BASELINE_NUMBERS_FILE", course_numbers)
+    monkeypatch.setattr(checker, "BASELINE_COURSEDIC_FILE", tmp_path / "missing-coursedic.json")
+    monkeypatch.setattr(checker, "LEGACY_NUMBERS_FILE", tmp_path / "missing-coursenumbers.txt")
+    monkeypatch.setattr(checker, "LEGACY_COURSEDIC_FILE", legacy_coursedic)
+    monkeypatch.setattr(checker, "REPORT_FILE", report_file)
+    monkeypatch.setattr(checker, "get_course_numbers", lambda: True)
+    monkeypatch.setattr(checker, "probe_new_semesters", fail_probe)
+    monkeypatch.setattr(
+        checker.config,
+        "paths",
+        SimpleNamespace(course_numbers_file=course_numbers, secret_file=tmp_path / "secret.txt"),
+    )
+
+    assert checker.main() == 0
+
+    report = json.loads(report_file.read_text())
+    assert report["coursedic_baseline_missing"] is True
+    assert report["probed_course_count"] == 0
+    assert report["new_semesters"] == []
