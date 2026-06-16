@@ -4,16 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Current Version: 2.2.2**
+**Current Version: 2.3.0**
 
 DTU Course Analyzer is a web scraper and browser extension that collects and analyzes historical grade distributions and course evaluations from DTU's (Technical University of Denmark) course database. The system scrapes data, validates it, analyzes it, and packages it into browser extensions (Chrome and Firefox) that students can use to search and compare courses.
 
-**Latest Release (2.2.2):**
+**Latest Release (2.3.0):**
+- Slim extension: no jQuery/DataTables, vanilla-JS db.html, lazy-loaded `db/data.json`
+- Hardened scraper: jittered request pacing, retry with backoff, https-only,
+  session-expiry detection, checkpoint/resume (`RESUME=1`)
 - Modern Python package structure with `src/dtu_analyzer/` modular architecture
 - Professional packaging (pip installable, CLI tools)
 - Bilingual support with Danish/English language toggle
-- 1,418 courses with 94.3% Danish name translations
-- Updated data from 2024-2025 academic year
 - Python 3.10+ compatible (recommended: 3.12+)
 
 ## Claude Code Configuration
@@ -68,7 +69,7 @@ dtu-course-analyzer/
 │   ├── validation/            # Data validation
 │   ├── scripts/               # Utility scripts
 │   ├── utils/                 # Shared utilities (logger, prepender)
-│   └── config/                # Configuration management
+│   └── config.py              # Configuration management
 ├── extension/                 # Browser extension files
 ├── tests/                     # Test suite
 ├── docs/                      # Documentation (roadmap, test results)
@@ -172,8 +173,8 @@ The system follows a strict sequential pipeline:
 5. **Analysis** ([src/dtu_analyzer/analysis/analyzer.py](src/dtu_analyzer/analysis/analyzer.py))
    - CLI: `dtu-analyze extension`
    - Calculates aggregate statistics (percentiles, averages, pass rates)
-   - Generates extension/db/data.js and data.json
-   - Produces HTML table (extension/db.html) using DataTables
+   - Generates extension/db/data.json (compact) and data/data.json (formatted)
+   - extension/db.html is a static vanilla-JS page that renders db/data.json itself
 
 6. **Deployment** (GitHub Actions)
    - Automated via [.github/workflows/scrape.yml](.github/workflows/scrape.yml)
@@ -226,9 +227,22 @@ The production scraper uses aiohttp for concurrent I/O:
   - Changed from 5 to 2 for better reliability
   - Higher values (5, 10, 20) cause server timeouts
   - 2 provides reliable scraping without rate limiting
+- **Jittered Request Pacing**: a global gate spaces request starts by a random
+  REQUEST_DELAY_MIN–REQUEST_DELAY_MAX interval (default 0.25–0.75s) so
+  authenticated traffic never bursts
+- **Retry with Backoff**: timeouts, HTTP 429 and 5xx are retried up to
+  MAX_RETRIES times with exponential backoff (honors Retry-After)
 - **Timeout Detection**: Global `timeout_occurred` flag for fail-fast behavior
-  - If ANY request times out, entire scrape aborts
+  - If a request still times out after all retries, the scrape aborts
   - Prevents wasting time when server is rate-limiting
+- **Session-Expiry Detection**: an ADFS login page served with HTTP 200 sets
+  the `auth_failed` flag and aborts with a "re-run dtu-auth" message instead
+  of silently recording "no data" for every remaining course
+- **Checkpoint/Resume**: progress is saved to `data/coursedic.partial.json`
+  every 100 courses and on any abort; run with `RESUME=1` to skip
+  already-scraped courses
+- **HTTPS Only**: BASE_URL is https and scraped hrefs are upgraded to https so
+  the session cookie never travels in cleartext
 - **Semaphore-based Rate Limiting**: `asyncio.Semaphore(MAX_CONCURRENT)` controls concurrency
 - **Shared Parsers**: Uses [src/dtu_analyzer/parsers/](src/dtu_analyzer/parsers/) for grade/review parsing
 
@@ -240,13 +254,16 @@ The extension supports both Danish and English course names:
   - Danish: `BASE_URL/course/{courseN}?lang=da-DK` (**CRITICAL**: Must include `?lang=da-DK`)
   - English: `BASE_URL/course/{courseN}?lang=en-GB`
   - Without language parameters, DTU returns English by default
-- **Column Visibility**: Uses CSS class for hiding, NOT DataTables bVisible
-  - Both columns always present in DOM with `hidden-col` CSS class
-  - `bSearchable: true` on both name columns for bilingual search
-  - **Never use `bVisible: false`** - it breaks the language toggle
+- **Column Visibility**: class-driven via CSS, both columns always in the DOM
+  - The `#course-table` element carries a `lang-da` or `lang-en` class
+  - CSS hides the other language's column (`.col-name` / `.col-name-en` cells)
+  - Search in [extension/js/table.js](extension/js/table.js) filters on course
+    number and both names, so either language matches
+  - **Never remove a name column from the DOM** - the toggle depends on both
 - **Language Toggle**: JavaScript in [extension/js/language-toggle.js](extension/js/language-toggle.js)
   - External file for CSP compliance (no inline scripts allowed)
-  - Uses `style.display = 'table-cell'` or `'none'` to show/hide columns
+  - Swaps the table's `lang-da`/`lang-en` class; rows rendered later by
+    table.js automatically follow the active language
   - Preference persisted in localStorage with key `'dtu-analyzer-lang'`
   - Default: English ('en')
 
@@ -272,18 +289,24 @@ Course evaluations from `/course/{courseN}/evaluering/{semester}`:
 
 ### Async Scraper Settings
 
-Configured in [src/dtu_analyzer/config/settings.py](src/dtu_analyzer/config/settings.py):
+Configured in [src/dtu_analyzer/config.py](src/dtu_analyzer/config.py):
 
 ```python
-MAX_CONCURRENT = 2  # Reduced from 5 for better reliability
-TIMEOUT = 30        # Seconds before giving up on a request
-BASE_URL = "http://kurser.dtu.dk"
+MAX_CONCURRENT = 2          # Reduced from 5 for better reliability
+TIMEOUT = 30                # Seconds before giving up on a request
+BASE_URL = "https://kurser.dtu.dk"
+REQUEST_DELAY_MIN = 0.25    # Min jitter between request starts (seconds)
+REQUEST_DELAY_MAX = 0.75    # Max jitter between request starts (seconds)
+MAX_RETRIES = 3             # Retries on timeout/429/5xx
+BACKOFF_BASE = 2.0          # Exponential backoff base
 ```
 
 Can be overridden with environment variables:
 - `MAX_CONCURRENT`: Number of concurrent requests
 - `TIMEOUT`: Request timeout in seconds
-- `BASE_URL`: DTU course database URL
+- `REQUEST_DELAY_MIN` / `REQUEST_DELAY_MAX`: Jittered pacing between requests
+- `MAX_RETRIES` / `BACKOFF_BASE`: Retry behavior
+- `RESUME`: Set to `1` to resume from `data/coursedic.partial.json`
 
 ### Threaded Scraper Settings
 
@@ -293,8 +316,12 @@ Configured in [src/dtu_analyzer/scrapers/threaded_scraper.py](src/dtu_analyzer/s
 MAX_WORKERS = 8          # Number of parallel threads for course processing
 MAX_GATHER_WORKERS = 3   # Number of parallel threads for grade/review fetching per course
 TIMEOUT = 30             # Seconds before giving up on a request
-BASE_URL = "http://kurser.dtu.dk"
+BASE_URL = "https://kurser.dtu.dk"
 ```
+
+The threaded scraper shares the same jittered pacing gate and retry/backoff
+settings as the async scraper, so total request rate stays smooth regardless
+of thread count.
 
 **Performance Optimization**: The threaded scraper uses a two-level parallelization strategy:
 - **MAX_WORKERS**: Controls how many courses are scraped concurrently
@@ -308,14 +335,13 @@ BASE_URL = "http://kurser.dtu.dk"
 
 [src/dtu_analyzer/analysis/analyzer.py](src/dtu_analyzer/analysis/analyzer.py):
 
-- **HTML Generation**: Uses list concatenation + join for efficient string building
-  - Previous string concatenation was O(n²) for 1,418 courses × 11 columns
-  - New approach is O(n) and 2-3x faster
-
+- **Output**: writes `extension/db/data.json` (compact) and `data/data.json`
+  (formatted); no HTML generation — `extension/db.html` is a static page that
+  renders the table client-side from db/data.json
 - **Percentile Calculation**: Uses weighted percentile with grade counts
-- **Column Ordering**: Defines table structure in extension/db.html
-  - `name` (Danish) visible by default
-  - `name_en` (English) hidden but searchable
+- **Column Ordering**: Defined in extension/db.html + extension/js/table.js
+  - `name_en` (English) shown by default, `name` (Danish) hidden via toggle
+  - Both names searchable regardless of visibility
   - Other columns: avg, participants, pass_percentage, etc.
 
 ### GitHub Actions ([.github/workflows/scrape.yml](.github/workflows/scrape.yml))
@@ -371,13 +397,16 @@ BASE_URL = "http://kurser.dtu.dk"
    - This installs CLI tools: `dtu-auth`, `dtu-scrape`, `dtu-validate`, etc.
    - Without installation, CLI commands won't be available
 
-2. **Rate Limiting**: MAX_CONCURRENT should be 2 (configured in src/dtu_analyzer/config/settings.py)
+2. **Rate Limiting**: MAX_CONCURRENT should be 2 (configured in src/dtu_analyzer/config.py)
    - DTU's server will timeout with higher concurrency
-   - Current setting of 2 provides reliable scraping without rate limiting
+   - Requests are additionally paced by a jittered global gate and retried
+     with exponential backoff on timeout/429/5xx
    - If you get timeouts, DO NOT increase concurrency - it makes it worse
 
 3. **Authentication**: secret.txt expires after a period
-   - If scraper gets 403/401 errors, re-run `dtu-auth`
+   - DTU serves the ADFS login page with HTTP 200 when the session expires;
+     the scraper detects this, saves a checkpoint and aborts
+   - Re-run `dtu-auth`, then re-run the scraper with `RESUME=1` to continue
    - Requires DTU_USERNAME and DTU_PASSWORD environment variables
    - GitHub Actions uses DTU_USERNAME and DTU_PASSWORD secrets
 
@@ -391,10 +420,11 @@ BASE_URL = "http://kurser.dtu.dk"
    - Future instances should not modify this logic without testing
    - Edge case: years > current_year + 2 trigger warnings
 
-6. **DataTables Column Visibility**: NEVER use `bVisible: false` in column definitions
-   - It removes columns from DOM entirely, breaking CSS nth-child selectors
-   - Use CSS `hidden-col` class instead for hiding columns
-   - Language toggle depends on columns remaining in DOM
+6. **Name Column Visibility**: NEVER remove a name column from the DOM
+   - The language toggle works by swapping a `lang-da`/`lang-en` class on the
+     table; CSS hides the inactive column (`.col-name` / `.col-name-en`)
+   - Search runs on the data objects in table.js, not the DOM, so hidden
+     columns stay searchable
 
 7. **Chrome Extension CSP**: No inline scripts or onclick handlers allowed
    - All JavaScript must be in external files (e.g., language-toggle.js)
@@ -425,7 +455,7 @@ BASE_URL = "http://kurser.dtu.dk"
 - ❌ Suggest changes that break Safari compatibility
 - ❌ Collect any user data (privacy policy violation)
 - ❌ Use `var` in JavaScript (use `const`/`let`)
-- ❌ Use `bVisible: false` in DataTables columns
+- ❌ Reintroduce jQuery/DataTables (removed in 2.3.0)
 - ❌ Merge manifest.json between branches
 
 ## Testing Strategy
@@ -455,7 +485,7 @@ BASE_URL = "http://kurser.dtu.dk"
 - **Manual Validation**: Check extension/db.html in browser
   - Test language toggle
   - Test search with both Danish and English names
-  - Verify data.js loads correctly
+  - Verify db/data.json loads correctly (serve over http; file:// blocks fetch)
 
 - **Pre-flight Check**: Use `/project:preflight` to validate before testing
 
@@ -466,19 +496,22 @@ BASE_URL = "http://kurser.dtu.dk"
 The Chrome extension consists of:
 
 - **Manifest**: [extension/manifest.json](extension/manifest.json)
-- **Popup**: [extension/popup.html](extension/popup.html) - search interface
-- **Data**: extension/db/data.js - generated by `dtu-analyze` CLI tool
-- **Table**: extension/db.html - DataTables-based view
+- **Content script**: [extension/contentscript.js](extension/contentscript.js) -
+  injects stats on course pages, fetches db/data.json lazily
+- **Data**: extension/db/data.json - generated by `dtu-analyze` CLI tool,
+  listed in `web_accessible_resources`
+- **Table**: extension/db.html + [extension/js/table.js](extension/js/table.js) -
+  static vanilla-JS view (no jQuery/DataTables)
 
 Key features:
 - Search by course number or name (both languages)
-- Sort by average grade, pass rate, participants
+- Sort by average grade, pass rate, participants (empty values always last)
 - View grade distributions and evaluation results
 - Language toggle (DA/EN) with localStorage persistence
 - **Paging enabled** (50 courses per page) for improved performance
   - Reduces initial render time by 5-10x
   - Uses less memory on low-end devices
-  - Configurable via `pageLength` in templates/init_table.js
+  - Configurable via `PAGE_SIZE` in extension/js/table.js
 
 ## Logging
 
