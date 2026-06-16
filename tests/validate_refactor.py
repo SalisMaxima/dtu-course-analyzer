@@ -76,7 +76,7 @@ def test_configuration():
     assert hasattr(config, 'scraper'), "Config missing scraper section"
     assert config.scraper.max_concurrent == 2, f"Expected max_concurrent=2, got {config.scraper.max_concurrent}"
     assert config.scraper.timeout == 30, f"Expected timeout=30, got {config.scraper.timeout}"
-    assert config.scraper.base_url == "http://kurser.dtu.dk", f"Unexpected base_url: {config.scraper.base_url}"
+    assert config.scraper.base_url == "https://kurser.dtu.dk", f"Unexpected base_url: {config.scraper.base_url}"
 
     # Test paths config
     assert hasattr(config, 'paths'), "Config missing paths section"

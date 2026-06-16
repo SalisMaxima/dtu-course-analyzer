@@ -132,10 +132,14 @@ def existing_grade_urls(coursedic: dict, course_n: str) -> set[str]:
 
 
 def normalize_grade_href(href: str) -> str:
-    """Turn a relative or absolute karakterer href into a canonical URL."""
+    """Turn a relative or absolute karakterer href into a canonical URL.
+
+    The scheme is forced to a single canonical value per host so baseline
+    URLs stored as http:// compare equal to freshly scraped https:// ones.
+    """
     absolute = urljoin(f"{BASE_URL}/", href.strip())
     parsed = urlsplit(absolute)
-    scheme = 'http' if parsed.netloc.lower() == 'karakterer.dtu.dk' else parsed.scheme.lower()
+    scheme = 'http' if parsed.netloc.lower() == 'karakterer.dtu.dk' else 'https'
     netloc = parsed.netloc.lower()
     return urlunsplit((scheme, netloc, parsed.path, parsed.query, ''))
 

@@ -8,21 +8,23 @@ Prepare and validate the DTU Course Analyzer extension for testing.
    - Confirm host_permissions includes `*://kurser.dtu.dk/*`
    - Verify content_scripts matches pattern
 
-2. **Check `extension/db/data.js`**:
-   - Verify file exists and exports valid JavaScript object
+2. **Check `extension/db/data.json`**:
+   - Verify file exists and parses as valid JSON
    - Report number of courses in database
+   - Confirm it is listed under `web_accessible_resources` in manifest.json
 
 3. **Lint JavaScript files**:
+   - `extension/js/table.js`
    - `extension/js/language-toggle.js`
    - `extension/contentscript.js` (if exists)
    - `extension/background.js`
    - Check for `var` usage (should be const/let)
    - Check for `innerHTML` usage (security concern)
 
-4. **Check DataTables configuration**:
-   - Verify NO `bVisible: false` in column definitions
-   - Confirm `hidden-col` CSS class is used instead
-   - Check `bSearchable: true` on name columns
+4. **Check db.html table behavior** (vanilla JS, no DataTables):
+   - Both name columns present in the DOM (`col-name`, `col-name-en`)
+   - Language toggle switches the table's `lang-da`/`lang-en` class
+   - Search filters on course number and both names
 
 5. **Safari compatibility check**:
    - Verify no Chrome-specific APIs without fallbacks

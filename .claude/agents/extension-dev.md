@@ -12,7 +12,6 @@ You are a browser extension developer specializing in Manifest V3 extensions wit
 - Content script injection and lifecycle
 - Cross-browser API compatibility (chrome.* vs browser.*)
 - DOM manipulation without frameworks
-- DataTables library integration
 
 ## Code Style — STRICT
 
@@ -32,8 +31,11 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 ## DTU Course Analyzer Specifics
 
 - Injects into `kurser.dtu.dk/course/*` pages
-- Data comes from bundled `db/data.js`
-- Targets `.box.information > table` for injection
+- Data is fetched lazily from bundled `db/data.json`
+  (`fetch(chrome.runtime.getURL("db/data.json"))`, listed in
+  `web_accessible_resources`)
+- Targets `.box.information > table` for injection, with fallbacks to
+  `.box.information` and the main content container
 - Course ID extraction: `/\/course\/(?:[0-9-]*\/)?([0-9]{5})/`
 - Match DTU styling: red #990000, existing CSS patterns
 

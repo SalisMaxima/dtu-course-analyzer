@@ -12,7 +12,6 @@ from typing import Dict, List, Any, Optional, Tuple
 # Import from our modules
 from ..config import config
 from ..utils.logger import setup_logger
-from ..utils.prepender import PrependToFile
 
 logger = setup_logger('analyzer', 'analyzer.log')
 
@@ -250,145 +249,32 @@ def process_courses(courseDic: Dict) -> Dict:
 
 def generate_extension_data(db: Dict, folder: str):
     """
-    Generate extension data files (data.js and data.json).
+    Generate extension data file (db/data.json).
+
+    The extension fetches this lazily (content script and db.html), so it is
+    written compact. A formatted copy goes to data/data.json for debugging.
 
     Args:
         db: Processed course database
         folder: Target folder for extension files
     """
-    extFilename = f'{folder}/db/data.js'
+    extFilename = f'{folder}/db/data.json'
 
     try:
         with open(extFilename, 'w') as outfile:
-            json.dump(db, outfile)
-
-        with PrependToFile(extFilename) as f:
-            f.write_line('window.data = ')
-
+            json.dump(db, outfile, ensure_ascii=False, separators=(',', ':'))
         logger.info(f"Wrote extension data to {extFilename}")
     except IOError as e:
         logger.error(f"Failed to write extension data: {e}")
         raise
 
-    # Also save as plain JSON for debugging
+    # Also save as formatted JSON for debugging
     try:
         with open(config.paths.data_json_file, 'w') as outfile:
             json.dump(db, outfile, indent=2)
         logger.info(f"Wrote formatted data to {config.paths.data_json_file}")
     except IOError as e:
         logger.warning(f"Failed to write data.json: {e}")
-
-
-def generate_html_table(db: Dict, folder: str):
-    """
-    Generate HTML table for dashboard (db.html).
-
-    Args:
-        db: Processed course database
-        folder: Target folder for extension files
-    """
-    # Note: name_en is hidden but searchable for bilingual search
-    headNames = [
-        ["name", "Name", False],           # Danish name (visible by default)
-        ["name_en", "Name (EN)", True],    # English name (hidden, for search)
-        ["avg", "Average Grade", False],
-        ["avgp", "Average Grade Percentile", False],
-        ["passpercent", "Percent Passed", False],
-        ["grade_participants", "Total Students", False],
-        ["review_participants", "Feedback Count", False],
-        ["qualityscore", "Course Rating", False],
-        ["workload", "Workload", False],
-        ["lazyscore", "Lazy Score Percentile", False]
-    ]
-
-    # Build table using list for efficient string concatenation
-    table_parts = ['<table id="example" class="display" cellspacing="0" width="100%"><thead><tr>']
-    table_parts.append('<th>Course</th>')
-    for header in headNames:
-        hidden_class = ' class="hidden-col"' if header[2] else ''
-        table_parts.append(f'<th{hidden_class}>{header[1]}</th>')
-    table_parts.append('</tr></thead><tbody>')
-
-    for course, data in db.items():
-        table_parts.append('<tr>')
-        table_parts.append(f'<td><a href="http://kurser.dtu.dk/course/{course}">{course}</a></td>')
-        for header in headNames:
-            key = header[0]
-            val = str(data.get(key, ""))
-            hidden_class = ' class="hidden-col"' if header[2] else ''
-            table_parts.append(f'<td{hidden_class}>{val}</td>')
-        table_parts.append('</tr>')
-    table_parts.append('</tbody></table>')
-
-    # Join all parts into final table string
-    table = ''.join(table_parts)
-
-    # Read template and generate db.html
-    try:
-        with open(config.paths.template_dir / "db.html", 'r') as file:
-            content = file.read()
-
-        content = content.replace('$table', table)
-
-        with open(f"{folder}/db.html", 'w') as file:
-            file.write(content)
-
-        logger.info(f"Generated {folder}/db.html")
-    except IOError as e:
-        logger.error(f"Failed to generate db.html: {e}")
-        raise
-
-
-def generate_init_table_js(db: Dict, folder: str):
-    """
-    Generate init_table.js configuration file.
-
-    Args:
-        db: Processed course database (for column count)
-        folder: Target folder for extension files
-    """
-    headNames = [
-        ["name", "Name", False],
-        ["name_en", "Name (EN)", True],
-        ["avg", "Average Grade", False],
-        ["avgp", "Average Grade Percentile", False],
-        ["passpercent", "Percent Passed", False],
-        ["grade_participants", "Total Students", False],
-        ["review_participants", "Feedback Count", False],
-        ["qualityscore", "Course Rating", False],
-        ["workload", "Workload", False],
-        ["lazyscore", "Lazy Score Percentile", False]
-    ]
-
-    try:
-        with open(config.paths.template_dir / "init_table.js", 'r') as file:
-            content = file.read()
-
-        # Column 0: Course code (searchable)
-        searchable_columns = '{ "bSearchable": true, "aTargets": [ 0 ] }'
-        for i in range(len(headNames)):
-            col_idx = i + 1
-            key = headNames[i][0]
-            is_hidden = headNames[i][2]
-
-            # Both name columns (Danish and English) are searchable
-            # Note: Do NOT use bVisible: false - it removes column from DOM
-            # Use CSS hidden-col class instead for initial hiding
-            if key in ["name", "name_en"]:
-                sort_str = '"bSearchable": true,'
-            else:
-                sort_str = '"asSorting": [ "desc", "asc" ], "bSearchable": false, '
-            searchable_columns += f', {{ "type": "non-empty", {sort_str}"aTargets": [ {col_idx} ] }}'
-
-        content = content.replace('$searchable_columns', searchable_columns)
-
-        with open(f"{folder}/js/init_table.js", 'w') as file:
-            file.write(content)
-
-        logger.info(f"Generated {folder}/js/init_table.js")
-    except IOError as e:
-        logger.error(f"Failed to generate init_table.js: {e}")
-        raise
 
 
 def main():
@@ -414,11 +300,9 @@ def main():
     # Process courses and calculate metrics
     db = process_courses(courseDic)
 
-    # Generate all output files
+    # Generate output files (db.html is static and reads db/data.json itself)
     try:
         generate_extension_data(db, folder)
-        generate_html_table(db, folder)
-        generate_init_table_js(db, folder)
     except IOError as e:
         logger.error(f"Failed to generate output files: {e}")
         return 1
