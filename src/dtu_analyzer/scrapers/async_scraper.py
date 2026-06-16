@@ -13,7 +13,7 @@ import random
 import time
 import aiohttp
 import json
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from tqdm.asyncio import tqdm
 
@@ -59,12 +59,19 @@ class TimeoutException(Exception):
 
 def normalize_url(href: str) -> str:
     """
-    Make a scraped href absolute and force https.
+    Make a scraped href absolute and normalize schemes per DTU host.
 
-    The session cookie carries personal-credential access, so it must never
-    travel over cleartext http even if DTU's pages link with http:// hrefs.
+    Course and evaluation pages are fetched over https so session cookies never
+    travel over cleartext. Grade histograms on karakterer.dtu.dk are kept on
+    http because that host is historically canonicalized that way in project
+    data and update checks.
     """
     url = urljoin(f"{BASE_URL}/", href.strip())
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+
+    if host == "karakterer.dtu.dk":
+        return "http://" + url.split("://", 1)[1]
     if url.startswith("http://"):
         url = "https://" + url[len("http://"):]
     return url
@@ -403,7 +410,19 @@ async def main_async():
         # Process with progress bar
         try:
             for coro in tqdm.as_completed(tasks, total=len(courses)):
-                # Check if a fatal condition occurred in another task
+                # First record the completed task yielded by as_completed. A
+                # fatal flag may have been set concurrently by another task,
+                # but this result is already available and should be included
+                # in the checkpoint before aborting.
+                result = await coro
+                completed += 1
+                if result:
+                    c_num, c_data = result
+                    courseDic[c_num] = c_data
+                if completed % CHECKPOINT_EVERY == 0:
+                    save_checkpoint()
+
+                # Then stop if another task signaled a fatal condition.
                 if timeout_occurred:
                     logger.error(f"Stopping due to timeout on: {timeout_url}")
                     logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
@@ -416,14 +435,6 @@ async def main_async():
                     cancel_pending()
                     save_checkpoint()
                     return 1
-
-                result = await coro
-                completed += 1
-                if result:
-                    c_num, c_data = result
-                    courseDic[c_num] = c_data
-                if completed % CHECKPOINT_EVERY == 0:
-                    save_checkpoint()
         except (TimeoutException, asyncio.CancelledError, KeyboardInterrupt) as e:
             logger.error(f"FAILED: {e}")
             logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")

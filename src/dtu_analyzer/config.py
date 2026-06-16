@@ -61,7 +61,7 @@ class ScraperConfig:
     backoff_base: float = field(
         default_factory=lambda: float(os.getenv("BACKOFF_BASE", "2.0"))
     )
-    """Exponential backoff base: wait backoff_base**attempt seconds (default: 2.0)"""
+    """Exponential backoff base: wait backoff_base**(attempt + 1) seconds (default: 2.0)"""
 
 
 @dataclass

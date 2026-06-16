@@ -109,6 +109,7 @@ function renderPage() {
         const link = document.createElement("a");
         link.href = "https://kurser.dtu.dk/course/" + row.course;
         link.target = "_blank";
+        link.rel = "noopener noreferrer";
         link.textContent = row.course;
         td.appendChild(link);
       } else {

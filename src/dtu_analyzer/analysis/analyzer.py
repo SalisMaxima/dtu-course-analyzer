@@ -262,7 +262,7 @@ def generate_extension_data(db: Dict, folder: str):
 
     try:
         with open(extFilename, 'w') as outfile:
-            json.dump(db, outfile)
+            json.dump(db, outfile, ensure_ascii=False, separators=(',', ':'))
         logger.info(f"Wrote extension data to {extFilename}")
     except IOError as e:
         logger.error(f"Failed to write extension data: {e}")
