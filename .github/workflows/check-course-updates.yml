@@ -29,7 +29,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
