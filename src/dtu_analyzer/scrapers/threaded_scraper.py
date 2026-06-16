@@ -14,7 +14,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import json
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from tqdm import tqdm
 import concurrent.futures
 
@@ -51,12 +51,19 @@ _last_request_time = 0.0
 
 def normalize_url(href: str) -> str:
     """
-    Make a scraped href absolute and force https.
+    Make a scraped href absolute and normalize schemes per DTU host.
 
-    The session cookie carries personal-credential access, so it must never
-    travel over cleartext http even if DTU's pages link with http:// hrefs.
+    Course and evaluation pages are fetched over https so session cookies never
+    travel over cleartext. Grade histograms on karakterer.dtu.dk are kept on
+    http because that host is historically canonicalized that way in project
+    data and update checks.
     """
     url = urljoin(f"{BASE_URL}/", href.strip())
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+
+    if host == "karakterer.dtu.dk":
+        return "http://" + url.split("://", 1)[1]
     if url.startswith("http://"):
         url = "https://" + url[len("http://"):]
     return url

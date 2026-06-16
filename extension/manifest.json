@@ -10,7 +10,7 @@
     },
     "content_scripts": [
         {
-          "matches": ["http://kurser.dtu.dk/course/*", "https://kurser.dtu.dk/course/*"],
+          "matches": ["https://kurser.dtu.dk/course/*"],
           "js": ["contentscript.js"]
         }
     ],
@@ -21,13 +21,12 @@
         "default_icon": "icon128.png"
     },
     "host_permissions": [
-        "http://kurser.dtu.dk/*",
         "https://kurser.dtu.dk/*"
     ],
     "web_accessible_resources": [
         {
             "resources": ["db/data.json"],
-            "matches": ["http://kurser.dtu.dk/*", "https://kurser.dtu.dk/*"]
+            "matches": ["https://kurser.dtu.dk/*"]
         }
     ]
 }

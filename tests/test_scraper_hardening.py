@@ -4,7 +4,7 @@ detection, retry/backoff behavior and pacing configuration.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from dtu_analyzer.config import ScraperConfig
 from dtu_analyzer.scrapers import async_scraper, threaded_scraper
 from dtu_analyzer.scrapers.async_scraper import is_login_page, retry_delay
@@ -30,6 +30,16 @@ class TestNormalizeUrl:
     def test_keeps_https_unchanged(self, normalize):
         url = "https://kurser.dtu.dk/course/01005/info"
         assert normalize(url) == url
+
+    @pytest.mark.parametrize("normalize", [async_scraper.normalize_url, threaded_scraper.normalize_url])
+    def test_preserves_karakterer_http(self, normalize):
+        url = "http://karakterer.dtu.dk/Histogram/1/01005/Summer-2024"
+        assert normalize(url) == url
+
+    @pytest.mark.parametrize("normalize", [async_scraper.normalize_url, threaded_scraper.normalize_url])
+    def test_forces_karakterer_https_to_http(self, normalize):
+        url = "https://karakterer.dtu.dk/Histogram/1/01005/Summer-2024"
+        assert normalize(url) == "http://karakterer.dtu.dk/Histogram/1/01005/Summer-2024"
 
 
 class TestIsLoginPage:
