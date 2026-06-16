@@ -5,12 +5,6 @@ detection, retry/backoff behavior and pacing configuration.
 
 import pytest
 from unittest.mock import Mock, patch
-import sys
-import os
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from dtu_analyzer.config import ScraperConfig
 from dtu_analyzer.scrapers import async_scraper, threaded_scraper
 from dtu_analyzer.scrapers.async_scraper import is_login_page, retry_delay
