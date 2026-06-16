@@ -85,7 +85,9 @@ jobs:
           print(f"- Courses probed for semester links: {r.get('probed_course_count', r.get('sample_size', 0))}")
           print(f"- **Changes detected: {r.get('has_changes', False)}**")
           if r.get('baseline_missing'):
-              print("- **Baseline missing:** course-list diff suppressed")
+              print("- **Course-number baseline missing:** course-list diff suppressed")
+          if r.get('coursedic_baseline_missing'):
+              print("- **Course-data baseline missing:** semester probe skipped")
           if r.get('probe_error'):
               print(f"- **Probe error:** `{r['probe_error']}`")
           if r.get('failure_reason'):
@@ -170,7 +172,8 @@ jobs:
             lines.push(`- Baseline courses: **${report.baseline_course_count}** · Current: **${report.current_course_count}**`);
             lines.push(`- Courses probed for semester links: **${report.probed_course_count ?? report.sample_size ?? 0}**`);
             if (report.probe_error) lines.push(`- Probe error: \`${report.probe_error}\``);
-            if (report.baseline_missing) lines.push('- Baseline missing: course-list diff suppressed');
+            if (report.baseline_missing) lines.push('- Course-number baseline missing: course-list diff suppressed');
+            if (report.coursedic_baseline_missing) lines.push('- Course-data baseline missing: semester probe skipped');
             lines.push('');
             if (added.length) {
               lines.push(`### Added courses (${added.length})`);

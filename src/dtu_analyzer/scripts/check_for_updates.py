@@ -249,8 +249,11 @@ def main() -> int:
     logger.info("Starting weekly DTU course-data check.")
 
     # Read the committed baseline before refreshing data/coursenumbers.txt.
+    # Legacy files are useful for count/report context, but they are stale and
+    # must not drive alerts: comparing today's DTU pages against source-code/*
+    # would rediscover years of already-known changes as "new".
     baseline_numbers_file = resolve_baseline_file(BASELINE_NUMBERS_FILE, LEGACY_NUMBERS_FILE)
-    baseline_missing = not baseline_numbers_file.exists()
+    baseline_missing = not BASELINE_NUMBERS_FILE.exists()
     baseline = load_baseline_course_numbers(baseline_numbers_file)
 
     # Step 1: refresh course-number list (writes data/coursenumbers.txt).
@@ -267,7 +270,7 @@ def main() -> int:
     if baseline_missing:
         added = []
         removed = []
-        logger.error("Course-number baseline missing; suppressing added/removed diff to avoid noisy alerts.")
+        logger.error("Current course-number baseline missing; suppressing added/removed diff to avoid noisy alerts.")
     else:
         added = sorted(current - baseline)
         removed = sorted(baseline - current)
@@ -281,7 +284,12 @@ def main() -> int:
     probe_courses: list[str] = []
     probe_error = None
     baseline_coursedic_file = resolve_baseline_file(BASELINE_COURSEDIC_FILE, LEGACY_COURSEDIC_FILE)
-    if baseline_coursedic_file.exists():
+    coursedic_baseline_missing = not BASELINE_COURSEDIC_FILE.exists()
+    if coursedic_baseline_missing:
+        logger.error(
+            "Current coursedic baseline missing; skipping semester probe to avoid noisy alerts from stale legacy data."
+        )
+    elif baseline_coursedic_file.exists():
         try:
             coursedic = json.loads(baseline_coursedic_file.read_text())
         except json.JSONDecodeError as e:
@@ -314,6 +322,7 @@ def main() -> int:
         baseline_course_count=len(baseline),
         current_course_count=len(current),
         baseline_missing=baseline_missing,
+        coursedic_baseline_missing=coursedic_baseline_missing,
     )
     if probe_error:
         report['probe_error'] = probe_error
