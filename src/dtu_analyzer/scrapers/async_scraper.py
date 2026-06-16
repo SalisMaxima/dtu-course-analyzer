@@ -435,9 +435,15 @@ async def main_async():
                     cancel_pending()
                     save_checkpoint()
                     return 1
-        except (TimeoutException, asyncio.CancelledError, KeyboardInterrupt) as e:
+        except TimeoutException as e:
             logger.error(f"FAILED: {e}")
             logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+            cancel_pending()
+            save_checkpoint()
+            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+            return 1
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            logger.warning("Scrape cancelled. Saving checkpoint.")
             cancel_pending()
             save_checkpoint()
             logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
