@@ -23,6 +23,7 @@ const state = {
   sortKey: "course",
   sortAsc: true,
   page: 0,
+  selected: [],
 };
 
 function buildRows(db) {
@@ -118,6 +119,17 @@ function renderPage() {
       tr.appendChild(td);
     });
 
+    const compareCell = document.createElement("td");
+    const compareButton = document.createElement("button");
+    const selected = state.selected.includes(row.course);
+    compareButton.type = "button";
+    compareButton.className = selected ? "compare-btn selected" : "compare-btn";
+    compareButton.textContent = selected ? "Remove" : "Add";
+    compareButton.setAttribute("aria-pressed", String(selected));
+    compareButton.addEventListener("click", () => toggleCourse(row.course));
+    compareCell.appendChild(compareButton);
+    tr.appendChild(compareCell);
+
     tbody.appendChild(tr);
   });
 
@@ -129,6 +141,125 @@ function renderPage() {
   document.getElementById("next-page").disabled = state.page >= pageCount - 1;
 
   renderSortIndicators();
+}
+
+function metricValue(data, key, unit = "") {
+  const value = data && data[key];
+  return (typeof value === "undefined" || value === null || value === "")
+    ? "No data"
+    : String(value) + unit;
+}
+
+function appendComparisonRow(tbody, label, selectedRows, valueForRow) {
+  const tr = document.createElement("tr");
+  const labelCell = document.createElement("td");
+  labelCell.textContent = label;
+  tr.appendChild(labelCell);
+
+  selectedRows.forEach((row) => {
+    const td = document.createElement("td");
+    const value = valueForRow(row, td);
+    if (typeof value !== "undefined") td.textContent = value;
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+}
+
+function renderComparison() {
+  const panel = document.getElementById("comparison-panel");
+  const table = document.getElementById("comparison-table");
+  const empty = document.getElementById("comparison-empty");
+  if (!panel || !table || !empty) return;
+
+  const selectedRows = state.selected
+    .map((courseId) => state.rows.find((row) => row.course === courseId))
+    .filter(Boolean);
+  panel.hidden = selectedRows.length === 0 && window.location.hash !== "#compare";
+  empty.hidden = selectedRows.length > 0;
+  while (table.firstChild) table.removeChild(table.firstChild);
+  if (selectedRows.length === 0) return;
+
+  const useEnglish = document.getElementById("course-table").classList.contains("lang-en");
+  const thead = document.createElement("thead");
+  const heading = document.createElement("tr");
+  const metricHeading = document.createElement("th");
+  metricHeading.textContent = "Metric";
+  heading.appendChild(metricHeading);
+  selectedRows.forEach((row) => {
+    const th = document.createElement("th");
+    const link = document.createElement("a");
+    link.href = "https://kurser.dtu.dk/course/" + row.course;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    const name = useEnglish ? row.name_en : row.name;
+    link.textContent = `${row.course} — ${name || "Unnamed course"}`;
+    th.appendChild(link);
+    heading.appendChild(th);
+  });
+  thead.appendChild(heading);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  appendComparisonRow(tbody, "Average grade", selectedRows, (row) => metricValue(row, "avg"));
+  appendComparisonRow(tbody, "Grade percentile", selectedRows, (row) => metricValue(row, "avgp", "%"));
+  appendComparisonRow(tbody, "Passed", selectedRows, (row) => metricValue(row, "passpercent", "%"));
+  appendComparisonRow(tbody, "Course rating", selectedRows, (row) => metricValue(row, "qualityscore", "%"));
+  appendComparisonRow(tbody, "Workload", selectedRows, (row) => metricValue(row, "workload", "%"));
+  appendComparisonRow(tbody, "Lazy score", selectedRows, (row) => metricValue(row, "lazyscore", "%"));
+  appendComparisonRow(tbody, "Grade participants", selectedRows, (row) => metricValue(row, "grade_participants"));
+  appendComparisonRow(tbody, "Feedback responses", selectedRows, (row, td) => {
+    const count = row.review_participants;
+    if (typeof count === "undefined" || count === null || count === "") return "No data";
+    const countText = document.createTextNode(String(count));
+    td.appendChild(countText);
+    const confidence = DTUAnalyzer.getConfidence(count);
+    if (confidence) {
+      const note = document.createElement("span");
+      note.className = "confidence-note";
+      note.textContent = confidence.label;
+      note.title = "Based on sample size, not response rate.";
+      td.appendChild(note);
+    }
+  });
+  appendComparisonRow(tbody, "Selection", selectedRows, (row, td) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "compare-btn selected";
+    button.textContent = "Remove";
+    button.addEventListener("click", () => toggleCourse(row.course));
+    td.appendChild(button);
+  });
+  table.appendChild(tbody);
+}
+
+async function toggleCourse(courseId) {
+  const result = DTUAnalyzer.toggleSelection(state.selected, courseId);
+  const status = document.getElementById("comparison-status");
+  if (result.limitReached) {
+    if (status) status.textContent = `Maximum ${DTUAnalyzer.MAX_COMPARISONS} courses. Remove one before adding another.`;
+    return;
+  }
+  if (status) status.textContent = "";
+  state.selected = await DTUAnalyzer.writeSelection(result.selection);
+  renderPage();
+  renderComparison();
+}
+
+async function initComparison() {
+  state.selected = await DTUAnalyzer.readSelection();
+  document.getElementById("clear-comparison").addEventListener("click", async () => {
+    state.selected = await DTUAnalyzer.writeSelection([]);
+    renderPage();
+    renderComparison();
+  });
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local" || !changes[DTUAnalyzer.COMPARISON_KEY]) return;
+    state.selected = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);
+    renderPage();
+    renderComparison();
+  });
+  window.addEventListener("hashchange", renderComparison);
+  window.addEventListener("dtu-analyzer-language-changed", renderComparison);
 }
 
 function update() {
@@ -180,8 +311,10 @@ async function initTable() {
     }
     const db = await response.json();
     state.rows = buildRows(db);
+    await initComparison();
     initEvents();
     update();
+    renderComparison();
   } catch (e) {
     console.error("DTU Analyzer: Failed to load db/data.json:", e);
     const info = document.getElementById("table-info");

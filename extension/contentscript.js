@@ -1,4 +1,4 @@
-// contentscript.js - Version 2.3.0
+// contentscript.js - Version 2.4.0
 
 // 1. Configuration (Must be defined BEFORE running logic)
 const outputArr = [
@@ -49,7 +49,7 @@ function findInsertionPoint() {
   return null;
 }
 
-function presentData(data) {
+function presentData(data, courseId) {
   const insertion = findInsertionPoint();
 
   // Guard clause if the page structure changes and no anchor is found
@@ -77,15 +77,23 @@ function presentData(data) {
   if (data) {
     let hasData = false;
 
-    // Add combined participant count at the top (if available)
+    // Add participant counts and an honest sample-size confidence cue.
     const gradeParticipants = data["grade_participants"];
     const reviewParticipants = data["review_participants"];
 
-    if (typeof gradeParticipants !== "undefined" && typeof reviewParticipants !== "undefined") {
-      const labelSpan = document.createElement("span");
-      labelSpan.textContent = "Students/Feedback count";
-      labelSpan.style.whiteSpace = "nowrap";
-      addRow(tbody, labelSpan, `${gradeParticipants}/${reviewParticipants}`, "", false);
+    if (typeof gradeParticipants !== "undefined") {
+      addRow(tbody, "Grade participants", gradeParticipants);
+      hasData = true;
+    }
+
+    if (typeof reviewParticipants !== "undefined") {
+      addFeedbackRow(tbody, reviewParticipants);
+      hasData = true;
+    }
+
+    const gradeDistribution = DTUAnalyzer.normalizeGrades(data.grades);
+    if (gradeDistribution.some((item) => item.count > 0)) {
+      addGradeHistogram(tbody, gradeDistribution);
       hasData = true;
     }
 
@@ -111,6 +119,8 @@ function presentData(data) {
     addRow(tbody, "No data found for this course");
   }
 
+  addComparisonControls(tbody, courseId);
+
   // Add Footer Link
   const link = document.createElement("a");
   link.href = "https://github.com/SMKIDRaadet/dtu-course-analyzer";
@@ -122,6 +132,152 @@ function presentData(data) {
 
   link.appendChild(linkLabel);
   addRow(tbody, link);
+}
+
+function addFeedbackRow(tbody, count) {
+  const confidence = DTUAnalyzer.getConfidence(count);
+  const value = document.createElement("span");
+  value.textContent = String(count);
+
+  if (confidence) {
+    const badge = document.createElement("span");
+    badge.textContent = confidence.label;
+    badge.title = "Confidence is based on feedback sample size, not response rate.";
+    badge.style.marginLeft = "8px";
+    badge.style.padding = "2px 6px";
+    badge.style.borderRadius = "10px";
+    badge.style.fontSize = "0.85em";
+    badge.style.fontWeight = "bold";
+    badge.style.color = confidence.key === "low" ? "#842029" : "#4d3d00";
+    badge.style.backgroundColor = confidence.key === "low" ? "#f8d7da" : "#fff3cd";
+    if (confidence.key === "higher") {
+      badge.style.color = "#0f5132";
+      badge.style.backgroundColor = "#d1e7dd";
+    }
+    value.appendChild(badge);
+  }
+
+  addRow(tbody, "Feedback responses", value);
+}
+
+function addGradeHistogram(tbody, distribution) {
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = 2;
+  td.style.paddingTop = "8px";
+
+  const title = document.createElement("b");
+  title.textContent = "Grade distribution";
+  td.appendChild(title);
+
+  const chart = document.createElement("div");
+  chart.setAttribute("role", "img");
+  chart.setAttribute(
+    "aria-label",
+    distribution.map((item) => `${item.grade}: ${item.count}`).join(", ")
+  );
+  chart.style.display = "flex";
+  chart.style.alignItems = "end";
+  chart.style.gap = "5px";
+  chart.style.height = "92px";
+  chart.style.marginTop = "6px";
+
+  const maximum = Math.max(...distribution.map((item) => item.percentage), 1);
+  distribution.forEach((item) => {
+    const column = document.createElement("div");
+    column.style.display = "flex";
+    column.style.flex = "1";
+    column.style.height = "100%";
+    column.style.minWidth = "26px";
+    column.style.flexDirection = "column";
+    column.style.justifyContent = "end";
+    column.style.alignItems = "center";
+    column.title = `${item.grade}: ${item.count} (${item.percentage.toFixed(1)}%)`;
+
+    const count = document.createElement("span");
+    count.textContent = String(item.count);
+    count.style.fontSize = "0.75em";
+
+    const bar = document.createElement("span");
+    bar.style.display = "block";
+    bar.style.width = "100%";
+    bar.style.height = `${Math.max(2, (item.percentage / maximum) * 58)}px`;
+    bar.style.backgroundColor = "#990000";
+    bar.style.borderRadius = "3px 3px 0 0";
+
+    const grade = document.createElement("span");
+    grade.textContent = item.grade;
+    grade.style.fontSize = "0.8em";
+    grade.style.marginTop = "2px";
+
+    column.appendChild(count);
+    column.appendChild(bar);
+    column.appendChild(grade);
+    chart.appendChild(column);
+  });
+
+  td.appendChild(chart);
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
+
+function addComparisonControls(tbody, courseId) {
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = 2;
+  td.style.paddingTop = "8px";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.style.padding = "5px 9px";
+  button.style.cursor = "pointer";
+
+  const viewButton = document.createElement("button");
+  viewButton.type = "button";
+  viewButton.textContent = "View comparison";
+  viewButton.style.marginLeft = "8px";
+  viewButton.style.padding = "5px 9px";
+  viewButton.style.cursor = "pointer";
+
+  const message = document.createElement("span");
+  message.setAttribute("role", "status");
+  message.style.marginLeft = "8px";
+  message.style.fontSize = "0.85em";
+
+  async function refresh() {
+    const selection = await DTUAnalyzer.readSelection();
+    const selected = selection.includes(courseId);
+    button.textContent = selected ? "Remove from comparison" : "Add to comparison";
+    button.setAttribute("aria-pressed", String(selected));
+    viewButton.textContent = `View comparison (${selection.length}/${DTUAnalyzer.MAX_COMPARISONS})`;
+  }
+
+  button.addEventListener("click", async () => {
+    const current = await DTUAnalyzer.readSelection();
+    const result = DTUAnalyzer.toggleSelection(current, courseId);
+    if (result.limitReached) {
+      message.textContent = `Remove a course before adding another (maximum ${DTUAnalyzer.MAX_COMPARISONS}).`;
+      return;
+    }
+    message.textContent = "";
+    await DTUAnalyzer.writeSelection(result.selection);
+    refresh();
+  });
+
+  viewButton.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ type: "openComparison" });
+  });
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === "local" && changes[DTUAnalyzer.COMPARISON_KEY]) refresh();
+  });
+
+  td.appendChild(button);
+  td.appendChild(viewButton);
+  td.appendChild(message);
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+  refresh();
 }
 
 function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxVal = 1) {
@@ -145,7 +301,12 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   const tdRight = document.createElement("td");
   tdRight.style.paddingLeft = "15px";
   const span = document.createElement("span");
-  span.textContent = value + unit;
+  if (value instanceof Node) {
+    span.appendChild(value);
+    if (unit) span.appendChild(document.createTextNode(unit));
+  } else {
+    span.textContent = value + unit;
+  }
 
   if (colored && maxVal > 0) {
     span.style.backgroundColor = getColor(value / maxVal);
@@ -179,16 +340,16 @@ async function main() {
 
     const db = await loadData();
     if (!db) {
-      presentData(null);
+      presentData(null, courseId);
       return;
     }
 
     const courseData = db[courseId];
     if (courseData) {
-      presentData(courseData);
+      presentData(courseData, courseId);
     } else {
       console.info("DTU Analyzer: No data available for course " + courseId);
-      presentData(null);
+      presentData(null, courseId);
     }
   } catch (e) {
     // Never let an unexpected error escape onto DTU's page

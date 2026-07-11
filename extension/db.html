@@ -116,6 +116,77 @@
     font-size: 14px;
     color: #666;
   }
+
+  .compare-btn,
+  #clear-comparison {
+    padding: 5px 9px;
+    border: 1px solid #990000;
+    border-radius: 4px;
+    background: #fff;
+    color: #990000;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .compare-btn.selected {
+    background: #990000;
+    color: #fff;
+  }
+
+  #comparison-panel {
+    margin: 18px 0 24px;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-top: 4px solid #990000;
+    border-radius: 4px;
+  }
+
+  #comparison-panel[hidden] {
+    display: none;
+  }
+
+  .comparison-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .comparison-heading h2 {
+    margin: 0;
+  }
+
+  .comparison-scroll {
+    overflow-x: auto;
+  }
+
+  #comparison-table {
+    margin-top: 12px;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  #comparison-table th,
+  #comparison-table td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: left;
+    min-width: 135px;
+  }
+
+  #comparison-table th:first-child,
+  #comparison-table td:first-child {
+    min-width: 155px;
+    font-weight: bold;
+    background: #f5f5f5;
+  }
+
+  .confidence-note {
+    display: block;
+    margin-top: 2px;
+    color: #666;
+    font-size: 12px;
+  }
 </style>
 
 </head>
@@ -126,7 +197,19 @@
   <button id="lang-da" class="language-toggle-btn">Dansk</button>
   <button id="lang-en" class="language-toggle-btn active">English</button>
   <input id="search-input" type="search" placeholder="Search course number or name">
+  <span id="comparison-status" role="status"></span>
 </div>
+
+<section id="comparison-panel" aria-labelledby="comparison-title" hidden>
+  <div class="comparison-heading">
+    <h2 id="comparison-title">Course comparison</h2>
+    <button id="clear-comparison" type="button">Clear all</button>
+  </div>
+  <p id="comparison-empty">Add up to four courses from this table or a DTU course page.</p>
+  <div class="comparison-scroll">
+    <table id="comparison-table"></table>
+  </div>
+</section>
 
 <table id="course-table" class="lang-en">
   <thead>
@@ -142,6 +225,7 @@
       <th data-key="qualityscore" data-type="number">Course Rating<span class="sort-indicator"></span></th>
       <th data-key="workload" data-type="number">Workload<span class="sort-indicator"></span></th>
       <th data-key="lazyscore" data-type="number">Lazy Score Percentile<span class="sort-indicator"></span></th>
+      <th>Compare</th>
     </tr>
   </thead>
   <tbody id="course-tbody"></tbody>
@@ -153,6 +237,7 @@
   <button id="next-page">Next</button>
 </div>
 
+<script src="js/course-utils.js"></script>
 <script src="js/table.js"></script>
 <script src="js/language-toggle.js"></script>
 

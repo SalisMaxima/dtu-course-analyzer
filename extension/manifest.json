@@ -1,7 +1,7 @@
 {
     "name": "DTU Course Analyzer",
     "description": "Analyzes and scores courses on kurser.dtu.dk",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "manifest_version": 3,
     "icons": {
         "16": "icon16.png",
@@ -11,7 +11,7 @@
     "content_scripts": [
         {
           "matches": ["https://kurser.dtu.dk/course/*"],
-          "js": ["contentscript.js"]
+          "js": ["js/course-utils.js", "contentscript.js"]
         }
     ],
     "background": {
@@ -22,6 +22,9 @@
     },
     "host_permissions": [
         "https://kurser.dtu.dk/*"
+    ],
+    "permissions": [
+        "storage"
     ],
     "web_accessible_resources": [
         {
