@@ -32,6 +32,14 @@ test("classifies feedback confidence at documented boundaries", () => {
   assert.equal(utils.getConfidence(undefined), null);
 });
 
+test("uses the shared red-to-green metric color scale", () => {
+  assert.equal(utils.getMetricColor(0, 100), "hsl(0, 100%, 50%)");
+  assert.equal(utils.getMetricColor(50, 100), "hsl(60, 100%, 50%)");
+  assert.equal(utils.getMetricColor(100, 100), "hsl(120, 100%, 50%)");
+  assert.equal(utils.getMetricColor(150, 100), "hsl(120, 100%, 50%)");
+  assert.equal(utils.getMetricColor(undefined, 100), null);
+});
+
 test("normalizes, deduplicates, and caps comparison IDs", () => {
   const selection = utils.normalizeSelection([
     "11111",

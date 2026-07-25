@@ -165,6 +165,19 @@ function appendComparisonRow(tbody, label, selectedRows, valueForRow) {
   tbody.appendChild(tr);
 }
 
+function appendColoredComparisonRow(tbody, label, selectedRows, key, unit, maxValue) {
+  appendComparisonRow(tbody, label, selectedRows, (row, td) => {
+    const value = row[key];
+    if (typeof value === "undefined" || value === null || value === "") return "No data";
+
+    const badge = document.createElement("span");
+    badge.className = "metric-value";
+    badge.textContent = String(value) + unit;
+    badge.style.backgroundColor = DTUAnalyzer.getMetricColor(value, maxValue);
+    td.appendChild(badge);
+  });
+}
+
 function renderComparison() {
   const panel = document.getElementById("comparison-panel");
   const table = document.getElementById("comparison-table");
@@ -200,12 +213,12 @@ function renderComparison() {
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  appendComparisonRow(tbody, "Average grade", selectedRows, (row) => metricValue(row, "avg"));
-  appendComparisonRow(tbody, "Grade percentile", selectedRows, (row) => metricValue(row, "avgp", "%"));
-  appendComparisonRow(tbody, "Passed", selectedRows, (row) => metricValue(row, "passpercent", "%"));
-  appendComparisonRow(tbody, "Course rating", selectedRows, (row) => metricValue(row, "qualityscore", "%"));
-  appendComparisonRow(tbody, "Workload", selectedRows, (row) => metricValue(row, "workload", "%"));
-  appendComparisonRow(tbody, "Lazy score", selectedRows, (row) => metricValue(row, "lazyscore", "%"));
+  appendColoredComparisonRow(tbody, "Average grade", selectedRows, "avg", "", 12);
+  appendColoredComparisonRow(tbody, "Grade percentile", selectedRows, "avgp", "%", 100);
+  appendColoredComparisonRow(tbody, "Passed", selectedRows, "passpercent", "%", 100);
+  appendColoredComparisonRow(tbody, "Course rating", selectedRows, "qualityscore", "%", 100);
+  appendColoredComparisonRow(tbody, "Workload", selectedRows, "workload", "%", 100);
+  appendColoredComparisonRow(tbody, "Lazy score", selectedRows, "lazyscore", "%", 100);
   appendComparisonRow(tbody, "Grade participants", selectedRows, (row) => metricValue(row, "grade_participants"));
   appendComparisonRow(tbody, "Feedback responses", selectedRows, (row, td) => {
     const count = row.review_participants;

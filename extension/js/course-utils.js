@@ -26,6 +26,16 @@
     return { key: "higher", label: "Higher confidence" };
   }
 
+  function getMetricColor(value, maxValue = 1) {
+    const parsedValue = Number(value);
+    const parsedMax = Number(maxValue);
+    if (!Number.isFinite(parsedValue) || !Number.isFinite(parsedMax) || parsedMax <= 0) {
+      return null;
+    }
+    const clamped = Math.max(0, Math.min(1, parsedValue / parsedMax));
+    return `hsl(${clamped * 120}, 100%, 50%)`;
+  }
+
   function normalizeSelection(courseIds) {
     const unique = [];
     (Array.isArray(courseIds) ? courseIds : []).forEach((courseId) => {
@@ -73,6 +83,7 @@
     GRADE_ORDER,
     MAX_COMPARISONS,
     getConfidence,
+    getMetricColor,
     normalizeGrades,
     normalizeSelection,
     readSelection,

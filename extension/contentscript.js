@@ -309,7 +309,7 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   }
 
   if (colored && maxVal > 0) {
-    span.style.backgroundColor = getColor(value / maxVal);
+    span.style.backgroundColor = DTUAnalyzer.getMetricColor(value, maxVal);
     span.style.padding = "2px 6px";
     span.style.borderRadius = "4px";
   }
@@ -318,14 +318,6 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   tr.appendChild(tdRight);
 
   tbody.appendChild(tr);
-}
-
-function getColor(value) {
-  // Clamp value between 0 and 1
-  const clamped = Math.max(0, Math.min(1, value));
-  // Calculate Hue (Green=120 to Red=0)
-  const hue = (clamped * 120).toString(10);
-  return `hsl(${hue}, 100%, 50%)`;
 }
 
 // 5. Main Execution Logic
