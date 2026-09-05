@@ -184,9 +184,10 @@ function renderComparison() {
   const empty = document.getElementById("comparison-empty");
   if (!panel || !table || !empty) return;
 
-  const selectedRows = state.selected
-    .map((courseId) => state.rows.find((row) => row.course === courseId))
-    .filter(Boolean);
+  // Keep selections that have no dataset entry so they stay visible and removable
+  const selectedRows = state.selected.map((courseId) =>
+    state.rows.find((row) => row.course === courseId) || { course: courseId, missing: true }
+  );
   panel.hidden = selectedRows.length === 0 && window.location.hash !== "#compare";
   empty.hidden = selectedRows.length > 0;
   while (table.firstChild) table.removeChild(table.firstChild);
@@ -205,7 +206,8 @@ function renderComparison() {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     const name = useEnglish ? row.name_en : row.name;
-    link.textContent = `${row.course} — ${name || "Unnamed course"}`;
+    const label = row.missing ? "Not in this dataset" : (name || "Unnamed course");
+    link.textContent = `${row.course} — ${label}`;
     th.appendChild(link);
     heading.appendChild(th);
   });
@@ -245,29 +247,46 @@ function renderComparison() {
   table.appendChild(tbody);
 }
 
-async function toggleCourse(courseId) {
-  const result = DTUAnalyzer.toggleSelection(state.selected, courseId);
+// Persist a selection and re-render, reporting failures instead of hanging the buttons
+async function applySelection(selection) {
   const status = document.getElementById("comparison-status");
-  if (result.limitReached) {
-    if (status) status.textContent = `Maximum ${DTUAnalyzer.MAX_COMPARISONS} courses. Remove one before adding another.`;
+  try {
+    state.selected = await DTUAnalyzer.writeSelection(selection);
+  } catch (e) {
+    console.error("DTU Analyzer: Could not save the comparison selection:", e);
+    if (status) status.textContent = "Could not save your comparison selection.";
     return;
   }
   if (status) status.textContent = "";
-  state.selected = await DTUAnalyzer.writeSelection(result.selection);
   renderPage();
   renderComparison();
 }
 
+async function toggleCourse(courseId) {
+  const result = DTUAnalyzer.toggleSelection(state.selected, courseId);
+  const status = document.getElementById("comparison-status");
+  if (result.invalid) {
+    if (status) status.textContent = `${courseId} cannot be added to a comparison.`;
+    return;
+  }
+  if (result.limitReached) {
+    if (status) status.textContent = `Maximum ${DTUAnalyzer.MAX_COMPARISONS} courses. Remove one before adding another.`;
+    return;
+  }
+  await applySelection(result.selection);
+}
+
 async function initComparison() {
   state.selected = await DTUAnalyzer.readSelection();
-  document.getElementById("clear-comparison").addEventListener("click", async () => {
-    state.selected = await DTUAnalyzer.writeSelection([]);
-    renderPage();
-    renderComparison();
-  });
+
+  const clearButton = document.getElementById("clear-comparison");
+  if (clearButton) clearButton.addEventListener("click", () => applySelection([]));
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[DTUAnalyzer.COMPARISON_KEY]) return;
-    state.selected = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);
+    const selection = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);
+    // Our own writes have already re-rendered - skip the echo
+    if (selection.join(",") === state.selected.join(",")) return;
+    state.selected = selection;
     renderPage();
     renderComparison();
   });
@@ -317,21 +336,33 @@ function initEvents() {
 }
 
 async function initTable() {
+  let db;
   try {
     const response = await fetch("db/data.json");
     if (!response.ok) {
       throw new Error("HTTP " + response.status);
     }
-    const db = await response.json();
-    state.rows = buildRows(db);
-    await initComparison();
-    initEvents();
-    update();
-    renderComparison();
+    db = await response.json();
   } catch (e) {
     console.error("DTU Analyzer: Failed to load db/data.json:", e);
     const info = document.getElementById("table-info");
     if (info) info.textContent = "Failed to load course data.";
+    return;
+  }
+
+  state.rows = buildRows(db);
+  initEvents();
+  update();
+
+  // Comparison needs chrome.storage - keep its failures out of the table's error path
+  try {
+    await initComparison();
+    renderPage();
+    renderComparison();
+  } catch (e) {
+    console.error("DTU Analyzer: Course comparison is unavailable:", e);
+    const status = document.getElementById("comparison-status");
+    if (status) status.textContent = "Course comparison is unavailable here.";
   }
 }
 

@@ -19,17 +19,19 @@ function getCourseId() {
 }
 
 // 3. Load packaged course data (async, does not block the page)
+// Returns { ok: true, db } or { ok: false, reason } so a broken install stays
+// distinguishable from a course we simply have no data for
 async function loadData() {
   try {
     const response = await fetch(chrome.runtime.getURL("db/data.json"));
     if (!response.ok) {
       console.error("DTU Analyzer: Failed to load db/data.json (HTTP " + response.status + ")");
-      return null;
+      return { ok: false, reason: "HTTP " + response.status };
     }
-    return await response.json();
+    return { ok: true, db: await response.json() };
   } catch (e) {
     console.error("DTU Analyzer: Failed to load course data:", e);
-    return null;
+    return { ok: false, reason: e.message };
   }
 }
 
@@ -49,7 +51,7 @@ function findInsertionPoint() {
   return null;
 }
 
-function presentData(data, courseId) {
+function presentData(data, courseId, loadError) {
   const insertion = findInsertionPoint();
 
   // Guard clause if the page structure changes and no anchor is found
@@ -73,6 +75,13 @@ function presentData(data, courseId) {
   headerText.textContent = "—DTU Course Analyzer—";
   headerText.style.whiteSpace = "nowrap";
   addRow(tbody, headerText);
+
+  // The shared helpers ship as a separate content script - say so if it did not load
+  if (typeof DTUAnalyzer === "undefined") {
+    console.error("DTU Analyzer: course-utils.js did not load");
+    addRow(tbody, "Extension scripts failed to load - try reinstalling the extension");
+    return;
+  }
 
   if (data) {
     let hasData = false;
@@ -115,11 +124,14 @@ function presentData(data, courseId) {
     if (!hasData) {
       addRow(tbody, "Data available but no metrics found");
     }
+  } else if (loadError) {
+    addRow(tbody, "Course data could not be loaded (" + loadError + ") - try reinstalling");
   } else {
     addRow(tbody, "No data found for this course");
   }
 
-  addComparisonControls(tbody, courseId);
+  // Only offer comparison for courses the packaged dataset can actually render
+  if (data) addComparisonControls(tbody, courseId);
 
   // Add Footer Link
   const link = document.createElement("a");
@@ -167,7 +179,7 @@ function addGradeHistogram(tbody, distribution) {
   td.style.paddingTop = "8px";
 
   const title = document.createElement("b");
-  title.textContent = "Grade distribution";
+  title.textContent = "Grades awarded";
   td.appendChild(title);
 
   const chart = document.createElement("div");
@@ -244,32 +256,57 @@ function addComparisonControls(tbody, courseId) {
   message.style.marginLeft = "8px";
   message.style.fontSize = "0.85em";
 
-  async function refresh() {
-    const selection = await DTUAnalyzer.readSelection();
-    const selected = selection.includes(courseId);
-    button.textContent = selected ? "Remove from comparison" : "Add to comparison";
-    button.setAttribute("aria-pressed", String(selected));
-    viewButton.textContent = `View comparison (${selection.length}/${DTUAnalyzer.MAX_COMPARISONS})`;
+  let renderedSelection = "";
+
+  async function refresh(selection) {
+    try {
+      const current = selection || await DTUAnalyzer.readSelection();
+      const selected = current.includes(courseId);
+      button.textContent = selected ? "Remove from comparison" : "Add to comparison";
+      button.setAttribute("aria-pressed", String(selected));
+      viewButton.textContent = `View comparison (${current.length}/${DTUAnalyzer.MAX_COMPARISONS})`;
+      renderedSelection = current.join(",");
+    } catch (e) {
+      console.error("DTU Analyzer: Could not read the saved comparison:", e);
+      message.textContent = "Comparison is unavailable - try reloading the page.";
+    }
   }
 
   button.addEventListener("click", async () => {
-    const current = await DTUAnalyzer.readSelection();
-    const result = DTUAnalyzer.toggleSelection(current, courseId);
-    if (result.limitReached) {
-      message.textContent = `Remove a course before adding another (maximum ${DTUAnalyzer.MAX_COMPARISONS}).`;
-      return;
+    try {
+      const current = await DTUAnalyzer.readSelection();
+      const result = DTUAnalyzer.toggleSelection(current, courseId);
+      if (result.invalid) {
+        message.textContent = `${courseId} cannot be added to a comparison.`;
+        return;
+      }
+      if (result.limitReached) {
+        message.textContent = `Remove a course before adding another (maximum ${DTUAnalyzer.MAX_COMPARISONS}).`;
+        return;
+      }
+      const saved = await DTUAnalyzer.writeSelection(result.selection);
+      message.textContent = "";
+      await refresh(saved);
+    } catch (e) {
+      console.error("DTU Analyzer: Could not update the comparison:", e);
+      message.textContent = "Could not save your comparison - try reloading the page.";
     }
-    message.textContent = "";
-    await DTUAnalyzer.writeSelection(result.selection);
-    refresh();
   });
 
   viewButton.addEventListener("click", () => {
-    chrome.runtime.sendMessage({ type: "openComparison" });
+    chrome.runtime.sendMessage({ type: "openComparison" }, () => {
+      if (!chrome.runtime.lastError) return;
+      console.error("DTU Analyzer: Could not open the comparison:", chrome.runtime.lastError.message);
+      message.textContent = "Could not open the comparison - try reloading the page.";
+    });
   });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === "local" && changes[DTUAnalyzer.COMPARISON_KEY]) refresh();
+    if (areaName !== "local" || !changes[DTUAnalyzer.COMPARISON_KEY]) return;
+    const selection = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);
+    // Our own writes have already refreshed the controls - skip the echo
+    if (selection.join(",") === renderedSelection) return;
+    refresh(selection);
   });
 
   td.appendChild(button);
@@ -330,13 +367,13 @@ async function main() {
       return;
     }
 
-    const db = await loadData();
-    if (!db) {
-      presentData(null, courseId);
+    const result = await loadData();
+    if (!result.ok) {
+      presentData(null, courseId, result.reason);
       return;
     }
 
-    const courseData = db[courseId];
+    const courseData = result.db[courseId];
     if (courseData) {
       presentData(courseData, courseId);
     } else {
