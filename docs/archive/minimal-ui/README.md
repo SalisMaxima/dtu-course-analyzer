@@ -7,9 +7,10 @@ After trying the redesign, the user preferred the original rough style, includin
 This archive preserves the experiment for reference; it is not the recommended design or a pending implementation plan.
 
 - Preferred original UI: `extension/` on `feature/course-insights-comparison-chrome`.
-- Archived implementation: `extension/` on the `archive/minimal-ui` branch. The implementation commit is `1422d2b`.
+- Archived implementation: `build/extension/` in this archive, or `extension/` on the `archive/minimal-ui` branch. The implementation commit is `1422d2b`.
 - [Interactive design mockup](proposal.html).
 - [Historical review and proposal](REVIEW.md), retained as a record of the experiment rather than current design guidance.
 - [Database design screenshot](proposed-database.png) and [course-panel design screenshot](proposed-course-panel.png).
+- [Loadable archived build](build/), explicitly kept here as archived reference material.
 
 To return to the original locally, disable the redesigned unpacked extension and enable the original loaded from the project's `extension/` folder, then refresh open DTU course pages. The archived implementation also remains available in the separate `build/ui-rework` checkout.

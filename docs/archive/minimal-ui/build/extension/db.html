@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DTU Course Analyzer</title>
+  <link rel="stylesheet" href="css/analyzer.css">
+</head>
+<body class="dtu-analyzer dtu-database">
+<main class="dtu-page">
+  <header class="page-heading">
+    <div><h1>DTU Course Analyzer</h1><p class="muted">Explore course results and compare your options.</p></div>
+    <div class="language-controls"><span class="muted small">Course names</span>
+      <div class="segmented" role="group" aria-label="Course name language">
+        <button id="lang-en" class="dtu-btn language-toggle-btn active" aria-pressed="true">English</button>
+        <button id="lang-da" class="dtu-btn language-toggle-btn" aria-pressed="false">Dansk</button>
+      </div>
+    </div>
+  </header>
+  <div class="controls">
+    <div class="search-field"><label for="search-input">Find a course</label><input id="search-input" type="search" placeholder="Search course number or name" disabled></div>
+    <button id="view-comparison" class="dtu-btn" type="button" disabled>Compare (0/4)</button>
+  </div>
+  <div class="score-legend" aria-label="Score color scale"><span>Score value</span><span class="metric-value score-low">Lower</span><span class="metric-value score-middle">Middle</span><span class="metric-value score-high">Higher</span></div>
+  <p id="comparison-status" class="dtu-status" role="status"></p>
+  <details id="comparison-panel" class="dtu-surface" open hidden>
+    <summary id="comparison-title">Course comparison <span id="selection-count" class="muted small">0 of 4 selected</span></summary>
+    <div class="comparison-body">
+      <div class="comparison-heading"><p class="muted small">Historical results. Percentiles show relative standing.</p><button id="clear-comparison" class="dtu-btn quiet" type="button">Clear all</button></div>
+      <p id="comparison-empty" class="muted">Add up to four courses from this table or a DTU course page.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Selected course metrics"><table id="comparison-table"></table></div>
+      <p class="muted small comparison-note">Higher workload percentile means a lighter reported workload. Confidence describes feedback sample size only.</p>
+    </div>
+  </details>
+  <div class="dtu-surface">
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Course results; scroll horizontally for more columns">
+      <table id="course-table" class="lang-en" aria-busy="true">
+        <thead><tr>
+          <th scope="col" data-key="course"><button class="sort-button" type="button">Course<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="name" class="col-name"><button class="sort-button" type="button">Course name<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="name_en" class="col-name-en"><button class="sort-button" type="button">Course name<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="avg" class="numeric"><button class="sort-button" type="button">Average grade<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="avgp" class="numeric"><button class="sort-button" type="button">Grade percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="passpercent" class="numeric"><button class="sort-button" type="button">Passed<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="grade_participants" class="numeric"><button class="sort-button" type="button">Grade participants<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="review_participants" class="numeric"><button class="sort-button" type="button">Feedback responses<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="qualityscore" class="numeric"><button class="sort-button" type="button">Rating percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="workload" class="numeric"><button class="sort-button" type="button">Workload percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="lazyscore" class="numeric"><button class="sort-button" type="button">Lazy score percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" class="compare-column">Compare</th>
+        </tr></thead>
+        <tbody id="course-tbody"><tr><td colspan="12" class="empty-message">Loading courses…</td></tr></tbody>
+      </table>
+    </div>
+    <nav class="pagination" aria-label="Course result pages"><span id="table-info" class="muted small" role="status">Loading course data…</span><div><button id="prev-page" class="dtu-btn" disabled>Previous</button><button id="next-page" class="dtu-btn" disabled>Next</button></div></nav>
+  </div>
+  <p class="muted small table-note">Percentile columns: grade, rating, workload and lazy score. Higher workload percentile means a lighter reported workload. Grade and feedback counts can cover different periods.</p>
+</main>
+<script src="js/course-utils.js"></script>
+<script src="js/table.js"></script>
+<script src="js/language-toggle.js"></script>
+</body>
+</html>
