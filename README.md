@@ -1,6 +1,11 @@
 # DTU Course Analyzer
 
-**Version 2.2.2** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+**Version 2.4.0** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+
+**New in 2.4.0:**
+- Compact grade histograms and feedback sample-size confidence labels on course pages
+- Persistent side-by-side comparison for up to four courses
+- Add or remove comparison courses from DTU course pages or the extension database
 
 **New in 2.2.2:**
 - Updated course data for the latest dataset
@@ -43,10 +48,20 @@ An alternative Firefox version is also available [here](https://addons.mozilla.o
 - Language preference saved in browser storage
 
 **Participant Statistics:**
-- **Total Students**: Number of students who took the exam/course
-- **Feedback Count**: Number of students who completed the evaluation survey
-- Helps assess reliability of feedback-based metrics (course rating, workload)
-- Example: A rating based on 97/202 responses is more reliable than 8/20 responses
+- **Grade Participants**: Number of students represented in the grade distribution
+- **Feedback Responses**: Number of students represented in the evaluation data
+- Sample-size confidence labels help qualify feedback-based metrics
+- The two participant counts may cover different periods and are not used to calculate a response rate
+
+**Grade Insights:**
+- Compact distribution of grades from -3 through 12 on each course page
+- Feedback confidence labels based on the number of responses
+- Confidence describes sample size only; it is not a survey response rate
+
+**Course Comparison:**
+- Compare up to four courses side by side
+- Selections persist locally and stay synchronized across extension tabs
+- Compare grades, pass rate, rating, workload, lazy score, and participant counts
 
 **Metrics Calculated:**
 All metrics are calculated based on historical data (higher is better):
