@@ -1,5 +1,7 @@
 # DTU Course Analyzer
 
+> Archived UI experiment (`archive/minimal-ui`). The user preferred the original rough style, including its imperfections, because this redesign felt too “AI generated / artificial.” Use `feature/course-insights-comparison-chrome` for the preferred original UI. See [the archive note](docs/UI_REWORK.md).
+
 **Version 2.4.0** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
 
 **New in 2.4.0:**

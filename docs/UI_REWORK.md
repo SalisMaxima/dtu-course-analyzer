@@ -1,6 +1,8 @@
-# Minimal UI branch
+# Archived minimal UI branch
 
-The `feature/minimal-ui` branch implements the revised course database, course comparison and injected course insights panel. It retains red–yellow–green score colors with softer fills, adds consistent typography and controls, and contains wide tables within horizontal scroll regions.
+Archived on 2026-09-05. The user preferred the original rough style, including its imperfections, because the redesign felt too “AI generated / artificial.” The original UI remains the preferred version. This branch preserves the experiment for reference, not as an active design direction.
+
+The `archive/minimal-ui` branch preserves the revised course database, course comparison and injected course insights panel. It retains red–yellow–green score colors with softer fills, adds consistent typography and controls, and contains wide tables within horizontal scroll regions.
 
 ## Try either version
 
@@ -9,7 +11,7 @@ Two independent checkouts are available from the original project directory:
 | Version | Branch | Folder to load in Chrome/Edge |
 | --- | --- | --- |
 | Original | `feature/course-insights-comparison-chrome` | `extension/` |
-| Revised UI | `feature/minimal-ui` | `build/ui-rework/extension/` |
+| Archived revised UI | `archive/minimal-ui` | `build/ui-rework/extension/` |
 
 Open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose **Load unpacked**, and select the desired folder. Enable one copy at a time, then refresh any open DTU course pages. Click the extension icon to open its course database. Each unpacked copy has its own saved comparison and language preferences.
 
