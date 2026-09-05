@@ -4,6 +4,12 @@
   const GRADE_ORDER = ["-3", "00", "02", "4", "7", "10", "12"];
   const COMPARISON_KEY = "dtu-analyzer-comparison-v1";
   const MAX_COMPARISONS = 4;
+  // Course numbers are five characters - mostly digits, some carry letters (42S01, KU002)
+  const COURSE_ID_PATTERN = /^[0-9A-Z]{5}$/;
+
+  function isValidCourseId(courseId) {
+    return COURSE_ID_PATTERN.test(String(courseId));
+  }
 
   function normalizeGrades(grades) {
     const values = GRADE_ORDER.map((grade) => {
@@ -19,6 +25,7 @@
   }
 
   function getConfidence(count) {
+    if (count === null || count === "" || typeof count === "undefined") return null;
     const parsed = Number(count);
     if (!Number.isFinite(parsed) || parsed < 0) return null;
     if (parsed < 10) return { key: "low", label: "Low confidence" };
@@ -40,7 +47,7 @@
     const unique = [];
     (Array.isArray(courseIds) ? courseIds : []).forEach((courseId) => {
       const normalized = String(courseId);
-      if (/^[0-9]{5}$/.test(normalized) && !unique.includes(normalized)) {
+      if (isValidCourseId(normalized) && !unique.includes(normalized)) {
         unique.push(normalized);
       }
     });
@@ -55,17 +62,34 @@
         selection: selection.filter((id) => id !== normalizedId),
         added: false,
         limitReached: false,
+        invalid: false,
       };
     }
-    if (selection.length >= MAX_COMPARISONS) {
-      return { selection, added: false, limitReached: true };
+    // Reject here rather than letting writeSelection quietly drop the id later
+    if (!isValidCourseId(normalizedId)) {
+      return { selection, added: false, limitReached: false, invalid: true };
     }
-    return { selection: selection.concat(normalizedId), added: true, limitReached: false };
+    if (selection.length >= MAX_COMPARISONS) {
+      return { selection, added: false, limitReached: true, invalid: false };
+    }
+    return {
+      selection: selection.concat(normalizedId),
+      added: true,
+      limitReached: false,
+      invalid: false,
+    };
   }
 
+  // Both storage helpers reject on failure - a storage error must never be
+  // indistinguishable from an empty selection or a successful save
   function readSelection() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       chrome.storage.local.get(COMPARISON_KEY, (result) => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          reject(new Error("Could not read the saved comparison: " + error.message));
+          return;
+        }
         resolve(normalizeSelection(result && result[COMPARISON_KEY]));
       });
     });
@@ -73,8 +97,15 @@
 
   function writeSelection(courseIds) {
     const selection = normalizeSelection(courseIds);
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ [COMPARISON_KEY]: selection }, () => resolve(selection));
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({ [COMPARISON_KEY]: selection }, () => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          reject(new Error("Could not save the comparison: " + error.message));
+          return;
+        }
+        resolve(selection);
+      });
     });
   }
 
@@ -84,6 +115,7 @@
     MAX_COMPARISONS,
     getConfidence,
     getMetricColor,
+    isValidCourseId,
     normalizeGrades,
     normalizeSelection,
     readSelection,
