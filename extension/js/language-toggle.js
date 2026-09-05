@@ -15,6 +15,8 @@ function applyLanguage(lang) {
 
   document.getElementById("lang-en").classList.toggle("active", isEnglish);
   document.getElementById("lang-da").classList.toggle("active", !isEnglish);
+  document.getElementById("lang-en").setAttribute("aria-pressed", String(isEnglish));
+  document.getElementById("lang-da").setAttribute("aria-pressed", String(!isEnglish));
 
   localStorage.setItem("dtu-analyzer-lang", lang);
   window.dispatchEvent(new CustomEvent("dtu-analyzer-language-changed"));

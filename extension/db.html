@@ -1,251 +1,63 @@
-<!DOCTYPE html>
-<html>
-
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>DTU Course Analyzer</title>
-
-<style>
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 20px;
-    color: #333;
-  }
-
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-  }
-
-  .language-label {
-    font-size: 14px;
-    color: #666;
-  }
-
-  .language-toggle-btn {
-    padding: 8px 16px;
-    border: 1px solid #990000;
-    background-color: #fff;
-    color: #990000;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-  }
-
-  .language-toggle-btn:hover,
-  .language-toggle-btn.active {
-    background-color: #990000;
-    color: #fff;
-  }
-
-  #search-input {
-    margin-left: auto;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    min-width: 220px;
-  }
-
-  table#course-table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  #course-table th,
-  #course-table td {
-    border-bottom: 1px solid #ddd;
-    padding: 6px 10px;
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  #course-table th {
-    cursor: pointer;
-    user-select: none;
-    background-color: #f5f5f5;
-    border-bottom: 2px solid #990000;
-  }
-
-  #course-table th .sort-indicator {
-    display: inline-block;
-    width: 1em;
-    color: #990000;
-  }
-
-  #course-table tbody tr:hover {
-    background-color: #f9f0f0;
-  }
-
-  #course-table a {
-    color: #990000;
-  }
-
-  /* Language toggle: both name columns stay in the DOM, visibility is class-driven */
-  #course-table.lang-en .col-name,
-  #course-table.lang-da .col-name-en {
-    display: none;
-  }
-
-  .pagination {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0;
-  }
-
-  .pagination button {
-    padding: 6px 14px;
-    border: 1px solid #990000;
-    background-color: #fff;
-    color: #990000;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .pagination button:disabled {
-    border-color: #ccc;
-    color: #ccc;
-    cursor: default;
-  }
-
-  #table-info {
-    font-size: 14px;
-    color: #666;
-  }
-
-  .compare-btn,
-  #clear-comparison {
-    padding: 5px 9px;
-    border: 1px solid #990000;
-    border-radius: 4px;
-    background: #fff;
-    color: #990000;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .compare-btn.selected {
-    background: #990000;
-    color: #fff;
-  }
-
-  #comparison-panel {
-    margin: 18px 0 24px;
-    padding: 16px;
-    border: 1px solid #ddd;
-    border-top: 4px solid #990000;
-    border-radius: 4px;
-  }
-
-  #comparison-panel[hidden] {
-    display: none;
-  }
-
-  .comparison-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .comparison-heading h2 {
-    margin: 0;
-  }
-
-  .comparison-scroll {
-    overflow-x: auto;
-  }
-
-  #comparison-table {
-    margin-top: 12px;
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  #comparison-table th,
-  #comparison-table td {
-    border: 1px solid #ddd;
-    padding: 8px 10px;
-    text-align: left;
-    min-width: 135px;
-  }
-
-  #comparison-table th:first-child,
-  #comparison-table td:first-child {
-    min-width: 155px;
-    font-weight: bold;
-    background: #f5f5f5;
-  }
-
-  .confidence-note {
-    display: block;
-    margin-top: 2px;
-    color: #666;
-    font-size: 12px;
-  }
-
-  .metric-value {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-</style>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DTU Course Analyzer</title>
+  <link rel="stylesheet" href="css/analyzer.css">
 </head>
-<body>
-
-<div class="controls">
-  <span class="language-label">Display language:</span>
-  <button id="lang-da" class="language-toggle-btn">Dansk</button>
-  <button id="lang-en" class="language-toggle-btn active">English</button>
-  <input id="search-input" type="search" placeholder="Search course number or name">
-  <span id="comparison-status" role="status"></span>
-</div>
-
-<section id="comparison-panel" aria-labelledby="comparison-title" hidden>
-  <div class="comparison-heading">
-    <h2 id="comparison-title">Course comparison</h2>
-    <button id="clear-comparison" type="button">Clear all</button>
+<body class="dtu-analyzer dtu-database">
+<main class="dtu-page">
+  <header class="page-heading">
+    <div><h1>DTU Course Analyzer</h1><p class="muted">Explore course results and compare your options.</p></div>
+    <div class="language-controls"><span class="muted small">Course names</span>
+      <div class="segmented" role="group" aria-label="Course name language">
+        <button id="lang-en" class="dtu-btn language-toggle-btn active" aria-pressed="true">English</button>
+        <button id="lang-da" class="dtu-btn language-toggle-btn" aria-pressed="false">Dansk</button>
+      </div>
+    </div>
+  </header>
+  <div class="controls">
+    <div class="search-field"><label for="search-input">Find a course</label><input id="search-input" type="search" placeholder="Search course number or name" disabled></div>
+    <button id="view-comparison" class="dtu-btn" type="button" disabled>Compare (0/4)</button>
   </div>
-  <p id="comparison-empty">Add up to four courses from this table or a DTU course page.</p>
-  <div class="comparison-scroll">
-    <table id="comparison-table"></table>
+  <div class="score-legend" aria-label="Score color scale"><span>Score value</span><span class="metric-value score-low">Lower</span><span class="metric-value score-middle">Middle</span><span class="metric-value score-high">Higher</span></div>
+  <p id="comparison-status" class="dtu-status" role="status"></p>
+  <details id="comparison-panel" class="dtu-surface" open hidden>
+    <summary id="comparison-title">Course comparison <span id="selection-count" class="muted small">0 of 4 selected</span></summary>
+    <div class="comparison-body">
+      <div class="comparison-heading"><p class="muted small">Historical results. Percentiles show relative standing.</p><button id="clear-comparison" class="dtu-btn quiet" type="button">Clear all</button></div>
+      <p id="comparison-empty" class="muted">Add up to four courses from this table or a DTU course page.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Selected course metrics"><table id="comparison-table"></table></div>
+      <p class="muted small comparison-note">Higher workload percentile means a lighter reported workload. Confidence describes feedback sample size only.</p>
+    </div>
+  </details>
+  <div class="dtu-surface">
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Course results; scroll horizontally for more columns">
+      <table id="course-table" class="lang-en" aria-busy="true">
+        <thead><tr>
+          <th scope="col" data-key="course"><button class="sort-button" type="button">Course<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="name" class="col-name"><button class="sort-button" type="button">Course name<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="name_en" class="col-name-en"><button class="sort-button" type="button">Course name<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="avg" class="numeric"><button class="sort-button" type="button">Average grade<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="avgp" class="numeric"><button class="sort-button" type="button">Grade percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="passpercent" class="numeric"><button class="sort-button" type="button">Passed<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="grade_participants" class="numeric"><button class="sort-button" type="button">Grade participants<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="review_participants" class="numeric"><button class="sort-button" type="button">Feedback responses<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="qualityscore" class="numeric"><button class="sort-button" type="button">Rating percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="workload" class="numeric"><button class="sort-button" type="button">Workload percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" data-key="lazyscore" class="numeric"><button class="sort-button" type="button">Lazy score percentile<span class="sort-indicator" aria-hidden="true"></span></button></th>
+          <th scope="col" class="compare-column">Compare</th>
+        </tr></thead>
+        <tbody id="course-tbody"><tr><td colspan="12" class="empty-message">Loading courses…</td></tr></tbody>
+      </table>
+    </div>
+    <nav class="pagination" aria-label="Course result pages"><span id="table-info" class="muted small" role="status">Loading course data…</span><div><button id="prev-page" class="dtu-btn" disabled>Previous</button><button id="next-page" class="dtu-btn" disabled>Next</button></div></nav>
   </div>
-</section>
-
-<table id="course-table" class="lang-en">
-  <thead>
-    <tr>
-      <th data-key="course" data-type="text">Course<span class="sort-indicator"></span></th>
-      <th data-key="name" data-type="text" class="col-name">Name<span class="sort-indicator"></span></th>
-      <th data-key="name_en" data-type="text" class="col-name-en">Name (EN)<span class="sort-indicator"></span></th>
-      <th data-key="avg" data-type="number">Average Grade<span class="sort-indicator"></span></th>
-      <th data-key="avgp" data-type="number">Average Grade Percentile<span class="sort-indicator"></span></th>
-      <th data-key="passpercent" data-type="number">Percent Passed<span class="sort-indicator"></span></th>
-      <th data-key="grade_participants" data-type="number">Total Students<span class="sort-indicator"></span></th>
-      <th data-key="review_participants" data-type="number">Feedback Count<span class="sort-indicator"></span></th>
-      <th data-key="qualityscore" data-type="number">Course Rating<span class="sort-indicator"></span></th>
-      <th data-key="workload" data-type="number">Workload<span class="sort-indicator"></span></th>
-      <th data-key="lazyscore" data-type="number">Lazy Score Percentile<span class="sort-indicator"></span></th>
-      <th>Compare</th>
-    </tr>
-  </thead>
-  <tbody id="course-tbody"></tbody>
-</table>
-
-<div class="pagination">
-  <button id="prev-page">Previous</button>
-  <span id="table-info"></span>
-  <button id="next-page">Next</button>
-</div>
-
+  <p class="muted small table-note">Percentile columns: grade, rating, workload and lazy score. Higher workload percentile means a lighter reported workload. Grade and feedback counts can cover different periods.</p>
+</main>
 <script src="js/course-utils.js"></script>
 <script src="js/table.js"></script>
 <script src="js/language-toggle.js"></script>
-
 </body>
 </html>

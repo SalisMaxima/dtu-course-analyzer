@@ -34,13 +34,14 @@
   }
 
   function getMetricColor(value, maxValue = 1) {
+    if (value === null || value === "" || typeof value === "undefined") return null;
     const parsedValue = Number(value);
     const parsedMax = Number(maxValue);
     if (!Number.isFinite(parsedValue) || !Number.isFinite(parsedMax) || parsedMax <= 0) {
       return null;
     }
     const clamped = Math.max(0, Math.min(1, parsedValue / parsedMax));
-    return `hsl(${clamped * 120}, 100%, 50%)`;
+    return `hsl(${clamped * 120}, 85%, 78%)`;
   }
 
   function normalizeSelection(courseIds) {
