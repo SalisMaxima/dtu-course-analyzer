@@ -25,25 +25,87 @@ ORDINARY_SEASONS = {
 }
 
 
-def extract_schedule(html: str) -> dict:
-    """Read the labelled schedule row, never the entire course description."""
+COURSE_CODE = r"(?=[0-9A-Z]{0,4}[0-9])[0-9A-Z]{5}"
+COURSE_REFERENCE = re.compile(
+    rf"\b(?:course|kursus)\s+({COURSE_CODE})\b|\b({COURSE_CODE})\s*\(", re.I)
+# Only consume explicit schedule notation, stopping before narrative prose.
+PERIOD_WORD = r"(?:autumn|fall|efterår|spring|forår|january|januar|june|juni|july|juli|august)"
+SCHEDULE_PREFIX = re.compile(
+    rf"^({PERIOD_WORD}\b(?:\s+(?:and|og)\s+{PERIOD_WORD}\b|"
+    rf"\s+[EF][1-7][AB]?\b(?:\s*\([^)]*\))?|"
+    rf"\s*[,/]\s*{PERIOD_WORD}\b)*)", re.I)
+
+
+def schedule_from_text(text: str, course: str | None = None) -> dict:
+    """Conservative fallback for flattened legacy evidence and plain text cells."""
+    references = sorted({(a or b).upper() for a, b in COURSE_REFERENCE.findall(text)
+                         if (a or b).upper() != (course or "").upper()})
+    match = SCHEDULE_PREFIX.match(text.strip())
+    explicit = match[1] if match else ""
+    notes = text.strip()[match.end():].strip() if match else text
+    basis = explicit or text
+    periods = [p for p, pattern in PERIOD_PATTERNS.items()
+               if re.search(pattern, basis, re.I)]
+    ambiguous = False
+    # A period mentioned in prose is safe to ignore only when it repeats the
+    # explicit schedule or is in a sentence referring to another course.
+    for sentence in re.split(r"(?<=[.!?])\s+", notes):
+        extra = [p for p, pattern in PERIOD_PATTERNS.items()
+                 if p not in periods and re.search(pattern, sentence, re.I)]
+        for period in extra:
+            pattern = PERIOD_PATTERNS[period]
+            # Only ignore a month when the text directly associates it with an
+            # alternative course, not merely because a code occurs somewhere.
+            attributed = any(
+                re.search(rf"\b{re.escape(code)}\s*\(\s*{pattern}", sentence, re.I)
+                or re.search(rf"{pattern}(?:\s+\w+){{0,3}}\s*\(\s*(?:course|kursus)\s+{re.escape(code)}\b",
+                             sentence, re.I)
+                for code in references)
+            if not attributed:
+                ambiguous = True
+    if not explicit and references:
+        ambiguous = True
+    return {"raw": text, "explicit": explicit, "explanation": notes,
+            "periods": periods, "referenced_courses": references,
+            "contains_course_references": bool(references),
+            "ambiguous_explanation": ambiguous, "basis": "text_prefix" if explicit else "text_fallback"}
+
+
+def extract_schedule(html: str, course: str | None = None) -> dict:
+    """Preserve schedule markup boundaries and explanatory continuation rows."""
     soup = BeautifulSoup(html, "lxml")
-    fields = []
+    fields, continuations, segments = [], [], []
+    reading = False
     for row in soup.find_all("tr"):
         cells = row.find_all(["td", "th"], recursive=False)
         if len(cells) < 2:
             continue
         label = cells[0].get_text(" ", strip=True).rstrip(":").strip().lower()
-        if label not in SCHEDULE_LABELS:
-            continue
-        fields.append(" ".join(c.get_text(" ", strip=True) for c in cells[1:]))
-    text = "\n".join(fields)
-    # References to other course codes require review: their months must not
-    # silently become teaching periods for the course being inspected.
-    references = bool(re.search(r"\b[0-9A-Z]{5}\s*\(", text))
-    periods = [p for p, pattern in PERIOD_PATTERNS.items()
-               if re.search(pattern, text, re.IGNORECASE)]
-    return {"raw": text, "periods": periods, "contains_course_references": references}
+        if label in SCHEDULE_LABELS:
+            reading = True
+            fields.extend(c.get_text(" ", strip=True) for c in cells[1:])
+            for cell in cells[1:]:
+                fragment = BeautifulSoup(str(cell), "lxml")
+                for boundary in fragment.find_all(["br", "p", "div"]):
+                    boundary.insert_before("DTU_SCHEDULE_BOUNDARY")
+                segments.extend(part.strip() for part in fragment.get_text(" ", strip=True).split("DTU_SCHEDULE_BOUNDARY") if part.strip())
+        elif reading and not label:
+            continuations.extend(c.get_text(" ", strip=True) for c in cells[1:])
+        else:
+            reading = False
+    result = schedule_from_text("\n".join(fields + continuations), course)
+    if len(segments) > 1:
+        first = SCHEDULE_PREFIX.fullmatch(segments[0])
+        if first:
+            result["explicit"] = segments[0]
+            result["explanation"] = "\n".join(segments[1:])
+            result["basis"] = "structured_schedule"
+    # Continuation rows are explicitly explanatory, but retain them as evidence.
+    if continuations:
+        if result["basis"] == "structured_schedule":
+            result["explanation"] = "\n".join(filter(None, [result["explanation"], *continuations]))
+        result["continuation_text"] = "\n".join(continuations)
+    return result
 
 
 def parse_period(url: str) -> dict:
@@ -69,8 +131,9 @@ def classify_course(record: dict) -> dict:
     primary_season = None
     if not periods:
         reasons.append("schedule_missing_or_unrecognized")
-    elif schedule.get("contains_course_references"):
-        reasons.append("schedule_contains_other_course_references")
+    elif schedule.get("ambiguous_explanation", schedule.get("contains_course_references")):
+        reasons.append("schedule_contains_other_course_references" if schedule.get("contains_course_references")
+                       else "ambiguous_schedule_explanation")
     elif "august" in periods:
         reasons.append("august_histogram_mapping_unverified")
     elif any(period not in ORDINARY_SEASONS for period in periods):
@@ -86,9 +149,10 @@ def classify_course(record: dict) -> dict:
     for source in record.get("exams", []):
         exam = {**source, "classification": "undetermined", "reason": None}
         period = exam["period"]
+        exam.setdefault("distribution_status", "failed" if exam.get("error") else "published")
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
-        elif exam.get("grades", {}).get("participants", 0) <= 0:
+        elif exam["distribution_status"] != "suppressed" and (exam.get("grades") or {}).get("participants", 0) <= 0:
             exam["reason"] = "no_published_results"
         elif primary_season is None:
             exam["reason"] = reasons[0]

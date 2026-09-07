@@ -15,11 +15,14 @@ import aiohttp
 from bs4 import BeautifulSoup
 from yarl import URL
 
-from ..analysis.exam_classification import classify_course, extract_schedule, parse_period
+from ..analysis.exam_classification import classify_course, extract_schedule, parse_period, schedule_from_text
 from ..analysis.analyzer import extract_grade_results
 from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
+
+SCHEMA_VERSION = 3
+RULE_VERSION = "schedule-hypothesis-v4"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -66,6 +69,65 @@ def page_evidence(html: str) -> dict:
     }
 
 
+def distribution_suppressed(text: str) -> bool:
+    text = " ".join(text.split()).lower()
+    return bool(re.search(
+        r"fordelingen vises ikke da tre eller færre|"
+        r"distribution (?:is not shown|is hidden).*?(?:three|3) or fewer", text))
+
+
+def info_evidence(html: str, url: str, course: str) -> dict:
+    """Bounded evidence from public course/result content, never raw page HTML."""
+    if is_login_page(html, url) or BeautifulSoup(html, "lxml").select_one('input[type="password"]'):
+        return {"state": "authentication_required_or_expired"}
+    soup = BeautifulSoup(html, "lxml")
+    for element in soup.select("script, style, form, input, nav, header, footer"):
+        element.decompose()
+    text = soup.get_text(" ", strip=True)
+    anchors = soup.find_all("a", href=True)
+    relevant = []
+    for anchor in anchors:
+        target = urlsplit(urljoin(url, anchor["href"]))
+        if (target.hostname in {"kurser.dtu.dk", "karakterer.dtu.dk"}
+                and re.fullmatch(r"/(?:course/[0-9A-Z]{5}(?:/info)?|Histogram/\d+/[0-9A-Z]{5}/[A-Za-z]+-\d+)", target.path)):
+            relevant.append(diagnostic_url(urlunsplit(target)))
+    # Capture only result-related text nodes, excluding contact details and URLs.
+    excerpts = []
+    for node in soup.stripped_strings:
+        if (re.search(r"exam|grade|result|karakter|eksamen", node, re.I)
+                and not re.search(r"@|https?://|token|password|secret|cookie", node, re.I)):
+            excerpts.append(node[:250])
+    explicit_none = bool(re.search(
+        r"no (?:published )?(?:exam results|grade distributions|results)(?: available| found| published)?\b|"
+        r"ingen (?:offentliggjorte )?(?:eksamensresultater|karakterfordelinger|resultater)\b", text, re.I))
+    links = extract_histogram_links(html, course)
+    state = ("links_found" if links else "no_published_results" if explicit_none
+             else "empty_response" if not html.strip()
+             else "no_links_unknown" if re.search(rf"\b{re.escape(course)}\b", text)
+             else "info_page_unrecognized")
+    return {"state": state, "link_count": len(anchors),
+            "histogram_link_count": len(links), "relevant_links": list(dict.fromkeys(relevant))[:30],
+            "course_content_excerpts": excerpts[:8]}
+
+
+def read_distribution(exam: dict, html: str) -> None:
+    """Store availability independently of seasonal exam classification."""
+    soup = BeautifulSoup(html, "lxml")
+    exam["evidence"] = {
+        "headings": [h.get_text(" ", strip=True) for h in soup.find_all(["h1", "h2", "h3"])],
+        "tables": [t.get_text(" ", strip=True) for t in soup.find_all("table")],
+    }
+    if distribution_suppressed(soup.get_text(" ", strip=True)):
+        exam.update(distribution_status="suppressed", grades=None)
+        return
+    exam["grades"] = parse_grades(html, exam["url"])
+    if not exam["grades"] or "participants" not in exam["grades"]:
+        exam.update(distribution_status="failed", error="histogram_parse_failed")
+    else:
+        exam["distribution_status"] = "published"
+        exam["result_counts"] = result_count_check(exam["grades"])
+
+
 def course_wrapper_url(html: str, url: str) -> str | None:
     """Follow only DTU's known same-course forceLogin wrapper."""
     current = urlsplit(url)
@@ -93,7 +155,8 @@ def result_count_check(sheet: dict) -> dict:
             'participants': participants,
             'all_categories_retained': retained_total == source_total,
             'matches_participants': source_total == participants,
-            'grading_scale': grading_scale}
+            'grading_scale': grading_scale,
+            'participant_difference': participants - source_total if participants is not None else None}
 
 
 async def fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str:
@@ -115,7 +178,10 @@ async def fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str
                 if response.status != 200:
                     raise ValueError(f"HTTP {response.status}")
                 html = await response.text()
-                if is_login_page(html, final_url):
+                attempt_info["content_type"] = response.headers.get("Content-Type", "")
+                attempt_info["response_bytes"] = len(html.encode("utf-8"))
+                if is_login_page(html, final_url) or BeautifulSoup(html, "lxml").select_one('input[type="password"]'):
+                    attempt_info["state"] = "authentication_required_or_expired"
                     raise ValueError("authentication_required_or_expired")
                 if diagnostics is not None:
                     attempt_info['page'] = page_evidence(html)
@@ -147,7 +213,7 @@ async def collect_course(session, semaphore, course: str) -> dict:
                 record["errors"].append({"source": kind, "reason": str(exc)})
                 continue
             if kind == "course":
-                record["schedule"] = extract_schedule(html)
+                record["schedule"] = extract_schedule(html, course)
                 soup = BeautifulSoup(html, "lxml")
                 heading = soup.find("h2")
                 record["name"] = heading.get_text(" ", strip=True) if heading else None
@@ -156,28 +222,17 @@ async def collect_course(session, semaphore, course: str) -> dict:
                     record['errors'].append({'source': kind, 'reason': reason})
             else:
                 record["exams"] = extract_histogram_links(html, course)
-                if not record['exams']:
-                    headings = page_evidence(html)['headings']
-                    if not any(re.search(rf'\b{re.escape(course)}\b', h) for h in headings):
-                        record['errors'].append({'source': kind, 'reason': 'info_page_unrecognized'})
+                diagnostics["content"] = info_evidence(html, url, course)
+                state = diagnostics["content"]["state"]
+                if state in {"info_page_unrecognized", "empty_response"}:
+                    record["errors"].append({"source": kind, "reason": state})
 
         for exam in record["exams"]:
             try:
                 html = await fetch_page(session, exam["url"])
-                soup = BeautifulSoup(html, "lxml")
-                # Retain targeted source evidence for manual review, not login
-                # pages, cookies, scripts, or unrelated personal information.
-                exam["evidence"] = {
-                    "headings": [h.get_text(" ", strip=True) for h in soup.find_all(["h1", "h2", "h3"])],
-                    "tables": [t.get_text(" ", strip=True) for t in soup.find_all("table")],
-                }
-                exam["grades"] = parse_grades(html, exam["url"])
-                if not exam["grades"] or "participants" not in exam["grades"]:
-                    exam["error"] = "histogram_parse_failed"
-                else:
-                    exam['result_counts'] = result_count_check(exam['grades'])
+                read_distribution(exam, html)
             except ValueError as exc:
-                exam["error"] = str(exc)
+                exam.update(distribution_status="failed", error=str(exc))
     return classify_course(record)
 
 
@@ -194,14 +249,26 @@ async def collect_registered_course(session, semaphore, course: str) -> dict:
 
 def write_reports(report: dict, output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
+    report["schema_version"] = SCHEMA_VERSION
+    report["rule_version"] = RULE_VERSION
     report["summary"] = dict(Counter(r["status"] for r in report["courses"].values()))
+    exams = [e for row in report["courses"].values() for e in row.get("exams", [])]
+    report["distribution_summary"] = dict(Counter(e.get("distribution_status", "unknown") for e in exams))
+    report["count_summary"] = {
+        "category_retention_failures": sum(not e["result_counts"]["all_categories_retained"]
+                                          for e in exams if "result_counts" in e),
+        "participant_discrepancies": sum(not e["result_counts"]["matches_participants"]
+                                       for e in exams if "result_counts" in e),
+    }
     temporary = output / "report.json.tmp"
     temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(output / "report.json")
     with (output / "courses.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(["course", "status", "primary_status", "resit_status", "schedule", "primary_exam", "primary_url",
-                         "resit_exams", "undetermined_exams", "reasons", "errors"])
+                         "resit_exams", "undetermined_exams", "reasons", "errors",
+                         "primary_distribution_status", "suppressed_histograms", "failed_histograms",
+                         "category_retention_failures", "participant_discrepancies", "info_state"])
         for course, row in report["courses"].items():
             primary = row.get("primary_exam") or {}
             writer.writerow([
@@ -214,14 +281,27 @@ def write_reports(report: dict, output: Path) -> None:
                     {"source": e["url"], "reason": e["error"]}
                     for e in row.get("exams", []) if e.get("error")
                 ]),
+                primary.get("distribution_status", ""),
+                sum(e.get("distribution_status") == "suppressed" for e in row.get("exams", [])),
+                sum(e.get("distribution_status") == "failed" for e in row.get("exams", [])),
+                sum(not e["result_counts"]["all_categories_retained"] for e in row.get("exams", []) if "result_counts" in e),
+                sum(not e["result_counts"]["matches_participants"] for e in row.get("exams", []) if "result_counts" in e),
+                row.get("pages", {}).get("info", {}).get("content", {}).get("state", "not_recorded"),
             ])
     summary = ["# Exam classification diagnostic", "",
                "Provisional schedule-based assignments; not measured classification accuracy.", "",
                f"Requested courses: {len(report['courses'])}", ""]
+    if report.get("replay"):
+        summary.extend(["Offline replay of saved evidence; no fresh requests or original schedule markup.", ""])
     summary.extend(f"- {status}: {count}" for status, count in sorted(report["summary"].items()))
     no_resits = sum(row.get('resit_status') == 'none_found_in_collected_links'
                    for row in report['courses'].values())
     summary.extend(['', f'Primary identified, no resit links found: {no_resits}'])
+    summary.extend(f"Distributions {status}: {count}" for status, count in sorted(report["distribution_summary"].items()))
+    summary.extend([
+        f"Category-retention failures: {report['count_summary']['category_retention_failures']}",
+        f"Source participant-total discrepancies: {report['count_summary']['participant_discrepancies']}",
+    ])
     count_mismatches = sum(
         not all(e['result_counts'][k] for k in ('all_categories_retained', 'matches_participants'))
         for row in report['courses'].values() for e in row.get('exams', []) if 'result_counts' in e)
@@ -245,7 +325,7 @@ def write_reports(report: dict, output: Path) -> None:
 
 async def run_probe(courses: list[str], output: Path) -> int:
     report = {
-        "schema_version": 2, "rule_version": "schedule-hypothesis-v3",
+        "schema_version": SCHEMA_VERSION, "rule_version": RULE_VERSION,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "courses": {c: {"course": c, "status": "pending", "primary_exam": None,
                         "resit_exams": [], "undetermined_exams": [],
@@ -288,12 +368,41 @@ async def run_probe(courses: list[str], output: Path) -> int:
     ))
 
 
+def replay_report(source: Path, output: Path) -> dict:
+    if source.resolve().parent == output.resolve():
+        raise ValueError("Replay output must differ from the source directory")
+    report = json.loads(source.read_text(encoding="utf-8"))
+    report["replay"] = {"source_schema_version": report.get("schema_version"),
+                        "reprocessed_at": datetime.now(timezone.utc).isoformat(),
+                        "note": "Offline replay; schedule markup and missing info content were not retained."}
+    for course, row in report["courses"].items():
+        row["schedule"] = schedule_from_text(row.get("schedule", {}).get("raw", ""), course)
+        row["schedule"]["basis"] = "legacy_text_replay"
+        for exam in row.get("exams", []):
+            evidence = " ".join(exam.get("evidence", {}).get("tables", []))
+            if exam.get("error") == "histogram_parse_failed" and distribution_suppressed(evidence):
+                exam.pop("error")
+                exam["distribution_status"] = "suppressed"
+            elif exam.get("error"):
+                exam["distribution_status"] = "failed"
+            elif exam.get("grades"):
+                exam["distribution_status"] = "published"
+                exam["result_counts"] = result_count_check(exam["grades"])
+        report["courses"][course] = classify_course(row)
+    write_reports(report, output)
+    return report
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--courses", help="Comma-separated course IDs; default: entire course file")
     parser.add_argument("--course-file", type=Path, default=config.paths.course_numbers_file)
     parser.add_argument("--output", type=Path, default=Path("exam-classification-report"))
+    parser.add_argument("--replay", type=Path, help="Reclassify saved report evidence without network access")
     args = parser.parse_args(argv)
+    if args.replay:
+        replay_report(args.replay, args.output)
+        return 0
     try:
         raw = args.courses if args.courses else args.course_file.read_text()
         courses = sorted(set(filter(None, re.split(r"[,\s]+", raw.strip().upper()))))

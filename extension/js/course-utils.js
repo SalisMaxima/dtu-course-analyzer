@@ -20,8 +20,10 @@
     const hasPair = (keys) => grades && keys.some(key => Object.hasOwn(grades, key));
     const passedPair = hasPair(["passed", "not_passed"]);
     const approvedPair = hasPair(["approved", "not_approved"]);
-    const binary = passedPair || approvedPair;
+    const positiveBinary = ["passed", "not_passed", "approved", "not_approved"]
+      .some(key => Number(grades && grades[key]) > 0);
     const numeric = GRADE_ORDER.some((grade) => Number(grades && grades[grade]) > 0);
+    const binary = (passedPair || approvedPair) && (!numeric || positiveBinary);
     const categories = binary
       ? [...(numeric ? GRADE_ORDER.map((grade) => [grade, grade]) : []),
          ...(passedPair ? [["passed", "Passed"], ["not_passed", "Not passed"]] : []),

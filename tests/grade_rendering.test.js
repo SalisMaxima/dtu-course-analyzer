@@ -107,3 +107,31 @@ for (const scale of ["pass_fail", "mixed", "seven_point"]) {
     }
   });
 }
+
+test("zero pass/fail placeholders keep the numeric histogram and average", () => {
+  const { context, node } = renderer("contentscript.js");
+  context.presentData({
+    grading_scale: "seven_point", avg: 7, avgp: 50, passpercent: 100,
+    grades: { "7": "10", passed: "0", not_passed: "0", approved: "0" },
+  }, "01001");
+  const text = node("anchor").textContent;
+  assert.match(text, /Average grade7/);
+  assert.match(text, /Average grade percentile50%/);
+  const tbody = node("anchor").children[0].children[0];
+  const chart = tbody.children.flatMap(row => row.children)
+    .flatMap(cell => cell.children).find(e => e.attributes.role === "img");
+  assert.doesNotMatch(chart.attributes["aria-label"], /Passed|Approved/);
+  assert.match(chart.attributes["aria-label"], /7: 10/);
+});
+
+test("approval-only and zero-result categorical histograms retain their labels", () => {
+  const { context } = renderer("contentscript.js");
+  for (const grades of [{ approved: 0, not_approved: 0 }, { passed: 0, not_passed: 0 }]) {
+    const distribution = context.DTUAnalyzer.normalizeGrades(grades);
+    assert.equal(distribution.length, 2);
+    assert.ok(distribution.every(item => item.count === 0 && item.percentage === 0));
+  }
+  const mixed = context.DTUAnalyzer.normalizeGrades({ "7": 1, approved: 2 });
+  assert.ok(mixed.some(item => item.grade === "Approved" && item.count === 2));
+  assert.ok(mixed.some(item => item.grade === "7" && item.count === 1));
+});

@@ -62,7 +62,7 @@ are saved every 25 completed courses; `pending` registrations in an interrupted
 run mean collection had not been checkpointed. A complete run returns nonzero
 for collection errors, but unresolved classifications alone do not fail it.
 
-Report schema version 2 also records course/info request attempts, HTTP status,
+Report schema version 3 also records course/info request attempts, HTTP status,
 final URL (with authentication query parameters omitted), page title/headings,
 table labels, and iframe count. The collector follows DTU's same-course
 `forceLogin` iframe once; repeated wrappers or unrecognized pages become explicit
@@ -84,13 +84,14 @@ preserved separately from passed/not-passed outcomes.
 | Multiple periods all mapping to summer | Summer | Winter |
 | Conflicting, unverified or missing teaching periods | Undetermined | Undetermined |
 
-Rule version `schedule-hypothesis-v3` permits combined periods when their ordinary
+Rule version `schedule-hypothesis-v4` permits combined periods when their ordinary
 exam season agrees: Autumn + January maps to winter; Spring + June + July maps
 to summer. Autumn + Spring remains unresolved, as does any combination involving
 August until its histogram mapping is verified. These combinations identify a
 season, not individual cohorts or separate sittings within that season.
 
-The second column chooses the newest parsed year among **all** matching sheets;
+The second column chooses the newest recognized year among **all** matching sheets,
+including suppressed distributions;
 participant count does not choose the exam. Zero-participant sheets remain
 unresolved. The third column only means "outside the presumed ordinary season",
 not confirmation that it is a resit. All resit candidates across all available
@@ -103,9 +104,11 @@ August or unknown URL labels stay unresolved so the collected evidence can
 establish that mapping. Current schedules may not apply to historical sheets;
 an ordinary-period histogram may itself include repeat attempts.
 
-Only labelled Schedule/Skemaplacering table fields are parsed. References to
-other courses within those fields trigger review; descriptions elsewhere do
-not contribute months. Missing fields are reported, never inferred from
+Only labelled Schedule/Skemaplacering fields and their explanatory continuation
+rows are retained. Explicit schedule notation is separated from prose, preserving
+markup boundaries when present. Periods clearly attributed to another course are
+excluded. Additional periods in ambiguous prose about the current course trigger
+review; descriptions elsewhere do not contribute months. Missing fields are reported, never inferred from
 participant counts. Duplicate source links are fetched once, while multiple
 histogram groups for the latest ordinary period prevent a unique assignment.
 
@@ -135,3 +138,55 @@ Tests use synthetic HTML, not authenticated live fixtures:
 ```bash
 python -m pytest tests/test_exam_classification.py
 ```
+
+## Availability and discrepancies (schema 3)
+
+Every collected histogram has a `distribution_status`: `published`,
+`suppressed`, or `failed`. DTU's small-cohort suppression message produces
+`suppressed`, null grades, and no fabricated counts. Its period can still be an
+ordinary/resit candidate. A suppressed latest ordinary exam remains primary;
+older visible exams are listed separately and never silently substituted.
+Genuine HTTP/authentication/parsing failures still produce error status.
+
+JSON includes `distribution_summary` and `count_summary`. CSV additionally
+records primary distribution availability, suppressed/failed histogram counts,
+category-retention failures, participant discrepancies, and info-page state.
+A histogram's `participant_difference` is registered participants minus its
+source result total. This is separate from source categories lost during
+normalization. Discrepancies are preserved, not filled with invented outcomes.
+
+Mixed grading requires positive counts in both numerical and categorical
+outcomes. Zero categorical placeholders alongside numeric results remain
+seven-point grading; categorical-only zero distributions remain pass/fail.
+
+Info-page evidence distinguishes `links_found`, `no_published_results`
+(explicit source message), `no_links_unknown`, `empty_response`, and
+`info_page_unrecognized`. Authentication failures are recorded on request
+attempts before page content is captured. Missing links alone never establish
+that results do not exist. Request attempts now include content type and the
+UTF-8 byte length of the decoded response. Additional evidence includes bounded
+result-related excerpts, link counts and sanitized course/histogram destinations;
+forms, scripts, authentication URLs and credential query parameters are excluded.
+
+## Replaying saved evidence
+
+No authentication or network is needed:
+
+```bash
+python -m dtu_analyzer.scripts.probe_exam_classification --replay test5/report.json --output exam-classification-report/test5-replayed
+```
+
+The original report is preserved. The output is labelled as an offline replay.
+Legacy flattened schedules can be reinterpreted conservatively, but missing
+info-page content and original schedule markup cannot be recovered this way.
+Replay returns success when report generation succeeds; remaining collection
+errors are retained in the output rather than re-fetched.
+
+For the next **Test Exam Classification** Actions run after pushing these changes:
+- `courses`: `01025,01034,01037,01018,01004,01666,01911`
+- `auth_courses`: `01001,01020`
+
+This covers an unrecognized info page, other-course references, August,
+suppressed histograms, zero categorical placeholders, ambiguous prose and
+compatible combined periods. Save the artifact for review before another full
+run. Production regular/resit selection remains unchanged.
