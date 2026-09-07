@@ -79,7 +79,7 @@ def test_unknown_periods_and_zero_results_remain_visible():
     assert result["status"] == "partial"
     assert len(result["undetermined_exams"]) == 3
     assert result["undetermined_exams"][-1]["reason"] == "no_published_results"
-    assert "no_resit_identified" in result["reasons"]
+    assert result['resit_status'] == 'undetermined'
 
 
 def test_missing_primary_does_not_fall_back_to_resit():
@@ -110,7 +110,7 @@ def test_histogram_links_are_deduplicated_and_scoped_to_course():
 
 @pytest.mark.asyncio
 async def test_collection_records_partial_fetch_failure(monkeypatch):
-    async def fetch(session, url):
+    async def fetch(session, url, diagnostics=None):
         if "/Histogram/" in url:
             if "Summer" in url:
                 raise ValueError("HTTP 503")
@@ -223,3 +223,66 @@ async def test_fetch_distinguishes_login_and_http_failure(response, reason):
     with pytest.raises(ValueError, match=reason):
         await probe.fetch_page(session, "https://kurser.dtu.dk")
     assert session.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_force_login_wrapper_is_followed_once_and_diagnosed():
+    url = 'https://kurser.dtu.dk/course/01001?lang=en-GB'
+    wrapper = '<title>kurser.dtu.dk</title><iframe src="?forceLogin=true"></iframe>'
+    target = probe.course_wrapper_url(wrapper, url)
+    assert target == 'https://kurser.dtu.dk/course/01001?forceLogin=true&lang=en-GB'
+    html = '<h2>01001 Mathematics</h2><table><tr><td>Schedule</td><td>Autumn</td></tr></table>'
+    diagnostics = {}
+    session = Session([Response(html=wrapper, url=url), Response(html=html, url=target)])
+    assert await probe.fetch_page(session, url, diagnostics) == html
+    assert session.calls == 2
+    assert diagnostics['attempts'][0]['page']['iframe_count'] == 1
+    assert diagnostics['attempts'][1]['page']['table_labels'] == ['Schedule']
+    assert diagnostics['attempts'][1]['final_url'] == target
+
+
+@pytest.mark.asyncio
+async def test_repeated_wrapper_fails_instead_of_becoming_missing_schedule():
+    url = 'https://kurser.dtu.dk/course/01001?lang=en-GB'
+    html = '<iframe src="?forceLogin=true"></iframe>'
+    session = Session([Response(html=html, url=url), Response(html=html, url=url)])
+    with pytest.raises(ValueError, match='authentication_wrapper_unresolved'):
+        await probe.fetch_page(session, url)
+    assert session.calls == 2
+
+
+def test_wrapper_does_not_follow_other_hosts_or_other_course_paths():
+    url = 'https://kurser.dtu.dk/course/01001'
+    assert probe.course_wrapper_url('<iframe src="https://example.com/course/01001?forceLogin=true"></iframe>', url) is None
+    assert probe.course_wrapper_url('<iframe src="/course/01911?forceLogin=true"></iframe>', url) is None
+    assert probe.diagnostic_url('https://auth.dtu.dk/login?token=secret&lang=en-GB') == 'https://auth.dtu.dk/login?lang=en-GB'
+
+
+@pytest.mark.asyncio
+async def test_unrecognized_success_response_is_a_collection_error(monkeypatch):
+    async def fetch(session, url, diagnostics=None):
+        return '<title>Unexpected page</title>'
+    monkeypatch.setattr(probe, 'fetch_page', fetch)
+    row = await probe.collect_course(None, asyncio.Semaphore(1), '01001')
+    assert row['status'] == 'error'
+    assert {e['reason'] for e in row['errors']} == {'course_page_unrecognized', 'info_page_unrecognized'}
+
+
+def test_primary_without_resit_links_is_successful_but_does_not_claim_no_resits_exist():
+    row = classify_course(record('Spring', [sheet('Summer-2026')]))
+    assert row['status'] == 'provisional'
+    assert row['primary_status'] == 'identified'
+    assert row['resit_status'] == 'none_found_in_collected_links'
+
+
+def test_count_check_detects_missing_source_categories_and_registration_mismatch():
+    sheet = {'Bestået': '575', 'Ikkebestået': '127', 'Godkendt': '0',
+             'IkkeGodkendt': '45', 'Ejmødt': '57', 'participants': 804}
+    assert probe.result_count_check(sheet) == {
+        'source_total': 804, 'retained_total': 804, 'participants': 804,
+        'all_categories_retained': True, 'matches_participants': True,
+    }
+    sheet['UnknownOutcome'] = '1'
+    check = probe.result_count_check(sheet)
+    assert not check['all_categories_retained']
+    assert not check['matches_participants']

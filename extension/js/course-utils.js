@@ -17,11 +17,15 @@
   }
 
   function normalizeGrades(grades) {
-    const binary = grades && (Object.hasOwn(grades, "passed") || Object.hasOwn(grades, "not_passed"));
+    const hasPair = (keys) => grades && keys.some(key => Object.hasOwn(grades, key));
+    const passedPair = hasPair(["passed", "not_passed"]);
+    const approvedPair = hasPair(["approved", "not_approved"]);
+    const binary = passedPair || approvedPair;
     const numeric = GRADE_ORDER.some((grade) => Number(grades && grades[grade]) > 0);
     const categories = binary
       ? [...(numeric ? GRADE_ORDER.map((grade) => [grade, grade]) : []),
-         ["passed", "Passed"], ["not_passed", "Not passed"],
+         ...(passedPair ? [["passed", "Passed"], ["not_passed", "Not passed"]] : []),
+         ...(approvedPair ? [["approved", "Approved"], ["not_approved", "Not approved"]] : []),
          ...["absent", "sick"].filter((key) => Number(grades[key]) > 0)
            .map((key) => [key, key === "absent" ? "Absent" : "Sick"])]
       : GRADE_ORDER.map((grade) => [grade, grade]);

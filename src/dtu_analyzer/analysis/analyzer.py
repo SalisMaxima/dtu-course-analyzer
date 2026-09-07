@@ -18,6 +18,8 @@ logger = setup_logger('analyzer', 'analyzer.log')
 RESULT_ALIASES = {
     'bestået': 'passed', 'passed': 'passed',
     'ikkebestået': 'not_passed', 'notpassed': 'not_passed',
+    'godkendt': 'approved', 'approved': 'approved',
+    'ikkegodkendt': 'not_approved', 'notapproved': 'not_approved',
     'ejmødt': 'absent', 'absent': 'absent',
     'syg': 'sick', 'sick': 'sick',
 }
@@ -33,7 +35,7 @@ def extract_grade_results(sheet: dict) -> tuple[dict, str]:
             results[key] = value
         elif category:
             results[category] = value
-    binary = any(key in results for key in ('passed', 'not_passed'))
+    binary = any(key in results for key in ('passed', 'not_passed', 'approved', 'not_approved'))
     numeric = False
     for key in ('-3', '00', '02', '4', '7', '10', '12'):
         try:

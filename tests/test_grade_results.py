@@ -41,3 +41,19 @@ def test_mixed_results_keep_both_kinds_of_awards():
     assert result['grading_scale'] == 'mixed'
     assert result['grades']['passed'] == '8'
     assert result['grades']['7'] == '1'
+
+
+def test_approval_results_are_retained_separately():
+    sheet = {'participants': 804, 'pass_percentage': 71, 'Bestået': '575',
+             'Ikkebestået': '127', 'Godkendt': '0', 'IkkeGodkendt': '45', 'Ejmødt': '57'}
+    result = process_courses({'01911': {'grades': [sheet]}})['01911']
+    assert result['grades']['not_approved'] == '45'
+    assert sum(int(v) for v in result['grades'].values()) == 804
+    assert result['grading_scale'] == 'pass_fail'
+
+
+def test_approval_only_results_have_no_numeric_average():
+    sheet = {'participants': 10, 'pass_percentage': 90, 'Godkendt': '9', 'IkkeGodkendt': '1', 'avg': 0}
+    result = process_courses({'12345': {'grades': [sheet]}})['12345']
+    assert result['grading_scale'] == 'pass_fail'
+    assert 'avg' not in result
