@@ -8,6 +8,11 @@ on:
         required: false
         default: ""
         type: string
+      auth_courses:
+        description: "Authentication comparison: 1–7 course IDs"
+        required: false
+        default: "01001,01020"
+        type: string
 
 permissions:
   contents: read
@@ -30,12 +35,13 @@ jobs:
           python -m pip install -e '.[dev]'
           playwright install --with-deps chromium
       - name: Test diagnostic logic
-        run: python -m pytest tests/test_exam_classification.py
-      - name: Authenticate
+        run: python -m pytest tests/test_exam_classification.py tests/test_schedule_access_diagnostics.py
+      - name: Authenticate and diagnose schedule access
         env:
           DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
           DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
-        run: dtu-auth
+          AUTH_DIAGNOSTIC_COURSES: ${{ inputs.auth_courses || '01001,01020' }}
+        run: python -m dtu_analyzer.scripts.diagnose_schedule_access
       - name: Discover current courses
         if: inputs.courses == ''
         run: dtu-get-courses
@@ -51,6 +57,9 @@ jobs:
       - name: Publish run summary
         if: always()
         run: |
+          if [ -f exam-classification-report/auth-summary.md ]; then
+            cat exam-classification-report/auth-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -f exam-classification-report/summary.md ]; then
             cat exam-classification-report/summary.md >> "$GITHUB_STEP_SUMMARY"
           else
