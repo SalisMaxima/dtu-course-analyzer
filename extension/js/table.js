@@ -141,6 +141,8 @@ function renderPage() {
     compareButton.className = selected ? "compare-btn selected" : "compare-btn";
     compareButton.textContent = selected ? "Remove" : "Add";
     compareButton.setAttribute("aria-pressed", String(selected));
+    compareButton.setAttribute("aria-label", selected
+      ? `Remove ${row.course} from comparison` : `Add ${row.course} to comparison`);
     compareButton.addEventListener("click", () => toggleCourse(row.course));
     compareCell.appendChild(compareButton);
     tr.appendChild(compareCell);
@@ -167,7 +169,8 @@ function metricValue(data, key, unit = "") {
 
 function appendComparisonRow(tbody, label, selectedRows, valueForRow) {
   const tr = document.createElement("tr");
-  const labelCell = document.createElement("td");
+  const labelCell = document.createElement("th");
+  labelCell.scope = "row";
   labelCell.textContent = label;
   tr.appendChild(labelCell);
 
@@ -265,6 +268,7 @@ function renderComparison() {
     button.type = "button";
     button.className = "compare-btn selected";
     button.textContent = "Remove";
+    button.setAttribute("aria-label", `Remove ${row.course} from comparison`);
     button.addEventListener("click", () => toggleCourse(row.course));
     td.appendChild(button);
   });

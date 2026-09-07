@@ -105,6 +105,7 @@ def test_histogram_links_are_deduplicated_and_scoped_to_course():
     links = probe.extract_histogram_links(html, "01001")
     assert len(links) == 1
     assert links[0]["link_label"] == "v25"
+    assert links[0]["url"] == "https://karakterer.dtu.dk/Histogram/1/01001/Winter-2025"
 
 
 @pytest.mark.asyncio

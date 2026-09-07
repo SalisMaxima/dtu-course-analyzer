@@ -11,6 +11,11 @@
     return COURSE_ID_PATTERN.test(String(courseId));
   }
 
+  function getCourseIdFromPath(pathname) {
+    const match = String(pathname).match(/^\/course\/(?:\d{4}-\d{4}\/)?([0-9A-Z]{5})(?:\/|$)/);
+    return match && isValidCourseId(match[1]) ? match[1] : null;
+  }
+
   function normalizeGrades(grades) {
     const binary = grades && (Object.hasOwn(grades, "passed") || Object.hasOwn(grades, "not_passed"));
     const numeric = GRADE_ORDER.some((grade) => Number(grades && grades[grade]) > 0);
@@ -148,6 +153,7 @@
     getPrimaryResult,
     getMetricColor,
     isValidCourseId,
+    getCourseIdFromPath,
     normalizeGrades,
     normalizeSelection,
     readSelection,

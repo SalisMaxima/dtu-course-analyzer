@@ -29,7 +29,7 @@ def extract_histogram_links(html: str, course: str) -> list[dict]:
             continue
         if not re.fullmatch(rf"/Histogram/\d+/{re.escape(course)}/[^/]+", url.path):
             continue
-        canonical = urlunsplit(("http", "karakterer.dtu.dk", url.path, "", ""))
+        canonical = urlunsplit(("https", "karakterer.dtu.dk", url.path, "", ""))
         found.setdefault(canonical, {
             "url": canonical, "link_label": anchor.get_text(" ", strip=True),
             "period": parse_period(canonical),

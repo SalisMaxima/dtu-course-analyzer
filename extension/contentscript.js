@@ -12,10 +12,7 @@ const outputArr = [
 
 // 2. Extract course ID from URL
 function getCourseId() {
-  const courseMatch = window.location.href.match(
-    /^http.:\/\/kurser.dtu.dk\/course\/(?:[0-9-]*\/)?([0-9]{5})/
-  );
-  return courseMatch ? courseMatch[1] : null;
+  return DTUAnalyzer.getCourseIdFromPath(window.location.pathname);
 }
 
 // 3. Load packaged course data (async, does not block the page)

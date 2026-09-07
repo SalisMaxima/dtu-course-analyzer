@@ -3,6 +3,16 @@ const test = require("node:test");
 
 const utils = require("../extension/js/course-utils.js");
 
+test("extracts bounded numeric and alphanumeric course IDs from catalogue paths", () => {
+  for (const id of ["01001", "42S01", "KU002"]) {
+    assert.equal(utils.getCourseIdFromPath(`/course/${id}`), id);
+    assert.equal(utils.getCourseIdFromPath(`/course/2025-2026/${id}/info`), id);
+  }
+  for (const pathname of ["/course/010201", "/course/42s01", "/other/01001", "/course/01001-extra"]) {
+    assert.equal(utils.getCourseIdFromPath(pathname), null);
+  }
+});
+
 test("primary result uses pass percentage for pass/fail and grade for numeric courses", () => {
   const result = utils.getPrimaryResult({ grading_scale: "pass_fail", passpercent: 85, avg: 0 });
   assert.equal(result.value, 85);
