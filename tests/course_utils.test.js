@@ -18,6 +18,7 @@ test("primary result uses pass percentage for pass/fail and grade for numeric co
   assert.equal(result.value, 85);
   assert.equal(result.unit, "% passed");
   assert.equal(result.maxValue, 100);
+  assert.equal(utils.getPrimaryResult({ grading_scale: "mixed", passpercent: 80, avg: 7 }).value, 80);
   assert.equal(utils.getPrimaryResult({ avg: 7, passpercent: 85 }).value, 7);
   assert.equal(utils.getPrimaryResult({ grading_scale: "pass_fail" }).value, undefined);
 });

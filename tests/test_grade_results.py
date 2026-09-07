@@ -41,6 +41,7 @@ def test_mixed_results_keep_both_kinds_of_awards():
     assert result['grading_scale'] == 'mixed'
     assert result['grades']['passed'] == '8'
     assert result['grades']['7'] == '1'
+    assert 'avg' not in result and 'avgp' not in result
 
 
 def test_approval_results_are_retained_separately():

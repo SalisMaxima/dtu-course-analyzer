@@ -43,6 +43,8 @@ htmlcov/
 .tox/
 /exam-classification-report/
 /test/
+/test2/
+/test3/
 
 # IDE
 .vscode/

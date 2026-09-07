@@ -173,6 +173,8 @@ async def test_full_run_retains_unresolved_courses_and_scopes_cookie(monkeypatch
         assert not session.cookie_jar.filter_cookies(probe.URL("http://karakterer.dtu.dk"))
         assert not session.cookie_jar.filter_cookies(probe.URL("http://kurser.dtu.dk"))
         assert not session.cookie_jar.filter_cookies(probe.URL("https://auth.dtu.dk"))
+        assert session.headers['User-Agent'] == probe.BROWSER_USER_AGENT
+        assert 'Chrome/' in session.headers['User-Agent']
         result = classify_course(record("Autumn" if course == "01001" else "August", [
             sheet("Winter-2025"), sheet("Summer-2026"),
         ]))
@@ -299,8 +301,27 @@ def test_count_check_detects_missing_source_categories_and_registration_mismatch
     assert probe.result_count_check(sheet) == {
         'source_total': 804, 'retained_total': 804, 'participants': 804,
         'all_categories_retained': True, 'matches_participants': True,
+        'grading_scale': 'pass_fail',
     }
     sheet['UnknownOutcome'] = '1'
     check = probe.result_count_check(sheet)
     assert not check['all_categories_retained']
     assert not check['matches_participants']
+
+
+def test_report_summary_flags_mixed_grading_histograms(tmp_path):
+    counts = probe.result_count_check({
+        '7': '1', 'Bestået': '8', 'Ikkebestået': '1', 'participants': 10,
+    })
+    report = {'courses': {'01001': {
+        'status': 'provisional', 'primary_status': 'identified',
+        'resit_status': 'none_found_in_collected_links', 'schedule': {},
+        'primary_exam': None, 'exams': [{
+            'url': 'https://karakterer.dtu.dk/Histogram/1/01001/Summer-2025',
+            'period': {'label': 'Summer-2025'}, 'result_counts': counts,
+        }], 'resit_exams': [], 'undetermined_exams': [], 'reasons': [], 'errors': [],
+    }}}
+    probe.write_reports(report, tmp_path)
+    assert counts['grading_scale'] == 'mixed'
+    assert 'Mixed numeric/pass-fail histograms requiring review: 1' in (
+        tmp_path / 'summary.md').read_text()

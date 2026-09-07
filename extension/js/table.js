@@ -32,7 +32,8 @@ function buildRows(db) {
     const row = { course: courseN, grading_scale: data.grading_scale };
     COLUMNS.forEach(({ key }) => {
       if (key === "course") return;
-      const val = data[key];
+      const val = DTUAnalyzer.usesPassPercentage(data) && ["avg", "avgp"].includes(key)
+        ? undefined : data[key];
       row[key] = (typeof val === "undefined" || val === null) ? "" : val;
     });
     return row;
@@ -128,6 +129,8 @@ function renderPage() {
         td.textContent = result.value === undefined || result.value === null || result.value === ""
           ? "No data" : String(result.value) + result.unit;
         td.title = result.label;
+      } else if (key === "avgp" && DTUAnalyzer.usesPassPercentage(row)) {
+        td.textContent = "Not applicable";
       } else {
         td.textContent = row[key];
       }
@@ -185,6 +188,7 @@ function appendComparisonRow(tbody, label, selectedRows, valueForRow) {
 
 function appendColoredComparisonRow(tbody, label, selectedRows, key, unit, maxValue) {
   appendComparisonRow(tbody, label, selectedRows, (row, td) => {
+    if (key === "avgp" && DTUAnalyzer.usesPassPercentage(row)) return "Not applicable";
     const value = row[key];
     if (typeof value === "undefined" || value === null || value === "") return "No data";
 

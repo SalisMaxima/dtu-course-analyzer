@@ -69,8 +69,9 @@ table labels, and iframe count. The collector follows DTU's same-course
 collection errors. It does not store full authentication pages or cookies.
 Each parsed histogram includes source/retained category totals and a comparison
 with registered participants. The summary counts discrepancies so omitted or
-unrecognized result categories remain visible. Approved/not-approved outcomes
-are preserved separately from passed/not-passed outcomes.
+unrecognized result categories remain visible. It also counts mixed numeric and
+pass/fail histograms for manual review. Approved/not-approved outcomes are
+preserved separately from passed/not-passed outcomes.
 
 ## Initial hypotheses
 

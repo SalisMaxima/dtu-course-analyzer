@@ -21,6 +21,11 @@ from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
+BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+)
+
 
 def extract_histogram_links(html: str, course: str) -> list[dict]:
     found = {}
@@ -79,7 +84,7 @@ def course_wrapper_url(html: str, url: str) -> str | None:
 
 
 def result_count_check(sheet: dict) -> dict:
-    retained, _ = extract_grade_results(sheet)
+    retained, grading_scale = extract_grade_results(sheet)
     retained_total = sum(int(v) for v in retained.values())
     metadata = {'timestamp', 'participants', 'pass_percentage', 'avg', 'url'}
     source_total = sum(int(v) for k, v in sheet.items() if k not in metadata)
@@ -87,7 +92,8 @@ def result_count_check(sheet: dict) -> dict:
     return {'source_total': source_total, 'retained_total': retained_total,
             'participants': participants,
             'all_categories_retained': retained_total == source_total,
-            'matches_participants': source_total == participants}
+            'matches_participants': source_total == participants,
+            'grading_scale': grading_scale}
 
 
 async def fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str:
@@ -220,6 +226,10 @@ def write_reports(report: dict, output: Path) -> None:
         not all(e['result_counts'][k] for k in ('all_categories_retained', 'matches_participants'))
         for row in report['courses'].values() for e in row.get('exams', []) if 'result_counts' in e)
     summary.extend([f'Histograms with result-count discrepancies: {count_mismatches}'])
+    mixed_histograms = sum(
+        e.get('result_counts', {}).get('grading_scale') == 'mixed'
+        for row in report['courses'].values() for e in row.get('exams', []))
+    summary.extend([f'Mixed numeric/pass-fail histograms requiring review: {mixed_histograms}'])
     if report.get("fatal_error"):
         summary.extend(["", f"Run error: {report['fatal_error']}"])
     reasons = Counter(reason for row in report["courses"].values() for reason in row.get("reasons", []))
@@ -256,7 +266,7 @@ async def run_probe(courses: list[str], output: Path) -> int:
         concurrency = max(1, config.scraper.max_concurrent)
         async with aiohttp.ClientSession(
             cookie_jar=jar, connector=aiohttp.TCPConnector(limit=concurrency),
-            headers={"User-Agent": "DTU-Course-Analyzer/diagnostic"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
         ) as session:
             semaphore = asyncio.Semaphore(concurrency)
             tasks = [collect_registered_course(session, semaphore, c) for c in courses]

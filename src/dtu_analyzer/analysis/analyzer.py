@@ -205,7 +205,7 @@ def process_courses(courseDic: Dict) -> Dict:
                     db_sheet["grade_source"] = sheet["url"]
 
                 # Extract average grade (optional)
-                if "avg" in sheet and db_sheet["grading_scale"] != "pass_fail":
+                if "avg" in sheet and db_sheet["grading_scale"] == "seven_point":
                     try:
                         avg_val = float(sheet["avg"])
                         db_sheet["avg"] = avg_val
