@@ -1,0 +1,17 @@
+# Normalize line endings so mixed CRLF/LF files stop producing phantom diffs
+* text=auto
+
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Firefox Add-ons submission mirror - keep byte-identical to what was submitted
+source-code/** -text

@@ -1,7 +1,7 @@
 # DTU Course Analyzer - Project Roadmap
 
-**Current Version:** 2.2.0
-**Last Updated:** 2025-12-19
+**Current Version:** 2.4.0
+**Last Updated:** 2026-07-11
 
 ---
 

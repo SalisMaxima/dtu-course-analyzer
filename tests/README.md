@@ -32,11 +32,31 @@ End-to-end pipeline validation (5 tests):
 python3 tests/validate_pipeline.py
 ```
 
+### `course_utils.test.js`
+Behaviour of the shared extension helpers in `extension/js/course-utils.js`:
+- Grade normalization and percentage calculation
+- Feedback confidence boundaries (10 and 30 responses)
+- Metric colour scale (red to green, clamped)
+- Course-id validation, deduplication, and the four-course comparison limit
+- `chrome.storage` round-trip, including rejection when storage reports an error
+
+Uses the built-in `node:test` runner only - no npm install required.
+
+**Run with:**
+```bash
+node --test tests/
+```
+
 ## Running All Tests
 
 Run both validation scripts:
 ```bash
 python3 tests/validate_refactor.py && python3 tests/validate_pipeline.py
+```
+
+Run the extension helper tests:
+```bash
+node --test tests/
 ```
 
 ## Test Coverage

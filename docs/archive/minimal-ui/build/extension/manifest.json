@@ -11,7 +11,8 @@
     "content_scripts": [
         {
           "matches": ["https://kurser.dtu.dk/course/*"],
-          "js": ["js/course-utils.js", "contentscript.js"]
+          "js": ["js/course-utils.js", "contentscript.js"],
+          "css": ["css/analyzer.css"]
         }
     ],
     "background": {

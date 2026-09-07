@@ -15,6 +15,34 @@ from ..utils.logger import setup_logger
 
 logger = setup_logger('analyzer', 'analyzer.log')
 
+RESULT_ALIASES = {
+    'bestået': 'passed', 'passed': 'passed',
+    'ikkebestået': 'not_passed', 'notpassed': 'not_passed',
+    'ejmødt': 'absent', 'absent': 'absent',
+    'syg': 'sick', 'sick': 'sick',
+}
+
+
+def extract_grade_results(sheet: dict) -> tuple[dict, str]:
+    """Preserve categorical outcomes as well as the seven-point grade scale."""
+    results = {}
+    for key, value in sheet.items():
+        normalized = ''.join(key.split()).lower()
+        category = RESULT_ALIASES.get(normalized)
+        if key in {'-3', '00', '02', '4', '7', '10', '12'}:
+            results[key] = value
+        elif category:
+            results[category] = value
+    binary = any(key in results for key in ('passed', 'not_passed'))
+    numeric = False
+    for key in ('-3', '00', '02', '4', '7', '10', '12'):
+        try:
+            numeric = numeric or float(results.get(key, 0) or 0) > 0
+        except (ValueError, TypeError):
+            continue
+    scale = 'mixed' if binary and numeric else 'pass_fail' if binary else 'seven_point'
+    return results, scale
+
 
 def calcScore(dic: dict, bestOptionFirst: bool) -> float:
     """
@@ -135,8 +163,6 @@ def process_courses(courseDic: Dict) -> Dict:
         Processed database with percentiles and metrics
     """
     db = {}
-    grades = ["-3", "00", "02", "4", "7", "10", "12"]
-
     # Collection lists for percentile calculation
     pass_percentages = []
     workloads = []
@@ -170,8 +196,14 @@ def process_courses(courseDic: Dict) -> Dict:
                 db_sheet["passpercent"] = sheet["pass_percentage"]
                 pass_percentages.append([courseN, sheet["pass_percentage"]])
 
+                db_sheet["grades"], db_sheet["grading_scale"] = extract_grade_results(sheet)
+                if "timestamp" in sheet:
+                    db_sheet["grade_period"] = sheet["timestamp"]
+                if "url" in sheet:
+                    db_sheet["grade_source"] = sheet["url"]
+
                 # Extract average grade (optional)
-                if "avg" in sheet:
+                if "avg" in sheet and db_sheet["grading_scale"] != "pass_fail":
                     try:
                         avg_val = float(sheet["avg"])
                         db_sheet["avg"] = avg_val
@@ -182,12 +214,6 @@ def process_courses(courseDic: Dict) -> Dict:
                 # Extract participants (total course attendees)
                 if "participants" in sheet:
                     db_sheet["grade_participants"] = sheet["participants"]
-
-                # Extract individual grades (optional)
-                db_sheet["grades"] = {}
-                for grade in grades:
-                    if grade in sheet:
-                        db_sheet["grades"][grade] = sheet[grade]
 
             elif categoryN == "reviews":
                 # Determine scoring direction

@@ -9,6 +9,11 @@ Simply install the extension and visit any course page, for example `http://kurs
 - Workload and Lazyscore based on student evaluations
 - Color-coded stats: green is good
 
+**New in Version 2.4.0:**
+- Grade distribution histograms on DTU course pages.
+- Feedback sample-size confidence labels.
+- Persistent side-by-side comparison for up to four courses.
+
 **New in Version 2.2.2:**
 
 - Updated course data for the latest dataset.

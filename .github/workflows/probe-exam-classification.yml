@@ -1,0 +1,58 @@
+name: Test Exam Classification
+
+on:
+  workflow_dispatch:
+    inputs:
+      courses:
+        description: "Comma-separated course IDs; leave blank to collect all current courses"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      PROBE_COURSES: ${{ inputs.courses }}
+      MAX_CONCURRENT: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install -e '.[dev]'
+          playwright install --with-deps chromium
+      - name: Test diagnostic logic
+        run: python -m pytest tests/test_exam_classification.py
+      - name: Authenticate
+        env:
+          DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
+          DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
+        run: dtu-auth
+      - name: Discover current courses
+        if: inputs.courses == ''
+        run: dtu-get-courses
+      - name: Collect classification evidence
+        run: python -m dtu_analyzer.scripts.probe_exam_classification --courses "$PROBE_COURSES"
+      - name: Upload diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exam-classification-report
+          path: exam-classification-report/
+          if-no-files-found: warn
+      - name: Publish run summary
+        if: always()
+        run: |
+          if [ -f exam-classification-report/summary.md ]; then
+            cat exam-classification-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No classification report produced; see setup/authentication logs.' >> "$GITHUB_STEP_SUMMARY"
+          fi

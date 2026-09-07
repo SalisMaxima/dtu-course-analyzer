@@ -8,6 +8,7 @@ Requires authentication cookie from auth.py.
 import os
 import sys
 import re
+from urllib.parse import urlsplit
 from playwright.sync_api import sync_playwright
 
 # Import from our modules
@@ -18,6 +19,12 @@ logger = setup_logger('course_numbers', 'course_numbers.log')
 
 # This URL searches for courses across all schedule groups
 SEARCH_URL = "https://kurser.dtu.dk/search?CourseCode=&SearchKeyword=&SchedulePlacement=E1%3BE2%3BE3%3BE4%3BE5%3BE1A%3BE2A%3BE3A%3BE4A%3BE5A%3BE1B%3BE2B%3BE3B%3BE4B%3BE5B%3BE7%3BE&SchedulePlacement=E1%3BE1A%3BE1B&SchedulePlacement=E1A&SchedulePlacement=E1B&SchedulePlacement=E2%3BE2A%3BE2B&SchedulePlacement=E2A&SchedulePlacement=E2B&SchedulePlacement=E3%3BE3A%3BE3B&SchedulePlacement=E3A&SchedulePlacement=E3B&SchedulePlacement=E4%3BE4A%3BE4B&SchedulePlacement=E4A&SchedulePlacement=E4B&SchedulePlacement=E5%3BE5A%3BE5B&SchedulePlacement=E5A&SchedulePlacement=E5B&SchedulePlacement=E7&SchedulePlacement=F1%3BF2%3BF3%3BF4%3BF5%3BF1A%3BF2A%3BF3A%3BF4A%3BF5A%3BF1B%3BF2B%3BF3B%3BF4B%3BF5B%3BF7%3BF&SchedulePlacement=F1%3BF1A%3BF1B&SchedulePlacement=F1A&SchedulePlacement=F1B&SchedulePlacement=F2%3BF2A%3BF2B&SchedulePlacement=F2A&SchedulePlacement=F2B&SchedulePlacement=F3%3BF3A%3BF3B&SchedulePlacement=F3A&SchedulePlacement=F3B&SchedulePlacement=F4%3BF4A%3BF4B&SchedulePlacement=F4A&SchedulePlacement=F4B&SchedulePlacement=F5%3BF5A%3BF5B&SchedulePlacement=F5A&SchedulePlacement=F5B&SchedulePlacement=F7&SchedulePlacement=January&SchedulePlacement=August%3BJuly%3BJune&SchedulePlacement=August&SchedulePlacement=July&SchedulePlacement=June&CourseType=&TeachingLanguage="
+
+
+def extract_course_number(link: str) -> str | None:
+    """Recognize numeric and alphanumeric IDs, including catalogue-year paths."""
+    match = re.match(r'/course/(?:\d{4}-\d{4}/)?([0-9A-Z]{5})(?:/|$)', urlsplit(link).path)
+    return match.group(1) if match else None
 
 
 def get_course_numbers() -> bool:
@@ -78,10 +85,9 @@ def get_course_numbers() -> bool:
 
             course_numbers = set()
             for link in links:
-                # Look for the pattern /course/XXXXX (5 digits)
-                match = re.search(r'/course/(\d{5})', link)
-                if match:
-                    course_numbers.add(match.group(1))
+                course_number = extract_course_number(link)
+                if course_number:
+                    course_numbers.add(course_number)
 
             count = len(course_numbers)
             logger.info(f"Found {count} unique courses.")
