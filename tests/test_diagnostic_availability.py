@@ -115,7 +115,7 @@ def test_offline_replay_preserves_source_and_reports_availability(tmp_path):
     source.write_text(original)
     result = probe.replay_report(source, tmp_path / "replayed")
     assert source.read_text() == original
-    assert result["schema_version"] == 3
+    assert result["schema_version"] == probe.SCHEMA_VERSION
     assert result["distribution_summary"] == {"suppressed": 1}
     assert result["summary"] == {"provisional": 1}
     with (tmp_path / "replayed/courses.csv").open() as stream:
@@ -172,3 +172,55 @@ def test_continuation_with_own_additional_period_requires_review():
                                 "<tr><td></td><td>This course also runs in Autumn.</td></tr></table>", "01001")
     assert schedule["ambiguous_explanation"]
     assert "Autumn" in schedule["explanation"]
+
+
+def test_suffix_links_are_separate_deduplicated_and_scoped():
+    html = "".join(f'<a href="https://karakterer.dtu.dk/Histogram/1/{code}/Summer-2026">s26</a>'
+                   for code in ["01025", "01025-2", "01025-2", "01025-3", "010250", "01026-2", "01025-2-3", "01025-other"])
+    links = probe.extract_histogram_links(html, "01025")
+    assert [e["histogram_course"] for e in links] == ["01025", "01025-2", "01025-3"]
+    assert links[0]["identity_status"] == "exact_course_id"
+    assert all(e["identity_status"] == "variant_requires_review" for e in links[1:])
+    evidence = probe.info_evidence(html, "https://kurser.dtu.dk/course/01025/info", "01025")
+    assert evidence["state"] == "links_found"
+    assert evidence["histogram_link_count"] == 3
+    assert links[1]["url"] in evidence["relevant_links"]
+
+
+@pytest.mark.asyncio
+async def test_suffix_is_collected_and_suppressed_but_not_assigned(monkeypatch, tmp_path):
+    url = "https://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2026"
+    async def fetch(session, requested, diagnostics=None):
+        if "/Histogram/" in requested:
+            return (FIXTURES / "suffixed-histogram.html").read_text()
+        if "/info" in requested:
+            return f'<a href="{url}">Historical version s26</a>'
+        return "<h2>01025 Differential Equations and Infinite Series</h2><table><tr><td>Schedule</td><td>Autumn</td></tr></table>"
+    monkeypatch.setattr(probe, "fetch_page", fetch)
+    row = await probe.collect_course(None, asyncio.Semaphore(1), "01025")
+    assert row["errors"] == []
+    assert row["primary_exam"] is None
+    assert row["resit_exams"] == []
+    assert row["status"] == "undetermined"
+    item = row["exams"][0]
+    assert item["distribution_status"] == "suppressed"
+    assert item["grades"] is None
+    assert item["histogram_course"] == "01025-2"
+    assert item["histogram_title"].startswith("01025 Matematik 2")
+    assert item["reason"] == "course_variant_identity_unverified"
+    probe.write_reports({"courses": {"01025": row}}, tmp_path)
+    with (tmp_path / "courses.csv").open() as stream:
+        csv_row = next(csv.DictReader(stream))
+    assert json.loads(csv_row["variant_urls"]) == [url]
+    assert "Suffixed course histograms requiring identity review: 1" in (tmp_path / "summary.md").read_text()
+
+
+def test_legacy_suffix_cannot_override_exact_primary():
+    exact = {"url": "https://karakterer.dtu.dk/Histogram/1/01025/Winter-2024",
+             "period": {"season": "winter", "year": 2024}, "grades": {"participants": 10}}
+    variant = {"url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Winter-2025",
+               "period": {"season": "winter", "year": 2025}, "grades": {"participants": 20}}
+    row = classify_course({"schedule": schedule_from_text("Autumn"), "exams": [exact, variant]})
+    assert row["status"] == "partial"
+    assert row["primary_exam"]["url"] == exact["url"]
+    assert row["undetermined_exams"][0]["identity_status"] == "variant_requires_review"

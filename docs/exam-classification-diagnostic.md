@@ -62,7 +62,7 @@ are saved every 25 completed courses; `pending` registrations in an interrupted
 run mean collection had not been checkpointed. A complete run returns nonzero
 for collection errors, but unresolved classifications alone do not fail it.
 
-Report schema version 3 also records course/info request attempts, HTTP status,
+Report schema version 4 also records course/info request attempts, HTTP status,
 final URL (with authentication query parameters omitted), page title/headings,
 table labels, and iframe count. The collector follows DTU's same-course
 `forceLogin` iframe once; repeated wrappers or unrecognized pages become explicit
@@ -84,7 +84,7 @@ preserved separately from passed/not-passed outcomes.
 | Multiple periods all mapping to summer | Summer | Winter |
 | Conflicting, unverified or missing teaching periods | Undetermined | Undetermined |
 
-Rule version `schedule-hypothesis-v4` permits combined periods when their ordinary
+Rule version `schedule-hypothesis-v5` permits combined periods when their ordinary
 exam season agrees: Autumn + January maps to winter; Spring + June + July maps
 to summer. Autumn + Spring remains unresolved, as does any combination involving
 August until its histogram mapping is verified. These combinations identify a
@@ -139,7 +139,7 @@ Tests use synthetic HTML, not authenticated live fixtures:
 python -m pytest tests/test_exam_classification.py
 ```
 
-## Availability and discrepancies (schema 3)
+## Availability and discrepancies (schema 4)
 
 Every collected histogram has a `distribution_status`: `published`,
 `suppressed`, or `failed`. DTU's small-cohort suppression message produces
@@ -190,3 +190,27 @@ This covers an unrecognized info page, other-course references, August,
 suppressed histograms, zero categorical placeholders, ambiguous prose and
 compatible combined periods. Save the artifact for review before another full
 run. Production regular/resit selection remains unchanged.
+
+
+## Suffixed histogram identities
+
+Schema 4 / rule `schedule-hypothesis-v5` collects the exact course ID and
+numeric suffixes such as `01025-2`, while excluding unrelated IDs and arbitrary
+suffix text. Canonical URLs keep variants separate. JSON records
+`histogram_course`, `identity_status`, and `histogram_title` alongside the
+current course name and source headings. Titles are evidence for manual review;
+translated or similar names do not automatically establish identity.
+
+Every suffixed variant has `identity_status=variant_requires_review` and
+classification reason `course_variant_identity_unverified`. It is not selected
+as primary or resit, even if its year is newer than an exact-ID exam. Its grade
+availability is independent: a small-cohort variant can be `suppressed` and
+identity-unverified without being a collection error. CSV lists `variant_urls`;
+the summary counts variants requiring review.
+
+Next run **Test Exam Classification** on the updated branch with
+`courses=01025,01001` and `auth_courses=01001,01020`. Check that 01025's suffixed
+links appear and its Summer-2026 distribution is suppressed, while 01001 remains
+the exact-ID control. Review this artifact before another all-course run.
+Previous artifacts cannot recover links discarded by the old filter; a fresh
+Actions run is required. Production selection and bundled data are unchanged.
