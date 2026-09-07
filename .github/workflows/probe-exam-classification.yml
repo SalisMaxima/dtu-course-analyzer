@@ -35,7 +35,7 @@ jobs:
           python -m pip install -e '.[dev]'
           playwright install --with-deps chromium
       - name: Test diagnostic logic
-        run: python -m pytest tests/test_exam_classification.py tests/test_schedule_access_diagnostics.py
+        run: python -m pytest tests/test_exam_classification.py tests/test_schedule_access_diagnostics.py tests/test_diagnostic_availability.py tests/test_grade_results.py
       - name: Authenticate and diagnose schedule access
         env:
           DTU_USERNAME: ${{ secrets.DTU_USERNAME }}

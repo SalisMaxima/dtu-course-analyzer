@@ -58,3 +58,28 @@ def test_approval_only_results_have_no_numeric_average():
     result = process_courses({'12345': {'grades': [sheet]}})['12345']
     assert result['grading_scale'] == 'pass_fail'
     assert 'avg' not in result
+
+
+def test_zero_categorical_placeholders_do_not_hide_numeric_average():
+    sheet = {"participants": 10, "pass_percentage": 100, "7": "10",
+             "Bestået": "0", "Ikkebestået": "0", "Godkendt": "0", "avg": 7}
+    result = process_courses({"01001": {"grades": [sheet]}})["01001"]
+    assert result["grading_scale"] == "seven_point"
+    assert result["avg"] == 7
+    assert "avgp" in result
+    assert result["grades"]["passed"] == "0"
+
+
+def test_zero_categorical_only_distribution_keeps_its_scale():
+    from dtu_analyzer.analysis.analyzer import extract_grade_results
+    for key in ("Bestået", "Godkendt"):
+        counts, scale = extract_grade_results({key: "0", "Ejmødt": "1"})
+        assert scale == "pass_fail"
+        assert sum(int(v) for v in counts.values()) == 1
+
+
+def test_positive_approval_and_numeric_results_are_mixed():
+    from dtu_analyzer.analysis.analyzer import extract_grade_results
+    counts, scale = extract_grade_results({"Godkendt": "1", "7": "1"})
+    assert scale == "mixed"
+    assert counts == {"approved": "1", "7": "1"}

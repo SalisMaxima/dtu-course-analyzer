@@ -42,7 +42,14 @@ def extract_grade_results(sheet: dict) -> tuple[dict, str]:
             numeric = numeric or float(results.get(key, 0) or 0) > 0
         except (ValueError, TypeError):
             continue
-    scale = 'mixed' if binary and numeric else 'pass_fail' if binary else 'seven_point'
+    def positive(key):
+        try:
+            return float(results.get(key, 0) or 0) > 0
+        except (ValueError, TypeError):
+            return False
+    positive_binary = any(positive(key) for key in ('passed', 'not_passed', 'approved', 'not_approved'))
+    scale = ('mixed' if numeric and positive_binary else 'seven_point' if numeric
+             else 'pass_fail' if binary else 'seven_point')
     return results, scale
 
 

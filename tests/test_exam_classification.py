@@ -52,7 +52,7 @@ def test_selects_latest_ordinary_across_all_sheets_not_participant_size():
     ("", "schedule_missing_or_unrecognized"),
     ("Spring and Autumn", "multiple_teaching_periods"),
     ("August", "august_histogram_mapping_unverified"),
-    ("August. Also 42500(January), 42501(June)", "schedule_contains_other_course_references"),
+    ("August. Also 42500(January), 42501(June)", "august_histogram_mapping_unverified"),
 ])
 def test_ambiguous_schedules_are_explicit(schedule, reason):
     result = classify_course(record(schedule, [sheet("Winter-2025"), sheet("Summer-2026")]))
@@ -86,7 +86,7 @@ def test_only_reads_schedule_field_not_other_course_references():
     <tr><td></td><td>The course runs in all periods: 42500(January), 42501(June)</td></tr>
     <tr><td>Exam</td><td>Winter</td></tr></table>"""
     assert extract_schedule(html)["periods"] == ["august"]
-    assert not extract_schedule(html)["contains_course_references"]
+    assert extract_schedule(html)["referenced_courses"] == ["42500", "42501"]
 
 
 def test_unknown_periods_and_zero_results_remain_visible():
@@ -301,7 +301,7 @@ def test_count_check_detects_missing_source_categories_and_registration_mismatch
     assert probe.result_count_check(sheet) == {
         'source_total': 804, 'retained_total': 804, 'participants': 804,
         'all_categories_retained': True, 'matches_participants': True,
-        'grading_scale': 'pass_fail',
+        'grading_scale': 'pass_fail', 'participant_difference': 0,
     }
     sheet['UnknownOutcome'] = '1'
     check = probe.result_count_check(sheet)
