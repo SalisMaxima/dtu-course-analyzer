@@ -41,6 +41,7 @@ build/
 .coverage
 htmlcov/
 .tox/
+/exam-classification-report/
 
 # IDE
 .vscode/

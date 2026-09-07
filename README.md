@@ -154,6 +154,12 @@ This generates:
 8. Publish the new package and wait for Chrome Web Store approval.
  
 ## Testing
+
+The manual [Test Exam Classification workflow](.github/workflows/probe-exam-classification.yml)
+collects schedule and histogram evidence, with a proposed primary exam, resits,
+and unresolved cases for every course. See the
+[diagnostic guide](docs/exam-classification-diagnostic.md) for running and reviewing it.
+
 ```bash
 # Run all tests
 pytest -v
