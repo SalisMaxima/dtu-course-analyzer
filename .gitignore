@@ -42,6 +42,7 @@ build/
 htmlcov/
 .tox/
 /exam-classification-report/
+/test/
 
 # IDE
 .vscode/

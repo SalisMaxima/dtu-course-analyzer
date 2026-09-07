@@ -17,13 +17,26 @@ Download the `exam-classification-report` artifact:
 - `summary.md`: totals by status and unresolved reason, also shown in Actions.
 
 Assignments are hypotheses, not measured accuracy. `provisional` means a primary
-and at least one resit candidate were found without unresolved sheets. `partial`
-means a primary was found but resits or other sheets remain unresolved.
+was found without unresolved sheets. `partial` means a primary was found but
+other sheets remain unresolved. Separate `primary_status` and `resit_status`
+fields distinguish a successful primary selection from resit availability.
+`none_found_in_collected_links` means no resit candidate was discovered; it does
+not assert that the course has no resits.
 `undetermined` means no unique primary could be assigned. `error` indicates a
 collection/parsing problem; usable partial evidence is still retained. Checkpoints
 are saved every 25 completed courses; `pending` registrations in an interrupted
 run mean collection had not been checkpointed. A complete run returns nonzero
 for collection errors, but unresolved classifications alone do not fail it.
+
+Report schema version 2 also records course/info request attempts, HTTP status,
+final URL (with authentication query parameters omitted), page title/headings,
+table labels, and iframe count. The collector follows DTU's same-course
+`forceLogin` iframe once; repeated wrappers or unrecognized pages become explicit
+collection errors. It does not store full authentication pages or cookies.
+Each parsed histogram includes source/retained category totals and a comparison
+with registered participants. The summary counts discrepancies so omitted or
+unrecognized result categories remain visible. Approved/not-approved outcomes
+are preserved separately from passed/not-passed outcomes.
 
 ## Initial hypotheses
 

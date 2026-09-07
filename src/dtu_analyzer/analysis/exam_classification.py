@@ -105,12 +105,10 @@ def classify_course(record: dict) -> dict:
         reasons.append("no_histogram_links")
     if not ordinary:
         reasons.append("no_ordinary_exam_identified")
-    if not resits:
-        reasons.append("no_resit_identified")
     if unresolved:
         reasons.append("unclassified_histograms")
     errors = record.get("errors", [])
-    status = "provisional" if primary and resits and not unresolved and not reasons else "partial"
+    status = "provisional" if primary and not unresolved and not reasons else "partial"
     if primary is None:
         status = "undetermined"
     if errors or any(e.get("error") for e in exams):
@@ -119,6 +117,8 @@ def classify_course(record: dict) -> dict:
         status=status, primary_exam=primary, ordinary_exams=ordinary,
         resit_exams=resits, undetermined_exams=unresolved, exams=exams,
         reasons=reasons, classification_basis="current_schedule_inference",
+        primary_status="identified" if primary else "undetermined",
+        resit_status="candidates_found" if resits else "undetermined" if unresolved or errors or primary is None else "none_found_in_collected_links",
         caveats=[
             "Assignments are hypotheses; they have not been manually verified.",
             "Current schedule may differ from historical course schedules.",

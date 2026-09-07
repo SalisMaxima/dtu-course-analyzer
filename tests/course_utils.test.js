@@ -30,6 +30,16 @@ test("pass/fail results show their actual categories and source percentages", ()
   assert.equal(result[2].percentage.toFixed(1), "6.5");
 });
 
+test("approval categories stay visible and count toward the source denominator", () => {
+  const result = utils.normalizeGrades({ passed: '575', not_passed: '127',
+    approved: '0', not_approved: '45', absent: '57' });
+  assert.equal(result.reduce((sum, item) => sum + item.count, 0), 804);
+  assert.equal(result.find(item => item.grade === 'Not approved').count, 45);
+  assert.equal(result.find(item => item.grade === 'Passed').percentage.toFixed(1), '71.5');
+  assert.deepEqual(utils.normalizeGrades({approved: '9', not_approved: '1'}).map(item => item.grade),
+    ['Approved', 'Not approved']);
+});
+
 test("mixed numeric and pass/fail data retains all awarded results", () => {
   const result = utils.normalizeGrades({ "7": "1", passed: "8", not_passed: "1" });
   assert.equal(result.reduce((sum, item) => sum + item.count, 0), 10);
