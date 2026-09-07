@@ -63,6 +63,24 @@ def test_ambiguous_schedules_are_explicit(schedule, reason):
     assert reason in result["reasons"]
 
 
+@pytest.mark.parametrize('schedule,primary', [
+    ('Autumn and January', 'Winter-2025'),
+    ('Spring and June', 'Summer-2026'),
+    ('June and July', 'Summer-2026'),
+])
+def test_combined_teaching_periods_can_share_an_ordinary_season(schedule, primary):
+    result = classify_course(record(schedule, [sheet('Summer-2026'), sheet('Winter-2025')]))
+    assert result['status'] == 'provisional'
+    assert result['primary_exam']['period']['label'] == primary
+    assert len(result['resit_exams']) == 1
+
+
+def test_august_with_another_period_stays_unresolved():
+    result = classify_course(record('June and August', [sheet('Summer-2026')]))
+    assert result['primary_exam'] is None
+    assert 'august_histogram_mapping_unverified' in result['reasons']
+
+
 def test_only_reads_schedule_field_not_other_course_references():
     html = """<table><tr><th>Schedule:</th><td>August</td></tr>
     <tr><td></td><td>The course runs in all periods: 42500(January), 42501(June)</td></tr>

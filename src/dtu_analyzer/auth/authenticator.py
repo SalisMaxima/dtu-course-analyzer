@@ -16,7 +16,7 @@ from ..utils.logger import setup_logger
 logger = setup_logger('auth', 'auth.log')
 
 
-def authenticate() -> bool:
+def authenticate(after_login=None) -> bool:
     """
     Authenticate with DTU and save session cookie.
 
@@ -106,6 +106,8 @@ def authenticate() -> bool:
                 with open(config.paths.secret_file, "w") as f:
                     f.write(session_cookie["value"])
                 logger.info(f"Cookie saved to {config.paths.secret_file}")
+                if after_login is not None:
+                    after_login(browser, context, session_cookie['value'])
                 return True
             else:
                 logger.error("FAILURE: Login flow finished, but ASP.NET_SessionId cookie was not found")

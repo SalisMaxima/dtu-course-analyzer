@@ -235,7 +235,7 @@ def write_reports(report: dict, output: Path) -> None:
 
 async def run_probe(courses: list[str], output: Path) -> int:
     report = {
-        "schema_version": 2, "rule_version": "schedule-hypothesis-v2",
+        "schema_version": 2, "rule_version": "schedule-hypothesis-v3",
         "started_at": datetime.now(timezone.utc).isoformat(),
         "courses": {c: {"course": c, "status": "pending", "primary_exam": None,
                         "resit_exams": [], "undetermined_exams": [],

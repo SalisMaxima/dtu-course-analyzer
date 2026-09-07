@@ -19,6 +19,10 @@ PERIOD_PATTERNS = {
     "august": r"\baugust\b",
 }
 SCHEDULE_LABELS = {"schedule", "schedule placement", "skemaplacering"}
+ORDINARY_SEASONS = {
+    "autumn": "winter", "january": "winter",
+    "spring": "summer", "june": "summer", "july": "summer",
+}
 
 
 def extract_schedule(html: str) -> dict:
@@ -67,12 +71,16 @@ def classify_course(record: dict) -> dict:
         reasons.append("schedule_missing_or_unrecognized")
     elif schedule.get("contains_course_references"):
         reasons.append("schedule_contains_other_course_references")
-    elif len(periods) != 1:
-        reasons.append("multiple_teaching_periods")
-    elif periods[0] == "august":
+    elif "august" in periods:
         reasons.append("august_histogram_mapping_unverified")
+    elif any(period not in ORDINARY_SEASONS for period in periods):
+        reasons.append("schedule_missing_or_unrecognized")
     else:
-        primary_season = "winter" if periods[0] in {"autumn", "january"} else "summer"
+        seasons = {ORDINARY_SEASONS[period] for period in periods}
+        if len(seasons) == 1:
+            primary_season = seasons.pop()
+        else:
+            reasons.append("multiple_teaching_periods")
 
     exams = []
     for source in record.get("exams", []):

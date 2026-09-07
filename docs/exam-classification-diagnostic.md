@@ -6,6 +6,40 @@ enter `01001,01911,02443,42500,42501,42504`. The workflow uses the existing
 `DTU_USERNAME` and `DTU_PASSWORD` Actions secrets. It does not update extension
 data, commit files, or open issues.
 
+## Diagnosing schedule access on GitHub Actions
+
+The authentication step now runs a comparison immediately after login, before
+closing Playwright. `auth_courses` defaults to `01001,01020` (failing example and
+working control); it accepts up to seven course IDs independently of `courses`.
+No local browser session is required.
+
+The artifact additionally contains `auth-report.json` and `auth-summary.md`.
+For each course it compares:
+
+1. A browser page, including iframe contents, with the complete login state.
+2. Playwright requests with the full cookie state and browser user agent.
+3. aiohttp with only the exported session cookie and the same browser user agent.
+4. aiohttp with only that cookie and the classification diagnostic's user agent.
+
+Each mode receives an isolated copy of the initial login state. Cookie names,
+domains, paths and security flags are recorded, along with sanitized navigation
+URLs/statuses and whether a schedule was recovered. Cookie values, full storage
+state, passwords, authentication HTML and screenshots are not added to these
+artifacts. Redirects in request probes are bounded and restricted to DTU HTTPS
+destinations. Comparisons checkpoint after each mode, including failures.
+
+Full-cookie success with session-only failure points toward cookie-state or HTTP
+client differences; browser-only success points toward browser navigation/storage;
+a difference between the two session-only probes points toward the user agent.
+These are hypotheses, not proof: server-side session state can still evolve
+during the sequential tests. Inspect navigation evidence before changing production
+authentication. If all modes succeed, the original failure was not reproduced.
+
+The normal classification collection still follows this step. Authentication
+failure prevents collection but produces an authentication diagnostic artifact.
+This does not export extra cookies to the normal scraper or automatically adopt
+any inferred authentication fix.
+
 Download the `exam-classification-report` artifact:
 
 - `courses.csv`: one registration for every requested course, with status,
@@ -45,7 +79,15 @@ are preserved separately from passed/not-passed outcomes.
 | Autumn / January | Winter | Summer |
 | Spring / June / July | Summer | Winter |
 | August | Undetermined | Undetermined |
-| Multiple or missing teaching periods | Undetermined | Undetermined |
+| Multiple periods all mapping to winter | Winter | Summer |
+| Multiple periods all mapping to summer | Summer | Winter |
+| Conflicting, unverified or missing teaching periods | Undetermined | Undetermined |
+
+Rule version `schedule-hypothesis-v3` permits combined periods when their ordinary
+exam season agrees: Autumn + January maps to winter; Spring + June + July maps
+to summer. Autumn + Spring remains unresolved, as does any combination involving
+August until its histogram mapping is verified. These combinations identify a
+season, not individual cohorts or separate sittings within that season.
 
 The second column chooses the newest parsed year among **all** matching sheets;
 participant count does not choose the exam. Zero-participant sheets remain
