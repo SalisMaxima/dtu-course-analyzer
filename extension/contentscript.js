@@ -103,7 +103,7 @@ function presentData(data, courseId, loadError) {
       hasData = true;
     }
 
-    const metrics = data.grading_scale === "pass_fail"
+    const metrics = DTUAnalyzer.usesPassPercentage(data)
       ? [["Percentage passed", "passpercent", "%", 100], ...outputArr.slice(3)]
       : outputArr;
     metrics.forEach(([label, key, unit, maxVal]) => {

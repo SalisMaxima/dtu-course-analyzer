@@ -50,8 +50,12 @@
     return { key: "higher", label: "Higher confidence" };
   }
 
+  function usesPassPercentage(data) {
+    return Boolean(data && ["pass_fail", "mixed"].includes(data.grading_scale));
+  }
+
   function getPrimaryResult(data) {
-    const passFail = data && data.grading_scale === "pass_fail";
+    const passFail = usesPassPercentage(data);
     return {
       label: passFail ? "Percentage passed" : "Average grade",
       value: data && data[passFail ? "passpercent" : "avg"],
@@ -155,6 +159,7 @@
     MAX_COMPARISONS,
     getConfidence,
     getPrimaryResult,
+    usesPassPercentage,
     getMetricColor,
     isValidCourseId,
     getCourseIdFromPath,
