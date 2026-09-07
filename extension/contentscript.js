@@ -102,11 +102,14 @@ function presentData(data, courseId, loadError) {
 
     const gradeDistribution = DTUAnalyzer.normalizeGrades(data.grades);
     if (gradeDistribution.some((item) => item.count > 0)) {
-      addGradeHistogram(tbody, gradeDistribution);
+      addGradeHistogram(tbody, gradeDistribution, data.grade_period);
       hasData = true;
     }
 
-    outputArr.forEach(([label, key, unit, maxVal]) => {
+    const metrics = data.grading_scale === "pass_fail"
+      ? [["Percentage passed", "passpercent", "%", 100], ...outputArr.slice(3)]
+      : outputArr;
+    metrics.forEach(([label, key, unit, maxVal]) => {
       const val = data[key];
 
       if (typeof val !== "undefined" && val !== null && !isNaN(val)) {
@@ -172,7 +175,7 @@ function addFeedbackRow(tbody, count) {
   addRow(tbody, "Feedback responses", value);
 }
 
-function addGradeHistogram(tbody, distribution) {
+function addGradeHistogram(tbody, distribution, period) {
   const tr = document.createElement("tr");
   const td = document.createElement("td");
   td.colSpan = 2;
@@ -181,6 +184,12 @@ function addGradeHistogram(tbody, distribution) {
   const title = document.createElement("b");
   title.textContent = "Grades awarded";
   td.appendChild(title);
+  if (period) {
+    const note = document.createElement("span");
+    note.textContent = ` · ${period}`;
+    note.style.fontSize = "0.85em";
+    td.appendChild(note);
+  }
 
   const chart = document.createElement("div");
   chart.setAttribute("role", "img");
@@ -274,8 +283,7 @@ function addComparisonControls(tbody, courseId) {
 
   button.addEventListener("click", async () => {
     try {
-      const current = await DTUAnalyzer.readSelection();
-      const result = DTUAnalyzer.toggleSelection(current, courseId);
+      const result = await DTUAnalyzer.updateSelection("toggle", courseId);
       if (result.invalid) {
         message.textContent = `${courseId} cannot be added to a comparison.`;
         return;
@@ -284,9 +292,8 @@ function addComparisonControls(tbody, courseId) {
         message.textContent = `Remove a course before adding another (maximum ${DTUAnalyzer.MAX_COMPARISONS}).`;
         return;
       }
-      const saved = await DTUAnalyzer.writeSelection(result.selection);
       message.textContent = "";
-      await refresh(saved);
+      await refresh(result.selection);
     } catch (e) {
       console.error("DTU Analyzer: Could not update the comparison:", e);
       message.textContent = "Could not save your comparison - try reloading the page.";

@@ -29,7 +29,7 @@ const state = {
 function buildRows(db) {
   return Object.keys(db).map((courseN) => {
     const data = db[courseN];
-    const row = { course: courseN };
+    const row = { course: courseN, grading_scale: data.grading_scale };
     COLUMNS.forEach(({ key }) => {
       if (key === "course") return;
       const val = data[key];
@@ -42,8 +42,18 @@ function buildRows(db) {
 // Empty values always sort last, regardless of direction
 function compareRows(a, b) {
   const { sortKey, sortAsc } = state;
-  const valA = a[sortKey];
-  const valB = b[sortKey];
+  let valA = a[sortKey];
+  let valB = b[sortKey];
+  if (sortKey === "avg") {
+    // Keep the two scales separate, sorting within each by its own metric.
+    const resultA = DTUAnalyzer.getPrimaryResult(a);
+    const resultB = DTUAnalyzer.getPrimaryResult(b);
+    valA = resultA.value ?? "";
+    valB = resultB.value ?? "";
+    if (valA !== "" && valB !== "" && resultA.maxValue !== resultB.maxValue) {
+      return resultA.maxValue - resultB.maxValue;
+    }
+  }
 
   if (valA === "" && valB === "") return 0;
   if (valA === "") return 1;
@@ -113,6 +123,11 @@ function renderPage() {
         link.rel = "noopener noreferrer";
         link.textContent = row.course;
         td.appendChild(link);
+      } else if (key === "avg") {
+        const result = DTUAnalyzer.getPrimaryResult(row);
+        td.textContent = result.value === undefined || result.value === null || result.value === ""
+          ? "No data" : String(result.value) + result.unit;
+        td.title = result.label;
       } else {
         td.textContent = row[key];
       }
@@ -215,7 +230,16 @@ function renderComparison() {
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  appendColoredComparisonRow(tbody, "Average grade", selectedRows, "avg", "", 12);
+  appendComparisonRow(tbody, "Grade / percentage passed", selectedRows, (row, td) => {
+    const result = DTUAnalyzer.getPrimaryResult(row);
+    if (result.value === undefined || result.value === null || result.value === "") return "No data";
+    const badge = document.createElement("span");
+    badge.className = "metric-value";
+    badge.textContent = String(result.value) + result.unit;
+    badge.title = result.label;
+    badge.style.backgroundColor = DTUAnalyzer.getMetricColor(result.value, result.maxValue);
+    td.appendChild(badge);
+  });
   appendColoredComparisonRow(tbody, "Grade percentile", selectedRows, "avgp", "%", 100);
   appendColoredComparisonRow(tbody, "Passed", selectedRows, "passpercent", "%", 100);
   appendColoredComparisonRow(tbody, "Course rating", selectedRows, "qualityscore", "%", 100);
@@ -248,10 +272,17 @@ function renderComparison() {
 }
 
 // Persist a selection and re-render, reporting failures instead of hanging the buttons
-async function applySelection(selection) {
+async function applySelection(action, courseId) {
   const status = document.getElementById("comparison-status");
   try {
-    state.selected = await DTUAnalyzer.writeSelection(selection);
+    const result = await DTUAnalyzer.updateSelection(action, courseId);
+    if (result.invalid || result.limitReached) {
+      if (status) status.textContent = result.invalid
+        ? `${courseId} cannot be added to a comparison.`
+        : `Maximum ${DTUAnalyzer.MAX_COMPARISONS} courses. Remove one before adding another.`;
+      return;
+    }
+    state.selected = result.selection;
   } catch (e) {
     console.error("DTU Analyzer: Could not save the comparison selection:", e);
     if (status) status.textContent = "Could not save your comparison selection.";
@@ -263,24 +294,14 @@ async function applySelection(selection) {
 }
 
 async function toggleCourse(courseId) {
-  const result = DTUAnalyzer.toggleSelection(state.selected, courseId);
-  const status = document.getElementById("comparison-status");
-  if (result.invalid) {
-    if (status) status.textContent = `${courseId} cannot be added to a comparison.`;
-    return;
-  }
-  if (result.limitReached) {
-    if (status) status.textContent = `Maximum ${DTUAnalyzer.MAX_COMPARISONS} courses. Remove one before adding another.`;
-    return;
-  }
-  await applySelection(result.selection);
+  await applySelection("toggle", courseId);
 }
 
 async function initComparison() {
   state.selected = await DTUAnalyzer.readSelection();
 
   const clearButton = document.getElementById("clear-comparison");
-  if (clearButton) clearButton.addEventListener("click", () => applySelection([]));
+  if (clearButton) clearButton.addEventListener("click", () => applySelection("clear"));
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[DTUAnalyzer.COMPARISON_KEY]) return;
     const selection = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);

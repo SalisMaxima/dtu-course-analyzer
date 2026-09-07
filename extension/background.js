@@ -1,6 +1,28 @@
 // background.js - Chrome Version
 // We don't handle data here anymore. The content script handles it via direct injection.
 
+importScripts("js/course-utils.js");
+
+// All tabs submit operations to one queue; no tab overwrites a stale snapshot.
+let comparisonQueue = Promise.resolve();
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (!message || message.type !== "updateComparison") return;
+    const operation = comparisonQueue.then(async () => {
+        if (!["toggle", "clear"].includes(message.action)) throw new Error("Invalid comparison action");
+        const current = await DTUAnalyzer.readSelection();
+        const result = message.action === "clear"
+            ? { selection: [] }
+            : DTUAnalyzer.toggleSelection(current, message.courseId);
+        if (!result.invalid && !result.limitReached) {
+            result.selection = await DTUAnalyzer.writeSelection(result.selection);
+        }
+        return result;
+    });
+    comparisonQueue = operation.catch(() => {});
+    operation.then(sendResponse, (error) => sendResponse({ error: error.message }));
+    return true;
+});
+
 // Update listener for the browser action button (top right icon)
 chrome.action.onClicked.addListener((tab) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('db.html') });

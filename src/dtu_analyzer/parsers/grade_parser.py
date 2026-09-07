@@ -65,9 +65,17 @@ def parse_grades(html: str, url: str) -> Optional[Dict[str, Any]]:
         try:
             summary_table = tables[0].find_all('tr')
 
+            summary_fields = {}
+            for row in summary_table:
+                cells = row.find_all('td', recursive=False)
+                if len(cells) >= 2:
+                    summary_fields[remove_whitespace(cells[0].text).lower()] = cells[1]
+
             # Participants (row 1, column 1)
             if len(summary_table) > 1:
-                participants_cell = summary_table[1].find_all('td')[1]
+                participants_cell = next((summary_fields[key] for key in
+                    ('antaltilmeldte', 'participants', 'registered') if key in summary_fields),
+                    summary_table[1].find_all('td')[1])
                 dic["participants"] = int(remove_whitespace(participants_cell.text))
 
             # Pass percentage (row 2, column 1) - extract from "XX (YY%)"

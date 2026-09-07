@@ -12,8 +12,16 @@
   }
 
   function normalizeGrades(grades) {
-    const values = GRADE_ORDER.map((grade) => {
-      const parsed = Number(grades && grades[grade]);
+    const binary = grades && (Object.hasOwn(grades, "passed") || Object.hasOwn(grades, "not_passed"));
+    const numeric = GRADE_ORDER.some((grade) => Number(grades && grades[grade]) > 0);
+    const categories = binary
+      ? [...(numeric ? GRADE_ORDER.map((grade) => [grade, grade]) : []),
+         ["passed", "Passed"], ["not_passed", "Not passed"],
+         ...["absent", "sick"].filter((key) => Number(grades[key]) > 0)
+           .map((key) => [key, key === "absent" ? "Absent" : "Sick"])]
+      : GRADE_ORDER.map((grade) => [grade, grade]);
+    const values = categories.map(([key, grade]) => {
+      const parsed = Number(grades && grades[key]);
       return { grade, count: Number.isFinite(parsed) && parsed > 0 ? parsed : 0 };
     });
     const total = values.reduce((sum, item) => sum + item.count, 0);
@@ -31,6 +39,16 @@
     if (parsed < 10) return { key: "low", label: "Low confidence" };
     if (parsed < 30) return { key: "moderate", label: "Moderate confidence" };
     return { key: "higher", label: "Higher confidence" };
+  }
+
+  function getPrimaryResult(data) {
+    const passFail = data && data.grading_scale === "pass_fail";
+    return {
+      label: passFail ? "Percentage passed" : "Average grade",
+      value: data && data[passFail ? "passpercent" : "avg"],
+      unit: passFail ? "% passed" : "",
+      maxValue: passFail ? 100 : 12,
+    };
   }
 
   function getMetricColor(value, maxValue = 1) {
@@ -109,11 +127,25 @@
     });
   }
 
+  function updateSelection(action, courseId) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "updateComparison", action, courseId }, (result) => {
+        const error = chrome.runtime.lastError;
+        if (error || !result || result.error) {
+          reject(new Error(error ? error.message : (result && result.error) || "No response"));
+          return;
+        }
+        resolve(result);
+      });
+    });
+  }
+
   const api = {
     COMPARISON_KEY,
     GRADE_ORDER,
     MAX_COMPARISONS,
     getConfidence,
+    getPrimaryResult,
     getMetricColor,
     isValidCourseId,
     normalizeGrades,
@@ -121,6 +153,7 @@
     readSelection,
     toggleSelection,
     writeSelection,
+    updateSelection,
   };
 
   root.DTUAnalyzer = api;

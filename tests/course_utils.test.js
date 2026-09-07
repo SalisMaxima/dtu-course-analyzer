@@ -3,6 +3,30 @@ const test = require("node:test");
 
 const utils = require("../extension/js/course-utils.js");
 
+test("primary result uses pass percentage for pass/fail and grade for numeric courses", () => {
+  const result = utils.getPrimaryResult({ grading_scale: "pass_fail", passpercent: 85, avg: 0 });
+  assert.equal(result.value, 85);
+  assert.equal(result.unit, "% passed");
+  assert.equal(result.maxValue, 100);
+  assert.equal(utils.getPrimaryResult({ avg: 7, passpercent: 85 }).value, 7);
+  assert.equal(utils.getPrimaryResult({ grading_scale: "pass_fail" }).value, undefined);
+});
+
+test("pass/fail results show their actual categories and source percentages", () => {
+  const result = utils.normalizeGrades({ passed: "79", not_passed: "7", absent: "6" });
+  assert.deepEqual(result.map(item => item.grade), ["Passed", "Not passed", "Absent"]);
+  assert.equal(result[0].percentage.toFixed(1), "85.9");
+  assert.equal(result[1].percentage.toFixed(1), "7.6");
+  assert.equal(result[2].percentage.toFixed(1), "6.5");
+});
+
+test("mixed numeric and pass/fail data retains all awarded results", () => {
+  const result = utils.normalizeGrades({ "7": "1", passed: "8", not_passed: "1" });
+  assert.equal(result.reduce((sum, item) => sum + item.count, 0), 10);
+  assert.equal(result.find(item => item.grade === "7").count, 1);
+  assert.equal(result.find(item => item.grade === "Passed").count, 8);
+});
+
 test("normalizes grade counts and calculates percentages", () => {
   const distribution = utils.normalizeGrades({
     "-3": "1",
