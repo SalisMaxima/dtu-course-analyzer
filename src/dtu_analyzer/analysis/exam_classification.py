@@ -150,8 +150,17 @@ def classify_course(record: dict) -> dict:
         exam = {**source, "classification": "undetermined", "reason": None}
         period = exam["period"]
         exam.setdefault("distribution_status", "failed" if exam.get("error") else "published")
+        # Infer from the source URL too, so replayed/legacy records cannot
+        # bypass identity review merely by lacking the new metadata.
+        source_parts = urlsplit(exam.get("url", "")).path.rstrip("/").split("/")
+        source_id = source_parts[-2] if len(source_parts) >= 2 else ""
+        if re.fullmatch(r"[0-9A-Z]{5}-[0-9]+", source_id):
+            exam["histogram_course"] = source_id
+            exam["identity_status"] = "variant_requires_review"
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
+        elif exam.get("identity_status") == "variant_requires_review":
+            exam["reason"] = "course_variant_identity_unverified"
         elif exam["distribution_status"] != "suppressed" and (exam.get("grades") or {}).get("participants", 0) <= 0:
             exam["reason"] = "no_published_results"
         elif primary_season is None:
@@ -179,6 +188,8 @@ def classify_course(record: dict) -> dict:
         reasons.append("no_ordinary_exam_identified")
     if unresolved:
         reasons.append("unclassified_histograms")
+    if any(e.get("identity_status") == "variant_requires_review" for e in exams):
+        reasons.append("course_variant_identity_unverified")
     errors = record.get("errors", [])
     status = "provisional" if primary and not unresolved and not reasons else "partial"
     if primary is None:

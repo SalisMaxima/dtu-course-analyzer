@@ -21,8 +21,8 @@ from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
-SCHEMA_VERSION = 3
-RULE_VERSION = "schedule-hypothesis-v4"
+SCHEMA_VERSION = 4
+RULE_VERSION = "schedule-hypothesis-v5"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -36,12 +36,16 @@ def extract_histogram_links(html: str, course: str) -> list[dict]:
         url = urlsplit(urljoin(config.scraper.base_url, anchor["href"]))
         if url.hostname != "karakterer.dtu.dk":
             continue
-        if not re.fullmatch(rf"/Histogram/\d+/{re.escape(course)}/[^/]+", url.path):
+        match = re.fullmatch(rf"/Histogram/\d+/({re.escape(course)}(?:-[0-9]+)?)/[^/]+", url.path)
+        if not match:
             continue
+        histogram_course = match[1]
         canonical = urlunsplit(("https", "karakterer.dtu.dk", url.path, "", ""))
         found.setdefault(canonical, {
             "url": canonical, "link_label": anchor.get_text(" ", strip=True),
             "period": parse_period(canonical),
+            "histogram_course": histogram_course,
+            "identity_status": "variant_requires_review" if histogram_course != course else "exact_course_id",
         })
     return list(found.values())
 
@@ -89,7 +93,7 @@ def info_evidence(html: str, url: str, course: str) -> dict:
     for anchor in anchors:
         target = urlsplit(urljoin(url, anchor["href"]))
         if (target.hostname in {"kurser.dtu.dk", "karakterer.dtu.dk"}
-                and re.fullmatch(r"/(?:course/[0-9A-Z]{5}(?:/info)?|Histogram/\d+/[0-9A-Z]{5}/[A-Za-z]+-\d+)", target.path)):
+                and re.fullmatch(r"/(?:course/[0-9A-Z]{5}(?:/info)?|Histogram/\d+/[0-9A-Z]{5}(?:-[0-9]+)?/[A-Za-z]+-\d+)", target.path)):
             relevant.append(diagnostic_url(urlunsplit(target)))
     # Capture only result-related text nodes, excluding contact details and URLs.
     excerpts = []
@@ -117,6 +121,11 @@ def read_distribution(exam: dict, html: str) -> None:
         "headings": [h.get_text(" ", strip=True) for h in soup.find_all(["h1", "h2", "h3"])],
         "tables": [t.get_text(" ", strip=True) for t in soup.find_all("table")],
     }
+    histogram_course = urlsplit(exam["url"]).path.split("/")[-2]
+    base_course = histogram_course.split("-")[0]
+    exam["histogram_title"] = next(
+        (heading for heading in exam["evidence"]["headings"]
+         if re.match(rf"^{re.escape(base_course)}(?:-[0-9]+)?\b", heading)), None)
     if distribution_suppressed(soup.get_text(" ", strip=True)):
         exam.update(distribution_status="suppressed", grades=None)
         return
@@ -254,6 +263,7 @@ def write_reports(report: dict, output: Path) -> None:
     report["summary"] = dict(Counter(r["status"] for r in report["courses"].values()))
     exams = [e for row in report["courses"].values() for e in row.get("exams", [])]
     report["distribution_summary"] = dict(Counter(e.get("distribution_status", "unknown") for e in exams))
+    report["variant_histograms"] = sum(e.get("identity_status") == "variant_requires_review" for e in exams)
     report["count_summary"] = {
         "category_retention_failures": sum(not e["result_counts"]["all_categories_retained"]
                                           for e in exams if "result_counts" in e),
@@ -268,7 +278,7 @@ def write_reports(report: dict, output: Path) -> None:
         writer.writerow(["course", "status", "primary_status", "resit_status", "schedule", "primary_exam", "primary_url",
                          "resit_exams", "undetermined_exams", "reasons", "errors",
                          "primary_distribution_status", "suppressed_histograms", "failed_histograms",
-                         "category_retention_failures", "participant_discrepancies", "info_state"])
+                         "category_retention_failures", "participant_discrepancies", "info_state", "variant_urls"])
         for course, row in report["courses"].items():
             primary = row.get("primary_exam") or {}
             writer.writerow([
@@ -287,6 +297,8 @@ def write_reports(report: dict, output: Path) -> None:
                 sum(not e["result_counts"]["all_categories_retained"] for e in row.get("exams", []) if "result_counts" in e),
                 sum(not e["result_counts"]["matches_participants"] for e in row.get("exams", []) if "result_counts" in e),
                 row.get("pages", {}).get("info", {}).get("content", {}).get("state", "not_recorded"),
+                json.dumps([e["url"] for e in row.get("exams", [])
+                            if e.get("identity_status") == "variant_requires_review"]),
             ])
     summary = ["# Exam classification diagnostic", "",
                "Provisional schedule-based assignments; not measured classification accuracy.", "",
@@ -297,6 +309,7 @@ def write_reports(report: dict, output: Path) -> None:
     no_resits = sum(row.get('resit_status') == 'none_found_in_collected_links'
                    for row in report['courses'].values())
     summary.extend(['', f'Primary identified, no resit links found: {no_resits}'])
+    summary.append(f"Suffixed course histograms requiring identity review: {report['variant_histograms']}")
     summary.extend(f"Distributions {status}: {count}" for status, count in sorted(report["distribution_summary"].items()))
     summary.extend([
         f"Category-retention failures: {report['count_summary']['category_retention_failures']}",
