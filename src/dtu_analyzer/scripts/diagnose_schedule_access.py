@@ -22,6 +22,7 @@ from ..auth.authenticator import authenticate
 from ..analysis.exam_classification import extract_schedule
 from ..scrapers.async_scraper import is_login_page
 from .probe_exam_classification import course_wrapper_url, diagnostic_url
+from . import diagnose_info_access as info_diagnostic
 
 
 DIAGNOSTIC_USER_AGENT = 'DTU-Course-Analyzer/diagnostic'
@@ -211,6 +212,16 @@ def main():
         return 1
     write_report(report, output)
 
+    info_courses = sorted(set(filter(None, re.split(r"[,\s]+", os.getenv(
+        "INFO_DIAGNOSTIC_COURSES", "02280,02426,01822,02262").strip()))))
+    info_report = {"schema_version": 1, "started_at": datetime.now(timezone.utc).isoformat(),
+                   "courses": {course: {} for course in info_courses}}
+    if len(info_courses) > 8 or any(not re.fullmatch(r"[0-9A-Z]{5}", c) for c in info_courses):
+        info_report.update(error="provide_up_to_eight_valid_course_ids", courses={})
+        info_diagnostic.write_report(info_report, output)
+        return 1
+    info_diagnostic.write_report(info_report, output)
+
     def after_login(browser, context, cookie):
         try:
             compare_access(browser, context, cookie, report, output)
@@ -218,9 +229,17 @@ def main():
             report['error'] = type(exc).__name__
             write_report(report, output)
 
+        try:
+            info_diagnostic.compare_info_access(browser, context, cookie, info_report, output)
+        except Exception as exc:
+            info_report["error"] = type(exc).__name__
+            info_diagnostic.write_report(info_report, output)
+
     authenticated = authenticate(after_login=after_login)
     if not authenticated:
         report['error'] = 'authentication_failed_before_comparison'
+        info_report["error"] = "authentication_failed_before_comparison"
+        info_diagnostic.write_report(info_report, output)
     report['finished_at'] = datetime.now(timezone.utc).isoformat()
     write_report(report, output)
     return 0 if authenticated else 1

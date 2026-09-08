@@ -21,8 +21,8 @@ from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
-SCHEMA_VERSION = 4
-RULE_VERSION = "schedule-hypothesis-v5"
+SCHEMA_VERSION = 5
+RULE_VERSION = "schedule-hypothesis-v6"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -36,7 +36,7 @@ def extract_histogram_links(html: str, course: str) -> list[dict]:
         url = urlsplit(urljoin(config.scraper.base_url, anchor["href"]))
         if url.hostname != "karakterer.dtu.dk":
             continue
-        match = re.fullmatch(rf"/Histogram/\d+/({re.escape(course)}(?:-[0-9]+)?)/[^/]+", url.path)
+        match = re.fullmatch(r"/Histogram/\d+/((?=[0-9A-Z]{0,4}[0-9])[0-9A-Z]{5}(?:-[0-9]+)?)/[^/]+", url.path)
         if not match:
             continue
         histogram_course = match[1]
@@ -45,7 +45,9 @@ def extract_histogram_links(html: str, course: str) -> list[dict]:
             "url": canonical, "link_label": anchor.get_text(" ", strip=True),
             "period": parse_period(canonical),
             "histogram_course": histogram_course,
-            "identity_status": "variant_requires_review" if histogram_course != course else "exact_course_id",
+            "identity_status": ("exact_course_id" if histogram_course == course else
+                                "variant_requires_review" if histogram_course.startswith(course + "-")
+                                else "different_course_requires_review"),
         })
     return list(found.values())
 
@@ -264,6 +266,7 @@ def write_reports(report: dict, output: Path) -> None:
     exams = [e for row in report["courses"].values() for e in row.get("exams", [])]
     report["distribution_summary"] = dict(Counter(e.get("distribution_status", "unknown") for e in exams))
     report["variant_histograms"] = sum(e.get("identity_status") == "variant_requires_review" for e in exams)
+    report["different_course_histograms"] = sum(e.get("identity_status") == "different_course_requires_review" for e in exams)
     report["count_summary"] = {
         "category_retention_failures": sum(not e["result_counts"]["all_categories_retained"]
                                           for e in exams if "result_counts" in e),
@@ -278,7 +281,7 @@ def write_reports(report: dict, output: Path) -> None:
         writer.writerow(["course", "status", "primary_status", "resit_status", "schedule", "primary_exam", "primary_url",
                          "resit_exams", "undetermined_exams", "reasons", "errors",
                          "primary_distribution_status", "suppressed_histograms", "failed_histograms",
-                         "category_retention_failures", "participant_discrepancies", "info_state", "variant_urls"])
+                         "category_retention_failures", "participant_discrepancies", "info_state", "variant_urls", "different_course_urls"])
         for course, row in report["courses"].items():
             primary = row.get("primary_exam") or {}
             writer.writerow([
@@ -299,6 +302,8 @@ def write_reports(report: dict, output: Path) -> None:
                 row.get("pages", {}).get("info", {}).get("content", {}).get("state", "not_recorded"),
                 json.dumps([e["url"] for e in row.get("exams", [])
                             if e.get("identity_status") == "variant_requires_review"]),
+                json.dumps([e["url"] for e in row.get("exams", [])
+                            if e.get("identity_status") == "different_course_requires_review"]),
             ])
     summary = ["# Exam classification diagnostic", "",
                "Provisional schedule-based assignments; not measured classification accuracy.", "",
@@ -309,6 +314,7 @@ def write_reports(report: dict, output: Path) -> None:
     no_resits = sum(row.get('resit_status') == 'none_found_in_collected_links'
                    for row in report['courses'].values())
     summary.extend(['', f'Primary identified, no resit links found: {no_resits}'])
+    summary.append(f"Different-course histograms requiring identity review: {report['different_course_histograms']}")
     summary.append(f"Suffixed course histograms requiring identity review: {report['variant_histograms']}")
     summary.extend(f"Distributions {status}: {count}" for status, count in sorted(report["distribution_summary"].items()))
     summary.extend([
