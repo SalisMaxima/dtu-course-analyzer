@@ -119,7 +119,14 @@ links against their schedules, then inspect August, mixed-period and failed
 records. Use the JSON's period labels and table evidence to determine whether
 August is a distinct histogram period or grouped with summer. Coverage totals
 alone do not establish correctness: manually verify assignments before applying
-these rules to production. No production selection or UI behavior uses this code.
+these rules to production. The opt-in Chrome beta builder uses these rules;
+the scheduled production analyzer retains its existing selection behavior.
+
+Maintainer-approved historical identities are stored in
+`analysis/course_history_reviews.py`. Rule `schedule-hypothesis-v7-reviewed`
+accepts the four reviewed mappings and records new-course history expectations.
+See [Chrome beta instructions](chrome-beta.md) for packaging, default selection,
+exam switching, and the beta test checklist.
 
 ## Local execution
 

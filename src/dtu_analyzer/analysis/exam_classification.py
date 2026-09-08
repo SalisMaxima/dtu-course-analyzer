@@ -1,10 +1,11 @@
-"""Provisional exam-period classification for the diagnostic workflow only.
+"""Provisional exam-period classification for diagnostics and opt-in beta builds.
 
 These are schedule-based hypotheses, not verified first-attempt populations.
 Keep unknown periods and mixed schedules visible instead of guessing.
 """
 
 import re
+from .course_history_reviews import NEW_COURSES, history_review
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -161,6 +162,10 @@ def classify_course(record: dict) -> dict:
         elif re.fullmatch(r"[0-9A-Z]{5}-[0-9]+", source_id):
             exam["histogram_course"] = source_id
             exam["identity_status"] = "variant_requires_review"
+        review = history_review(record.get("course"), source_id)
+        if review:
+            exam["identity_status"] = "manually_approved_history"
+            exam["identity_review"] = review
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
         elif exam.get("identity_status") == "different_course_requires_review":
@@ -190,6 +195,8 @@ def classify_course(record: dict) -> dict:
         reasons.append("multiple_histograms_for_latest_ordinary_period")
     if not exams:
         reasons.append("no_histogram_links")
+    if not exams and record.get("course") in NEW_COURSES:
+        record["history_status"] = "new_course_no_history_expected"
     if not ordinary:
         reasons.append("no_ordinary_exam_identified")
     if unresolved:

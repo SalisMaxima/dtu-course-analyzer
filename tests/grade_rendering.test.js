@@ -12,6 +12,7 @@ class Element {
     this.attributes = {};
     this.classList = { contains: () => false };
     this.value = "";
+    this.listeners = {};
   }
   set textContent(value) { this.children = []; this.text = String(value); }
   get textContent() { return (this.text || "") + this.children.map(c => c.textContent).join(""); }
@@ -20,7 +21,7 @@ class Element {
   removeChild(child) { this.children.splice(this.children.indexOf(child), 1); }
   insertAdjacentElement(position, child) { this.appendChild(child); }
   setAttribute(key, value) { this.attributes[key] = value; }
-  addEventListener() {}
+  addEventListener(event, callback) { this.listeners[event] = callback; }
 }
 
 function renderer(script) {
@@ -66,12 +67,12 @@ for (const scale of ["pass_fail", "mixed", "seven_point"]) {
     const { context, node } = renderer("contentscript.js");
     context.presentData(fixture, "01020");
     const text = node("anchor").textContent;
-    assert.match(text, /Summer-2026/);
+    assert.match(text, /Grades in: Summer 2026/);
     if (scale === "seven_point") {
-      assert.match(text, /Average grade9.4/);
-      assert.match(text, /Average grade percentile61.2%/);
+      assert.match(text, /Average gradeⓘ9.4/);
+      assert.match(text, /Average grade percentileⓘ61.2%/);
     } else {
-      assert.match(text, /Percentage passed85.9%/);
+      assert.match(text, /Percentage passedⓘ85.9%/);
       assert.doesNotMatch(text, /Average grade/);
       const tbody = node("anchor").children[0].children[0];
       const chart = tbody.children.flatMap(row => row.children)
@@ -115,8 +116,8 @@ test("zero pass/fail placeholders keep the numeric histogram and average", () =>
     grades: { "7": "10", passed: "0", not_passed: "0", approved: "0" },
   }, "01001");
   const text = node("anchor").textContent;
-  assert.match(text, /Average grade7/);
-  assert.match(text, /Average grade percentile50%/);
+  assert.match(text, /Average gradeⓘ7/);
+  assert.match(text, /Average grade percentileⓘ50%/);
   const tbody = node("anchor").children[0].children[0];
   const chart = tbody.children.flatMap(row => row.children)
     .flatMap(cell => cell.children).find(e => e.attributes.role === "img");
@@ -134,4 +135,35 @@ test("approval-only and zero-result categorical histograms retain their labels",
   const mixed = context.DTUAnalyzer.normalizeGrades({ "7": 1, approved: 2 });
   assert.ok(mixed.some(item => item.grade === "Approved" && item.count === 2));
   assert.ok(mixed.some(item => item.grade === "7" && item.count === 1));
+});
+
+test("beta selector switches numerical, pass/fail and hidden exams without stale metrics", () => {
+  const { context, node } = renderer("contentscript.js");
+  const data = {
+    default_exam_id: "regular", avgp: 75,
+    exam_default_note: "Latest regular exam", history_collected_at: "2026-09-08",
+    exam_history: [
+      { id: "regular", grade_period: "Winter-2025", histogram_course: "01001", classification: "ordinary_candidate",
+        distribution_status: "published", grading_scale: "seven_point", avg: 6.7, passpercent: 80, grades: { "7": 8, "00": 2 } },
+      { id: "binary", grade_period: "Summer-2026", histogram_course: "01001", classification: "resit_candidate",
+        distribution_status: "published", grading_scale: "pass_fail", passpercent: 90, grades: { passed: 9, not_passed: 1 } },
+      { id: "hidden", grade_period: "Summer-2024", histogram_course: "01001", classification: "resit_candidate",
+        distribution_status: "suppressed" },
+    ],
+  };
+  context.presentData(data, "01001");
+  function walk(e) { return [e, ...e.children.flatMap(walk)]; }
+  const select = walk(node("anchor")).find(e => e.attributes["aria-label"] === "Displayed exam");
+  assert.equal(select.value, "regular");
+  assert.match(node("anchor").textContent, /Average gradeⓘ6.7/);
+  assert.match(node("anchor").textContent, /Average grade percentileⓘ75%/);
+  select.value = "binary"; select.listeners.change();
+  assert.match(node("anchor").textContent, /Percentage passedⓘ90%/);
+  assert.doesNotMatch(node("anchor").textContent, /Average grade/);
+  select.value = "hidden"; select.listeners.change();
+  assert.match(node("anchor").textContent, /three or fewer/);
+  assert.doesNotMatch(node("anchor").textContent, /Grades awarded|Percentage passed90%|Average grade/);
+  select.value = "regular"; select.listeners.change();
+  assert.match(node("anchor").textContent, /Average gradeⓘ6.7/);
+  assert.doesNotMatch(node("anchor").textContent, /three or fewer/);
 });

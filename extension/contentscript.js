@@ -10,6 +10,36 @@ const outputArr = [
   ["Lazyscore percentile", "lazyscore", "%", 100],
 ];
 
+const METRIC_HELP = {
+  "Average grade": "DTU's published average numerical grade for the selected exam, on the Danish seven-point scale. Higher is better. Pass/fail and mixed distributions show percentage passed instead.",
+  "Average grade percentile": "Courses with numerical default-exam averages are ranked from lowest to highest. Equal averages share a rank. Higher is better. This percentile is shown only for the default exam, not for other historical selections.",
+  "Percentage passed": "The percentage of registered participants who passed the selected exam, including absent participants in the denominator. This uses DTU's rounded summary percentage, so it may differ slightly from the percentage calculated from the histogram counts. Higher is better.",
+  "Course rating percentile": "Courses are ranked using responses to the course-review question: ‘Overall I think the course is good.’ Higher means more positive ratings.",
+  "Workscore percentile": "Courses are ranked using responses to: ‘5 points are allocated to 9 h/week (45 h/week in the 3-week period). I think my workload in the course is [Much less … Much more].’ Higher means a lower reported workload relative to that expectation.",
+  "Lazyscore percentile": "The pass-rate percentile and lower-workload percentile are combined with equal weight, then courses are ranked again. The displayed value is that final percentile, not simply the average of the two inputs. Higher indicates a combination of higher pass rates and lower reported workload — the beer-friendly score. 🍺 This score comes from the bundled course-score dataset and does not change when you switch exams.",
+};
+METRIC_HELP["Percent passed"] = METRIC_HELP["Percentage passed"];
+
+function openMetricHelp(label, explanation) {
+  const dialog = document.createElement("dialog");
+  dialog.setAttribute("aria-label", label);
+  dialog.style.cssText = "max-width:520px;width:calc(100vw - 64px);padding:24px;border:1px solid #999;border-radius:8px;background:white;color:#222;";
+  const heading = document.createElement("h3");
+  heading.textContent = label;
+  const text = document.createElement("p");
+  text.textContent = explanation;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close";
+  close.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  dialog.appendChild(heading);
+  dialog.appendChild(text);
+  dialog.appendChild(close);
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
 // 2. Extract course ID from URL
 function getCourseId() {
   return DTUAnalyzer.getCourseIdFromPath(window.location.pathname);
@@ -61,6 +91,8 @@ function presentData(data, courseId, loadError) {
   const table = document.createElement("table");
   table.style.width = "100%";
   table.style.minWidth = "280px";
+  table.style.tableLayout = "fixed";
+  table.style.borderCollapse = "collapse";
   const tbody = document.createElement("tbody");
   tbody.id = "DTU-Course-Analyzer";
   table.appendChild(tbody);
@@ -80,7 +112,15 @@ function presentData(data, courseId, loadError) {
     return;
   }
 
-  if (data) {
+  if (data && Array.isArray(data.exam_history)) {
+    addExamHistory(tbody, data);
+    if (typeof data.review_participants !== "undefined") addFeedbackRow(tbody, data.review_participants);
+    outputArr.slice(3).forEach(([label, key, unit, maxVal]) => {
+      if (data[key] !== undefined && data[key] !== null && Number.isFinite(Number(data[key]))) {
+        addRow(tbody, label, Math.round(data[key] * 10) / 10, unit, true, maxVal);
+      }
+    });
+  } else if (data) {
     let hasData = false;
 
     // Add participant counts and an honest sample-size confidence cue.
@@ -146,6 +186,140 @@ function presentData(data, courseId, loadError) {
   addRow(tbody, link);
 }
 
+function addExamHistory(tbody, data) {
+  const note = document.createElement("span");
+  note.textContent = data.exam_default_note;
+  if (!data.exam_history.length) {
+    addRow(tbody, "Exam history", note);
+    return;
+  }
+
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Displayed exam");
+  select.style.maxWidth = "100%";
+  select.style.width = "100%";
+  select.style.minHeight = "40px";
+  select.style.padding = "8px";
+  select.style.border = "2px solid #990000";
+  select.style.borderRadius = "5px";
+  select.style.backgroundColor = "#fff";
+  select.style.color = "#222";
+  select.style.fontSize = "1em";
+  select.style.cursor = "pointer";
+  select.style.transform = "translateX(-6px)";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose an exam";
+  select.appendChild(placeholder);
+  data.exam_history.forEach(exam => {
+    const option = document.createElement("option");
+    option.value = exam.id;
+    const role = exam.classification === "ordinary_candidate" ? "Regular exam (inferred)"
+      : exam.classification === "resit_candidate" ? "Reexam (inferred)" : "Unclassified";
+    option.textContent = `${formatExamPeriod(exam.grade_period)} · ${role} · ${exam.histogram_course}`
+      + (exam.distribution_status === "published" ? "" : ` · ${exam.distribution_status}`)
+      + (exam.id === data.default_exam_id ? " · default" : "");
+    select.appendChild(option);
+  });
+  select.value = data.default_exam_id || "";
+  addRow(tbody, "Switch exam season", select);
+  if (data.history_collected_at) addRow(tbody, "Exam history collected", data.history_collected_at.slice(0, 10));
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = 2;
+  td.style.padding = "0";
+  const panel = document.createElement("table");
+  panel.style.width = "100%";
+  panel.style.tableLayout = "fixed";
+  panel.style.borderCollapse = "collapse";
+  panel.style.margin = "0";
+  const body = document.createElement("tbody");
+  body.setAttribute("aria-live", "polite");
+  panel.appendChild(body);
+  td.appendChild(panel);
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+  const render = () => {
+    while (body.firstChild) body.removeChild(body.firstChild);
+    const exam = data.exam_history.find(item => item.id === select.value);
+    if (!exam) { addRow(body, "Select an exam to view its results."); return; }
+    addRow(body, "Exam period", formatExamPeriod(exam.grade_period));
+    const link = document.createElement("a");
+    link.href = exam.grade_source;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = exam.title || `DTU results for ${exam.histogram_course}`;
+    addRow(body, "Source", link);
+    if (exam.identity_note) addRow(body, "Reviewed history", exam.identity_note);
+    if (["different_course_requires_review", "variant_requires_review"].includes(exam.identity_status)) {
+      addRow(body, "Historical course identity is unverified. These results are not assigned to the current course.");
+    }
+    if (exam.distribution_status === "suppressed") {
+      addRow(body, "DTU hides this distribution because three or fewer attended. No grade statistics are displayed.");
+      return;
+    }
+    if (exam.distribution_status !== "published") {
+      addRow(body, "Results could not be collected for this exam. Open the source to inspect it.");
+      return;
+    }
+    if (exam.grade_participants !== undefined) addRow(body, "Grade participants (registered)", exam.grade_participants);
+    if (exam.participant_difference) {
+      addRow(body, "Source totals differ", `${exam.participant_difference} registered participants are not accounted for by the displayed result total.`);
+    }
+    const distribution = DTUAnalyzer.normalizeGrades(exam.grades);
+    if (distribution.some(item => item.count > 0)) addGradeHistogram(body, distribution, exam.grade_period);
+    const primary = DTUAnalyzer.getPrimaryResult(exam);
+    if (primary.value !== undefined && primary.value !== null) {
+      addRow(body, primary.label, primary.value, DTUAnalyzer.usesPassPercentage(exam) ? "%" : "", true, primary.maxValue);
+    }
+    if (!DTUAnalyzer.usesPassPercentage(exam) && exam.passpercent !== undefined) {
+      addRow(body, "Percentage passed", exam.passpercent, "%", true, 100);
+    }
+    if (exam.id === data.default_exam_id && data.avgp !== undefined) {
+      addRow(body, "Average grade percentile", data.avgp, "%", true, 100);
+    }
+  };
+  select.addEventListener("change", render);
+  render();
+  addExamDisclaimer(tbody, data);
+}
+
+function addExamDisclaimer(tbody, data) {
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 2;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = "About these results";
+  button.style.cssText = "background:none;border:0;padding:6px 0;color:#990000;text-decoration:underline;cursor:pointer;font:inherit;";
+  button.setAttribute("aria-haspopup", "dialog");
+  const dialog = document.createElement("dialog");
+  dialog.setAttribute("aria-labelledby", "dtu-exam-disclaimer-title");
+  dialog.style.cssText = "max-width:520px;width:calc(100vw - 64px);padding:24px;border:1px solid #999;border-radius:8px;background:white;color:#222;";
+  const title = document.createElement("h3");
+  title.id = "dtu-exam-disclaimer-title";
+  title.textContent = "About these results";
+  dialog.appendChild(title);
+  [data.exam_default_note,
+    "Pass percentage uses registered participants, including absences, and DTU's rounded summary value.",
+    "Changing the exam affects this page only. Reload restores the default; comparisons use default exams.",
+    "Feedback metrics use their own latest collected survey."].filter(Boolean).forEach(text => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
+      dialog.appendChild(paragraph);
+    });
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close";
+  close.addEventListener("click", () => dialog.close());
+  dialog.appendChild(close);
+  button.addEventListener("click", () => dialog.showModal());
+  cell.appendChild(button);
+  cell.appendChild(dialog);
+  row.appendChild(cell);
+  tbody.appendChild(row);
+}
+
 function addFeedbackRow(tbody, count) {
   const confidence = DTUAnalyzer.getConfidence(count);
   const value = document.createElement("span");
@@ -172,19 +346,23 @@ function addFeedbackRow(tbody, count) {
   addRow(tbody, "Feedback responses", value);
 }
 
+function formatExamPeriod(period) {
+  return String(period || "").replace(/^([A-Za-z]+)-(\d{4})$/, "$1 $2");
+}
+
 function addGradeHistogram(tbody, distribution, period) {
   const tr = document.createElement("tr");
   const td = document.createElement("td");
   td.colSpan = 2;
   td.style.paddingTop = "8px";
+  td.style.paddingBottom = "16px";
 
-  const title = document.createElement("b");
-  title.textContent = "Grades awarded";
+  const title = document.createElement("span");
+  title.textContent = period ? "Grades in: " : "Grades";
   td.appendChild(title);
   if (period) {
-    const note = document.createElement("span");
-    note.textContent = ` · ${period}`;
-    note.style.fontSize = "0.85em";
+    const note = document.createElement("b");
+    note.textContent = formatExamPeriod(period);
     td.appendChild(note);
   }
 
@@ -199,6 +377,7 @@ function addGradeHistogram(tbody, distribution, period) {
   chart.style.gap = "5px";
   chart.style.height = "92px";
   chart.style.marginTop = "6px";
+  chart.style.marginRight = "8px";
 
   const maximum = Math.max(...distribution.map((item) => item.percentage), 1);
   distribution.forEach((item) => {
@@ -326,6 +505,8 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
 
   // Left Column (Label)
   const tdLeft = document.createElement("td");
+  tdLeft.style.width = "33%";
+  tdLeft.style.paddingLeft = "0";
   const b = document.createElement("b");
   if (typeof contentLeft === "string") {
     b.textContent = contentLeft;
@@ -336,11 +517,26 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
     return;
   }
   tdLeft.appendChild(b);
+  const label = typeof contentLeft === "string" ? contentLeft : contentLeft.textContent;
+  const explanation = METRIC_HELP[label];
+  if (explanation) {
+    b.title = explanation;
+    const info = document.createElement("button");
+    info.type = "button";
+    info.textContent = "ⓘ";
+    info.title = explanation;
+    info.setAttribute("aria-label", `About ${label}`);
+    info.setAttribute("aria-haspopup", "dialog");
+    info.style.cssText = "background:none;border:0;padding:0 4px;margin-left:4px;color:#990000;cursor:help;font:inherit;";
+    info.addEventListener("click", () => openMetricHelp(label, explanation));
+    tdLeft.appendChild(info);
+  }
   tr.appendChild(tdLeft);
 
   // Right Column (Value)
   const tdRight = document.createElement("td");
   tdRight.style.paddingLeft = "15px";
+  tdRight.style.overflowWrap = "anywhere";
   const span = document.createElement("span");
   if (value instanceof Node) {
     span.appendChild(value);
@@ -350,6 +546,10 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
   }
 
   if (colored && maxVal > 0) {
+    for (const cell of [tdLeft, tdRight]) {
+      cell.style.paddingTop = "6px";
+      cell.style.paddingBottom = "6px";
+    }
     span.style.backgroundColor = DTUAnalyzer.getMetricColor(value, maxVal);
     span.style.padding = "2px 6px";
     span.style.borderRadius = "4px";

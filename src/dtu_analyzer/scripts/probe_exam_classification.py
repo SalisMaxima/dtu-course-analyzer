@@ -22,7 +22,7 @@ from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
 SCHEMA_VERSION = 5
-RULE_VERSION = "schedule-hypothesis-v6"
+RULE_VERSION = "schedule-hypothesis-v7-reviewed"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
