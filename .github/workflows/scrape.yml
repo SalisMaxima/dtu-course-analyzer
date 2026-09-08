@@ -1,11 +1,26 @@
 name: Update Course Data
 
 on:
-  workflow_dispatch: # Allows manual triggering from GitHub UI
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish validated data (leave off until the candidate has been reviewed)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: course-data-update-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
 
 jobs:
   scrape-and-update:
     runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      MAX_CONCURRENT: "2"
 
     steps:
       - name: Checkout repository
@@ -50,10 +65,35 @@ jobs:
       - name: Validate Scraped Data
         run: dtu-validate data/coursedic.json
 
-      - name: Analyze Data
-        run: dtu-analyze extension
+      - name: Collect exam histories and schedule evidence
+        run: python -m dtu_analyzer.scripts.probe_exam_classification --output exam-classification-report
+
+      - name: Build and validate candidate (dry run)
+        if: ${{ !inputs.publish }}
+        run: >-
+          python -m dtu_analyzer.scripts.build_production_candidate
+          --raw data/coursedic.json --report exam-classification-report/report.json
+          --course-file data/coursenumbers.txt --output dist/production-candidate
+
+      - name: Build, validate and publish dataset
+        if: ${{ inputs.publish }}
+        run: >-
+          python -m dtu_analyzer.scripts.build_production_candidate
+          --raw data/coursedic.json --report exam-classification-report/report.json
+          --course-file data/coursenumbers.txt --output dist/production-candidate --publish
+
+      - name: Upload candidate and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-data-candidate
+          path: |
+            dist/production-candidate/
+            exam-classification-report/
+          if-no-files-found: warn
 
       - name: Commit and Push changes
+        if: ${{ inputs.publish && success() }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Auto-update course data [skip ci]"

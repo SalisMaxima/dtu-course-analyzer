@@ -30,7 +30,9 @@
          ...(approvedPair ? [["approved", "Approved"], ["not_approved", "Not approved"]] : []),
          ...["absent", "sick"].filter((key) => Number(grades[key]) > 0)
            .map((key) => [key, key === "absent" ? "Absent" : "Sick"])]
-      : GRADE_ORDER.map((grade) => [grade, grade]);
+      : [...GRADE_ORDER.map((grade) => [grade, grade]),
+         ...["absent", "sick"].filter(key => Number(grades && grades[key]) > 0)
+           .map(key => [key, key === "absent" ? "Absent" : "Sick"])];
     const values = categories.map(([key, grade]) => {
       const parsed = Number(grades && grades[key]);
       return { grade, count: Number.isFinite(parsed) && parsed > 0 ? parsed : 0 };

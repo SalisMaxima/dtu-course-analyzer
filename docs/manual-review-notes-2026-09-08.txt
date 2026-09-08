@@ -1,0 +1,299 @@
+10961 No prior exam found
+12125 No prior exam found
+12150 No prior exam found (from now on abbreviated as NPE)
+12615 NPE
+12952 Sustainability evaluation and communication
+2026/2027
+Please note: Course 12952 is identical to course 12950 and 12951. Course 12950/12951/12952 is mandatory for all PhD students at DTU enrolled as of 1 April 2019. The course is only for PhD students at DTU.
+https://karakterer.dtu.dk/Histogram/1/12950/Summer-2026 
+
+22214 NPE
+22240 NPE
+22286 NPE
+22461: “
+Prior course: 22433
+Evaluations
+22433 Rapid Prototyping of Simple Sensor Systems E22 (E-22-13)
+Grade history
+22433 Rapid prototyping of simple sensor systems v23
+22433 Rapid prototyping of simple sensor systems s23
+22433 Rapid prototyping of simple sensor systems v22
+“
+
+22514 NPE
+
+22531 NPE
+
+23303 NPE
+
+23513 NPE
+
+23721 NPE
+
+23750 NPE
+
+23851 NPE
+
+23934 NPE
+
+23955 NPE
+
+25216 NPE
+
+25342 NPE
+
+25356: “Prior course: 25314
+Evaluations
+25314 Computational marine ecological modelling F26 (F-26-13)
+25314 Computational marine ecological modelling F25 (F-25-13)
+25314 Computational marine ecological modelling F24 (F-24-13)
+25314 Computational marine ecological modelling F23 (F-23-13)
+25314 Computational marine ecological modelling F22 (F-22-13)
+Grade history
+25314 Computational marine ecological modelling s26
+25314 Computational marine ecological modelling s25
+25314 Computational marine ecological modelling s24
+25314 Computational marine ecological modelling v23
+25314 Computational marine ecological modelling s23
+“
+
+25357: NPE
+
+25623: “
+Evaluations
+25623 Methods for implementation of surveillance procedures for listed fish diseases. E25 (E-25-13)
+Prior course: 25617
+Grade history
+25617 Methods for implementation of surveillance procedures for listed fish diseases v23
+25617 Methods for implementation of surveillance procedures for listed fish diseases s22
+
+“
+  25624: NPE 
+
+  25625: NPE
+  25628: “Prior course: 25349
+Evaluations
+25349 Applied Fisheries Ecology F26 (F-26-13)
+25349 Applied Fisheries Ecology F25 (F-25-13)
+25349 Applied Fisheries Ecology F24 (F-24-13)
+Grade history
+25349 Applied fisheries ecology s26
+25349 Applied fisheries ecology s25
+25349 Applied fisheries ecology s24
+“
+  25825: “Prior course: 25803
+Grade history
+Study Group in Population Ecology and Genetics v22
+“
+
+  25840:NPE
+25841: NPE
+  25842: NPE
+  26250: NPE
+  26470: NPE
+
+  27029: NPE
+
+  27032: NPE
+  27064:NPE
+27066: NPE
+  27200: NPE
+  27221: NPE
+  27232: NPE
+  27450: NPE
+  27827: “Prior course: 29905
+Evaluations
+29905 Introduction to Python for Data Analysis and Automation in Biology Aug 22 (F-22-03AUG)
+Grade history
+29905 Hands-On Data Analysis and Automation: Better Decision-Making with Bash and Python Basics v25
+“
+  27829: NPE
+28217:NPE
+  34063: NPE
+  34064: NPE
+  34375: NPE
+  34555:  NPE  
+34556:   “Prior course: 34551
+Evaluations
+34551 Thin film photovoltaics Jan 26 (E-25-03)
+34551 Thin film photovoltaics Jan 25 (E-24-03)
+34551 Thin film photovoltaics Jan 24 (E-23-03)
+34551 Thin film photovoltaics Aug 23 (F-23-03AUG)
+Grade history
+34551 Thin Film Photovoltaics v25
+34551 Thin Film Photovoltaics v24
+34551 Thin Film Photovoltaics v23
+34551 Thin Film Photovoltaics s23
+“
+34766: NPE
+38311: NPE
+  38312: NPE
+  38400: NPE
+  38401:NPE
+  38402: NPE 
+38403: NPE  
+38404: NPE
+38405: NPE
+  41264: NPE
+  41349: NPE
+  41518:  “Replaces the course 41517.”  But not exams found under this either
+41751: “Prior course: 41730
+Evaluations
+41730 Industrial forming of metals E25 (E-25-13)
+41730 Industrial forming of metals E24 (E-24-13)
+41730 Industrial forming of metals E23 (E-23-13)
+41730 Industrial forming of metals E22 (E-22-13)
+Grade history
+41730 Industrial forming of metals s26
+41730 Industrial forming of metals v25
+41730 Industrial forming of metals s25
+41730 Industrial forming of metals v24
+41730 Industrial forming of metals v23
+“
+  41959: “Prior course: 11305
+Grade history
+11305 Computational Structural Modelling 1: The Finite Element Method v22
+11305 Computational Structural Modelling 1: The Finite Element Method s22
+“
+  42S17: NPE
+
+42S18: NPE
+  42S19: NPE
+  42S20: NPE
+  46220: NPE
+  46800: NPE
+  46805: NPE
+  62106: NPE
+62117: NPE
+  62123: NPE
+  62126: NPE
+  62127: NPE
+  62128: NPE
+  62129: NPE
+ 62130: NPE
+62151:NPE
+  62222: “Prior course: 62229
+Evaluations
+62229 IT Business F26 (F-26-13)
+62229 IT Business F25 (F-25-13)
+62229 IT Business F24 (F-24-13)
+62229 IT Business F23 (F-23-13)
+62229 IT Business E22 (E-22-13)
+Grade history
+62229 IT business s26
+62229 IT business s25
+62229 IT business s24
+62229 IT business s23
+62229 IT business v22
+“
+  62226:NPE
+  62237: “Prior course: 62236
+Evaluations
+62236 Industrial Programming E25 (E-25-03)
+Grade history
+62236 Industrial programming v25
+Prior course: 62234
+Evaluations
+62234 Industrial Programming E24 (E-24-03)
+62234 Industrial Programming E23 (E-23-03)
+Grade history
+62234 Industrial programming v24
+62234 Industrial programming v23
+“
+
+  62290: NPE
+  62414: NPE
+  62421: NPE
+62451: NPE
+  62513:NPE
+  62580: “Prior course: 62581
+Evaluations
+62581 IT and Computer Communication E25 (E-25-13)
+62581 IT and Computer Communication E24 (E-24-13)
+62581 IT and Computer Communication E23 (E-23-13)
+62581 IT and Computer Communication E22 (E-22-13)
+Grade history
+62581 IT and computer communication s26
+62581 IT and computer communication v25
+62581 IT and computer communication s25
+62581 IT and computer communication v24
+62581 IT and computer communication s24
+“
+
+  62678: NPE 
+  62713: “Prior course: 62712
+Evaluations
+62712 Basic C Programming E25 (E-25-13)
+62712 Basic C Programming E24 (E-24-13)
+Grade history
+62712 Basic C Programming s26
+62712 Basic C Programming v25
+62712 Basic C Programming s25
+62712 Basic C Programming v24
+“
+  62776: “Prior course: 62775
+Evaluations
+62775 Applied electrical engineering E25 (E-25-13)
+62775 Applied electrical engineering E24 (E-24-13)
+Grade history
+62775 Applied electrical engineering s26
+62775 Applied electrical engineering v25
+62775 Applied electrical engineering s25
+62775 Applied electrical engineering v24
+“
+  62812: NPE
+62813: NPE
+
+ 62814:NPE
+  MA100: NPE
+  MA239: NPE
+  MA263: “Prior course: 41263
+Evaluations
+41263 Experimental and numerical methods for ship resistance and propulsion Jun 26 (F-26-03JUN)
+41263 Experimental and numerical methods for ship resistance and propulsion Aug 25 (F-25-03AUG)
+41263 Experimental and numerical methods for ship resistance and propulsion Aug 24 (F-24-03AUG)
+Grade history
+41263 Experimental and numerical methods for ship resistance and propulsion s26
+41263 Experimental and numerical methods for ship resistance and propulsion s25
+41263 Experimental and numerical methods for ship resistance and propulsion s24
+“
+  MA264: NPE
+  MA270: NPE
+MA271: NPE
+  MA534: NPE
+  MA657:NPE
+  MA678: NPE
+  MA694: NPE
+  MA722: “Prior course: 31301
+Evaluations
+31301 Linear Control Design 1 F22 (F-22-13)
+Grade history
+31301 Linear Control Design 1 s22
+“
+  MA776: “Prior course: 62775
+Evaluations
+62775 Applied electrical engineering E25 (E-25-13)
+62775 Applied electrical engineering E24 (E-24-13)
+Grade history
+62775 Applied electrical engineering s26
+62775 Applied electrical engineering v25
+62775 Applied electrical engineering s25
+62775 Applied electrical engineering v24
+“
+MA922: NPE
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

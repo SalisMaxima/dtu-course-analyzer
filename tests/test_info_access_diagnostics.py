@@ -12,8 +12,8 @@ LINK = "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2026"
 HTML = f'<h2>02280 Grade history</h2><a href="{LINK}">02285 s26</a>'
 
 
-@pytest.mark.parametrize("course,target", [("02280", "02285"), ("02426", "02424"),
-                                          ("23103", "23102"), ("23104", "23102")])
+@pytest.mark.parametrize("course,target", [("02281", "02285"), ("02427", "02424"),
+                                          ("23105", "23102"), ("23106", "23102")])
 def test_other_course_reference_is_retained_but_unassigned(course, target):
     html = f'<a href="https://karakterer.dtu.dk/Histogram/1/{target}/Summer-2026">{target}</a>'
     exams = probe.extract_histogram_links(html, course)
@@ -149,7 +149,9 @@ async def test_shared_history_is_attached_to_each_source_without_aggregation(mon
     assert a["exams"][0] is not b["exams"][0]
     assert a["exams"][0]["distribution_status"] == "suppressed"
     assert a["exams"][0]["histogram_title"] == "23102 Grade history"
-    assert a["primary_exam"] is b["primary_exam"] is None
+    assert a["primary_exam"]["url"] == b["primary_exam"]["url"]
+    assert a["primary_exam"] is not b["primary_exam"]
+    assert a["primary_exam"]["identity_status"] == "manually_approved_history"
 
 
 def test_login_callback_runs_both_experiments_and_auth_failure_is_reported(monkeypatch, tmp_path):
@@ -174,9 +176,9 @@ def test_login_callback_runs_both_experiments_and_auth_failure_is_reported(monke
 
 
 def test_different_course_csv_and_summary_keep_reference_review_visible(tmp_path):
-    links = probe.extract_histogram_links(HTML, "02280")
+    links = probe.extract_histogram_links(HTML, "02281")
     links[0].update(distribution_status="suppressed", grades=None)
-    row = classify_course({"course": "02280", "schedule": schedule_from_text("Spring"), "exams": links})
+    row = classify_course({"course": "02281", "schedule": schedule_from_text("Spring"), "exams": links})
     report = {"courses": {"02280": row}}
     probe.write_reports(report, tmp_path)
     assert report["different_course_histograms"] == 1

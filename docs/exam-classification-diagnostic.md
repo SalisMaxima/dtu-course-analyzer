@@ -119,7 +119,16 @@ links against their schedules, then inspect August, mixed-period and failed
 records. Use the JSON's period labels and table evidence to determine whether
 August is a distinct histogram period or grouped with summer. Coverage totals
 alone do not establish correctness: manually verify assignments before applying
-these rules to production. No production selection or UI behavior uses this code.
+these rules to production. Both the Chrome beta builder and the production
+candidate builder use these rules. Update Course Data defaults to a dry run;
+the standalone legacy `dtu-analyze` command still emits the legacy dataset.
+
+Maintainer-approved historical identities are stored in
+`analysis/course_history_reviews.py`. Rule `schedule-hypothesis-v8-maintainer-history`
+also accepts reviewed NPE observations, additional predecessor identities,
+source preferences, exclusions, and explicit historical offering overrides.
+See [Chrome beta instructions](chrome-beta.md) for packaging, default selection,
+exam switching, and the beta test checklist.
 
 ## Local execution
 
