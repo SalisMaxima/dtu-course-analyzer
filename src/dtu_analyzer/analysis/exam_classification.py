@@ -154,11 +154,17 @@ def classify_course(record: dict) -> dict:
         # bypass identity review merely by lacking the new metadata.
         source_parts = urlsplit(exam.get("url", "")).path.rstrip("/").split("/")
         source_id = source_parts[-2] if len(source_parts) >= 2 else ""
-        if re.fullmatch(r"[0-9A-Z]{5}-[0-9]+", source_id):
+        if (record.get("course") and re.fullmatch(r"[0-9A-Z]{5}(?:-[0-9]+)?", source_id)
+                and source_id.split("-")[0] != record["course"]):
+            exam["histogram_course"] = source_id
+            exam["identity_status"] = "different_course_requires_review"
+        elif re.fullmatch(r"[0-9A-Z]{5}-[0-9]+", source_id):
             exam["histogram_course"] = source_id
             exam["identity_status"] = "variant_requires_review"
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
+        elif exam.get("identity_status") == "different_course_requires_review":
+            exam["reason"] = "different_course_identity_unverified"
         elif exam.get("identity_status") == "variant_requires_review":
             exam["reason"] = "course_variant_identity_unverified"
         elif exam["distribution_status"] != "suppressed" and (exam.get("grades") or {}).get("participants", 0) <= 0:
@@ -190,6 +196,8 @@ def classify_course(record: dict) -> dict:
         reasons.append("unclassified_histograms")
     if any(e.get("identity_status") == "variant_requires_review" for e in exams):
         reasons.append("course_variant_identity_unverified")
+    if any(e.get("identity_status") == "different_course_requires_review" for e in exams):
+        reasons.append("different_course_identity_unverified")
     errors = record.get("errors", [])
     status = "provisional" if primary and not unresolved and not reasons else "partial"
     if primary is None:

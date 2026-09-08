@@ -178,12 +178,13 @@ def test_suffix_links_are_separate_deduplicated_and_scoped():
     html = "".join(f'<a href="https://karakterer.dtu.dk/Histogram/1/{code}/Summer-2026">s26</a>'
                    for code in ["01025", "01025-2", "01025-2", "01025-3", "010250", "01026-2", "01025-2-3", "01025-other"])
     links = probe.extract_histogram_links(html, "01025")
-    assert [e["histogram_course"] for e in links] == ["01025", "01025-2", "01025-3"]
+    assert [e["histogram_course"] for e in links] == ["01025", "01025-2", "01025-3", "01026-2"]
     assert links[0]["identity_status"] == "exact_course_id"
-    assert all(e["identity_status"] == "variant_requires_review" for e in links[1:])
+    assert all(e["identity_status"] == "variant_requires_review" for e in links[1:3])
+    assert links[3]["identity_status"] == "different_course_requires_review"
     evidence = probe.info_evidence(html, "https://kurser.dtu.dk/course/01025/info", "01025")
     assert evidence["state"] == "links_found"
-    assert evidence["histogram_link_count"] == 3
+    assert evidence["histogram_link_count"] == 4
     assert links[1]["url"] in evidence["relevant_links"]
 
 

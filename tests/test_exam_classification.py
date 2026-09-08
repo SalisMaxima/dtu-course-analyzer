@@ -115,13 +115,14 @@ def test_duplicate_primary_period_across_histogram_groups_needs_review():
     assert "multiple_histograms_for_latest_ordinary_period" in result["reasons"]
 
 
-def test_histogram_links_are_deduplicated_and_scoped_to_course():
+def test_histogram_links_are_deduplicated_and_scoped_to_dtu():
     html = """<a href='https://karakterer.dtu.dk/Histogram/1/01001/Winter-2025'>v25</a>
     <a href='http://karakterer.dtu.dk/Histogram/1/01001/Winter-2025'>v25</a>
     <a href='http://karakterer.dtu.dk/Histogram/1/01911/Winter-2025'>v25</a>
     <a href='https://example.com/Histogram/1/01001/Winter-2025'>bad</a>"""
     links = probe.extract_histogram_links(html, "01001")
-    assert len(links) == 1
+    assert len(links) == 2
+    assert links[1]["identity_status"] == "different_course_requires_review"
     assert links[0]["link_label"] == "v25"
     assert links[0]["url"] == "https://karakterer.dtu.dk/Histogram/1/01001/Winter-2025"
 

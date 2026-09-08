@@ -62,7 +62,7 @@ are saved every 25 completed courses; `pending` registrations in an interrupted
 run mean collection had not been checkpointed. A complete run returns nonzero
 for collection errors, but unresolved classifications alone do not fail it.
 
-Report schema version 4 also records course/info request attempts, HTTP status,
+Report schema version 5 also records course/info request attempts, HTTP status,
 final URL (with authentication query parameters omitted), page title/headings,
 table labels, and iframe count. The collector follows DTU's same-course
 `forceLogin` iframe once; repeated wrappers or unrecognized pages become explicit
@@ -84,7 +84,7 @@ preserved separately from passed/not-passed outcomes.
 | Multiple periods all mapping to summer | Summer | Winter |
 | Conflicting, unverified or missing teaching periods | Undetermined | Undetermined |
 
-Rule version `schedule-hypothesis-v5` permits combined periods when their ordinary
+Rule version `schedule-hypothesis-v6` permits combined periods when their ordinary
 exam season agrees: Autumn + January maps to winter; Spring + June + July maps
 to summer. Autumn + Spring remains unresolved, as does any combination involving
 August until its histogram mapping is verified. These combinations identify a
@@ -139,7 +139,7 @@ Tests use synthetic HTML, not authenticated live fixtures:
 python -m pytest tests/test_exam_classification.py
 ```
 
-## Availability and discrepancies (schema 4)
+## Availability and discrepancies (schema 5)
 
 Every collected histogram has a `distribution_status`: `published`,
 `suppressed`, or `failed`. DTU's small-cohort suppression message produces
@@ -182,21 +182,11 @@ info-page content and original schedule markup cannot be recovered this way.
 Replay returns success when report generation succeeds; remaining collection
 errors are retained in the output rather than re-fetched.
 
-For the next **Test Exam Classification** Actions run after pushing these changes:
-- `courses`: `01025,01034,01037,01018,01004,01666,01911`
-- `auth_courses`: `01001,01020`
-
-This covers an unrecognized info page, other-course references, August,
-suppressed histograms, zero categorical placeholders, ambiguous prose and
-compatible combined periods. Save the artifact for review before another full
-run. Production regular/resit selection remains unchanged.
-
-
 ## Suffixed histogram identities
 
-Schema 4 / rule `schedule-hypothesis-v5` collects the exact course ID and
-numeric suffixes such as `01025-2`, while excluding unrelated IDs and arbitrary
-suffix text. Canonical URLs keep variants separate. JSON records
+Schema 5 / rule `schedule-hypothesis-v6` collects the exact course ID and
+numeric suffixes such as `01025-2`. Links to different course IDs are also
+collected as unverified references; arbitrary suffix text is excluded. Canonical URLs keep variants separate. JSON records
 `histogram_course`, `identity_status`, and `histogram_title` alongside the
 current course name and source headings. Titles are evidence for manual review;
 translated or similar names do not automatically establish identity.
@@ -208,9 +198,47 @@ availability is independent: a small-cohort variant can be `suppressed` and
 identity-unverified without being a collection error. CSV lists `variant_urls`;
 the summary counts variants requiring review.
 
-Next run **Test Exam Classification** on the updated branch with
-`courses=01025,01001` and `auth_courses=01001,01020`. Check that 01025's suffixed
-links appear and its Summer-2026 distribution is suppressed, while 01001 remains
-the exact-ID control. Review this artifact before another all-course run.
-Previous artifacts cannot recover links discarded by the old filter; a fresh
-Actions run is required. Production selection and bundled data are unchanged.
+## Different-course references and browser experiment
+
+All valid DTU histogram links from the requested course's info page are now
+retained. Different IDs have `identity_status=different_course_requires_review`
+and reason `different_course_identity_unverified`. CSV adds
+`different_course_urls`; JSON and the summary count these references. Source
+course names, histogram IDs/titles and individual distributions stay separate.
+A shared target such as 23102 remains attached independently to both originating
+courses (23103 and 23104). Counts are never combined. Different-ID and suffix
+references cannot become primary/resit assignments until identity is reviewed.
+
+After login, the workflow optionally runs a separate info-page comparison.
+`info_courses` defaults to `02280,02426,01822,02262`, accepts up to eight IDs,
+and can be blank to skip. Each course is fetched using the scraper's session
+cookie and user agent and visited in an isolated authenticated browser context.
+The browser observes the page for ten seconds after DOM content loads, inspects
+DTU service frames, and records up to 80 document/fetch/XHR responses and 20
+failed requests. Only service URL paths, statuses and resource types are kept;
+queries, fragments, authentication endpoints, headers and bodies are excluded.
+Cookie/storage state is copied only in memory.
+
+The artifact adds `info-report.json` and `info-summary.md`, checkpointed after
+each mode/course. Outcomes distinguish matching link sets, browser-only or
+additional browser links, links missing in the browser, explicit empty-history
+messages in both methods, access/loading failures, and unresolved cases.
+Missing links alone never establish an empty history. Differences are evidence
+for further investigation, not proof that JavaScript or authentication caused
+them; timing and server state can differ between requests. The observation
+window is bounded, so a slow page may remain unresolved.
+
+Run **Test Exam Classification** on the updated branch with:
+
+- `courses`: `02280,02426,23103,23104,01822,02262,01001,01025`
+- `auth_courses`: `01001,01020`
+- `info_courses`: `02280,02426,01822,02262`
+
+Review this eight-course artifact before expanding collection. Expect 02280 to
+retain 02285, 02426 to retain 02424, and 23103/23104 each to retain 23102,
+all as unverified references. Check the exact-ID and suffix controls remain
+unchanged. Inspect browser/direct evidence for the two apparently empty pages.
+
+Older reports cannot recover links discarded by previous filters or missing
+rendered content; a fresh Actions run is required. Production selection and
+bundled data are unchanged.
