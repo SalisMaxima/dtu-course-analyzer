@@ -5,7 +5,8 @@ Keep unknown periods and mixed schedules visible instead of guessing.
 """
 
 import re
-from .course_history_reviews import NEW_COURSES, history_review
+from .course_history_reviews import (NEW_COURSES, REVIEWED_NPE, history_review,
+    EXCLUDED_HISTORY, PREFERRED_SOURCES, REGULAR_SEASON_OVERRIDES, REGULAR_EXAM_OVERRIDES)
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -126,6 +127,8 @@ def parse_period(url: str) -> dict:
 def classify_course(record: dict) -> dict:
     """Assign candidates while retaining all evidence and unresolved sheets."""
     record = dict(record)
+    record.pop("history_status", None)
+    record.pop("default_selection_note", None)
     schedule = record.get("schedule", {})
     periods = schedule.get("periods", [])
     reasons = []
@@ -166,6 +169,7 @@ def classify_course(record: dict) -> dict:
         if review:
             exam["identity_status"] = "manually_approved_history"
             exam["identity_review"] = review
+        exam["display_eligible"] = source_id not in EXCLUDED_HISTORY.get(record.get("course"), set())
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
         elif exam.get("identity_status") == "different_course_requires_review":
@@ -174,6 +178,10 @@ def classify_course(record: dict) -> dict:
             exam["reason"] = "course_variant_identity_unverified"
         elif exam["distribution_status"] != "suppressed" and (exam.get("grades") or {}).get("participants", 0) <= 0:
             exam["reason"] = "no_published_results"
+        elif (record.get("course"), source_id, period.get("label")) in REGULAR_EXAM_OVERRIDES:
+            exam.update(classification="ordinary_candidate", reason="maintainer_reviewed_historical_regular_exam")
+        elif period["season"] in REGULAR_SEASON_OVERRIDES.get((record.get("course"), source_id), set()):
+            exam.update(classification="ordinary_candidate", reason="maintainer_reviewed_twice_yearly_offering")
         elif primary_season is None:
             exam["reason"] = reasons[0]
         elif period["season"] not in {"winter", "summer"} or period["year"] is None:
@@ -184,19 +192,37 @@ def classify_course(record: dict) -> dict:
             exam.update(classification="resit_candidate", reason="outside_ordinary_season")
         exams.append(exam)
 
-    ordinary = [e for e in exams if e["classification"] == "ordinary_candidate"]
-    ordinary.sort(key=lambda e: e["period"]["year"], reverse=True)
+    ordinary = [e for e in exams if e["classification"] == "ordinary_candidate" and e["display_eligible"]]
+    ordinary.sort(key=lambda e: (e["period"]["year"], e["period"]["season"] == "winter"), reverse=True)
     resits = [e for e in exams if e["classification"] == "resit_candidate"]
     resits.sort(key=lambda e: e["period"]["year"], reverse=True)
     unresolved = [e for e in exams if e["classification"] == "undetermined"]
     primary = ordinary[0] if ordinary else None
-    if len(ordinary) > 1 and ordinary[0]["period"]["year"] == ordinary[1]["period"]["year"]:
+    if len(ordinary) > 1 and ordinary[0]["period"] == ordinary[1]["period"]:
         primary = None
         reasons.append("multiple_histograms_for_latest_ordinary_period")
+    preference = PREFERRED_SOURCES.get(record.get("course"), [])
+    if primary and primary.get("histogram_course") == record.get("course"):
+        preference = []  # A current-course regular exam supersedes predecessor fallback.
+    for preferred in preference:
+        eligible = [e for e in exams if e.get("histogram_course") == preferred
+                    and e["display_eligible"] and not e.get("error")
+                    and e.get("distribution_status") in {"published", "suppressed"}
+                    and e["period"].get("year") is not None
+                    and e["period"].get("season") in {"winter", "summer"}]
+        if eligible:
+            eligible.sort(key=lambda e: (e["period"]["year"], e["period"]["season"] == "winter"), reverse=True)
+            primary = eligible[0] if len(eligible) == 1 or eligible[0]["period"] != eligible[1]["period"] else None
+            record["default_selection_note"] = "Latest available exam from the most recent reviewed predecessor course; historical regular/reexam classification may be unknown."
+            break
+    if primary and primary.get("reason", "").startswith("maintainer_reviewed"):
+        record["default_selection_note"] = "Regular exam selected using maintainer-reviewed historical offering information."
     if not exams:
         reasons.append("no_histogram_links")
     if not exams and record.get("course") in NEW_COURSES:
         record["history_status"] = "new_course_no_history_expected"
+    elif not exams and record.get("course") in REVIEWED_NPE:
+        record["history_status"] = "reviewed_no_prior_exam_found"
     if not ordinary:
         reasons.append("no_ordinary_exam_identified")
     if unresolved:

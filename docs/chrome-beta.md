@@ -1,14 +1,14 @@
 # Chrome beta 2.5.0-beta.3
 
-The accepted build is now the repository's default in `extension/`, copied
-unchanged from `dist/chrome-beta-2.5.0-beta.3/` (including its beta version name).
+The accepted build is now the repository's default in `extension/`, originally
+copied from `dist/chrome-beta-2.5.0-beta.3/` (including its beta version name).
 Load the root `extension/` directory in Chrome to use it. The previous 2.4.0
 build is preserved in `archive/dtu-course-analyzer-2.4.0.zip`.
 
-Exam history is a bundled snapshot. The existing **Update Course Data** workflow
-still uses the legacy analyzer and would replace that snapshot with data without
-exam history. Do not run it to refresh this build; production pipeline integration
-remains separate work.
+Exam history is a bundled snapshot. **Update Course Data** now builds a complete
+exam-history candidate and defaults to a dry run. Leave **publish** unchecked
+until its candidate artifact has been reviewed. See
+[production validation](production-pipeline-validation.md) for the current rules.
 
 This beta bundles the full test8 evidence, refreshed by the test9 sample, plus
 the existing feedback dataset. No DTU login or live scraping is needed to use it.

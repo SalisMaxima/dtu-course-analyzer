@@ -55,6 +55,41 @@ function renderer(script) {
   return { context, node };
 }
 
+test("older-results check requires a definitely old, recognized exam year", () => {
+  const { context } = renderer("contentscript.js");
+  const now = new Date("2026-09-08T12:00:00Z");
+  for (const period of ["Winter-2024", "Summer-2024", "Summer 2023"]) {
+    assert.equal(context.resultsAreOlderThanOneYear(period, now), true);
+  }
+  for (const period of ["Winter-2025", "Summer-2025", "Summer-2026", "Winter-2027", "", null, "Unknown-2020"]) {
+    assert.equal(context.resultsAreOlderThanOneYear(period, now), false);
+  }
+  assert.equal(context.resultsAreOlderThanOneYear("Winter-2024", new Date("2025-12-31T23:59:59Z")), false);
+  assert.equal(context.resultsAreOlderThanOneYear("Winter-2024", new Date("2026-01-01T00:00:00Z")), true);
+});
+
+test("older-results notice follows selection and opens the existing help popup", () => {
+  const { context, node } = renderer("contentscript.js");
+  vm.runInContext('Date = class extends Date { constructor() { super("2026-09-08T12:00:00Z"); } };', context);
+  let opened;
+  context.openMetricHelp = (label, text) => { opened = { label, text }; };
+  const exam = (id, period) => ({ id, grade_period: period, histogram_course: "01001",
+    classification: "ordinary_candidate", distribution_status: "published", grades: { "7": 10 } });
+  context.presentData({ default_exam_id: "new", exam_history: [exam("new", "Winter-2025"), exam("old", "Summer-2024")] }, "01001");
+  function walk(e) { return [e, ...e.children.flatMap(walk)]; }
+  const select = walk(node("anchor")).find(e => e.attributes["aria-label"] === "Displayed exam");
+  assert.doesNotMatch(node("anchor").textContent, /Older results/);
+  select.value = "old"; select.listeners.change();
+  assert.match(node("anchor").textContent, /Grades in: Summer 2024ⓘ Older results/);
+  const notice = walk(node("anchor")).find(e => e.attributes["aria-label"] === "About older results");
+  assert.match(notice.title, /does not mean the course has not run since/);
+  notice.listeners.click();
+  assert.equal(opened.label, "Older results");
+  assert.equal(opened.text, notice.title);
+  select.value = "new"; select.listeners.change();
+  assert.doesNotMatch(node("anchor").textContent, /Older results/);
+});
+
 for (const scale of ["pass_fail", "mixed", "seven_point"]) {
   // Stale numeric metrics must also be hidden for older packaged datasets.
   const fixture = {

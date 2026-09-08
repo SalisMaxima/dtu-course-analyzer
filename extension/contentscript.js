@@ -350,6 +350,27 @@ function formatExamPeriod(period) {
   return String(period || "").replace(/^([A-Za-z]+)-(\d{4})$/, "$1 $2");
 }
 
+function resultsAreOlderThanOneYear(period, now = new Date()) {
+  const match = /^(?:Winter|Summer)[ -](\d{4})$/.exec(String(period || ""));
+  // Seasons do not establish an exact exam date. Use the end of the labeled
+  // year as the upper bound, avoiding guesses about DTU's winter boundaries.
+  return Boolean(match) && now.getUTCFullYear() > Number(match[1]) + 1;
+}
+
+function addOlderResultsNotice(container, period) {
+  if (!resultsAreOlderThanOneYear(period)) return;
+  const explanation = `The selected results (${formatExamPeriod(period)}) are over a year old and may not reflect the course's current format. Only the exam season and year are available, so this notice uses a conservative year-based check. This does not mean the course has not run since.`;
+  const notice = document.createElement("button");
+  notice.type = "button";
+  notice.textContent = "ⓘ Older results";
+  notice.title = explanation;
+  notice.setAttribute("aria-label", "About older results");
+  notice.setAttribute("aria-haspopup", "dialog");
+  notice.style.cssText = "margin-left:8px;padding:0;border:0;background:transparent;color:#666;font:inherit;font-size:0.85em;cursor:pointer;";
+  notice.addEventListener("click", () => openMetricHelp("Older results", explanation));
+  container.appendChild(notice);
+}
+
 function addGradeHistogram(tbody, distribution, period) {
   const tr = document.createElement("tr");
   const td = document.createElement("td");
@@ -364,6 +385,7 @@ function addGradeHistogram(tbody, distribution, period) {
     const note = document.createElement("b");
     note.textContent = formatExamPeriod(period);
     td.appendChild(note);
+    addOlderResultsNotice(td, period);
   }
 
   const chart = document.createElement("div");

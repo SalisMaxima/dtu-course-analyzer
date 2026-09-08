@@ -1,0 +1,2919 @@
+{
+  "schema_version": 1,
+  "purpose": "Evidence ledger for later automation analysis; not runtime classification configuration.",
+  "scope": "117 unresolved no-history courses from combined test8/test9 evidence",
+  "courses": [
+    {
+      "course": "02339",
+      "name": "02339 Cybersecurity Fundamentals",
+      "course_url": "https://kurser.dtu.dk/course/02339",
+      "info_url": "https://kurser.dtu.dk/course/02339/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "confirmed_new_course",
+        "evidence": "The course is running for the first time in Autumn 2026.",
+        "academic_year": "2026/2027",
+        "decision": "No previous exam history expected.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "02581",
+      "name": "02581 Geometric Data Analysis and Processing",
+      "course_url": "https://kurser.dtu.dk/course/02581",
+      "info_url": "https://kurser.dtu.dk/course/02581/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/02580/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/02580/Summer-2024",
+          "http://karakterer.dtu.dk/Histogram/1/02580/Summer-2023",
+          "http://karakterer.dtu.dk/Histogram/1/02580/Summer-2022"
+        ],
+        "linked_source_courses": [
+          "02580"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_historical_schedule_change",
+        "evidence": "Offered as a pure MSc course from autumn 2026. The course has moved from spring to autumn.",
+        "academic_year": "2026/2027",
+        "source_course": "02580",
+        "accepted_regular_exam": "https://karakterer.dtu.dk/Histogram/1/02580/Summer-2025",
+        "decision": "Maintainer accepts Summer-2025 as the historical ordinary exam despite the current autumn schedule. Do not infer all historical periods from the current schedule.",
+        "open_questions": [
+          "Establish historical schedule validity periods before generalizing classification."
+        ],
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "02820",
+      "name": "02820 Explainable AI and user experience",
+      "course_url": "https://kurser.dtu.dk/course/02820",
+      "info_url": "https://kurser.dtu.dk/course/02820/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "confirmed_new_course",
+        "evidence": "02820 is also a new course",
+        "decision": "No previous exam history expected.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "02984",
+      "name": "02984 Nordic Logic Summer School 2026 (NLSS)",
+      "course_url": "https://kurser.dtu.dk/course/02984",
+      "info_url": "https://kurser.dtu.dk/course/02984/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "Nordic Logic Summer School 2026 (NLSS), 2026/2027. NLSS is sponsored by the Danish Data Science Academy.",
+        "decision": "Maintainer reports no exam set. Treat as reviewed NPE, not confirmed new course.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "10081",
+      "name": "10081 Physics for materials and energy, digital version",
+      "course_url": "https://kurser.dtu.dk/course/10081",
+      "info_url": "https://kurser.dtu.dk/course/10081/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "This course is an online version of 10080 and runs in the autumn. Also no prior exams online.",
+        "decision": "No prior exams found by maintainer. Relationship to 10080 recorded; sharing its exam history is not authorized.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "related_course": "10080"
+      }
+    },
+    {
+      "course": "10406",
+      "name": "10406 Numerical Simulation of Magnetised Plasmas",
+      "course_url": "https://kurser.dtu.dk/course/10406",
+      "info_url": "https://kurser.dtu.dk/course/10406/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "No prior exam found also.",
+        "decision": "No prior exams found by maintainer; this does not establish a first offering date.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "10415",
+      "name": "10415 Nuclear Reactor Technology",
+      "course_url": "https://kurser.dtu.dk/course/10415",
+      "info_url": "https://kurser.dtu.dk/course/10415/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "No prior exam found.",
+        "decision": "Previously tentatively new; manual inspection found no prior exams, without confirming first offering date.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "previous_findings": [
+          {
+            "status": "tentative_new_course",
+            "evidence": "10415 seemingly also a new course",
+            "decision": "Needs confirmation; do not treat as confirmed new course.",
+            "provenance": "Maintainer message; not independently verified live",
+            "recorded_at": "2026-09-08"
+          }
+        ]
+      }
+    },
+    {
+      "course": "10869",
+      "name": "10869 Experimental Methods and Instruments in Physics",
+      "course_url": "https://kurser.dtu.dk/course/10869",
+      "info_url": "https://kurser.dtu.dk/course/10869/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "No prior exam found.",
+        "decision": "No prior exams found by maintainer; this does not establish a first offering date.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "10960",
+      "name": "10960 Natural Science (Polytechnical Foundation -\nB.Eng.)",
+      "course_url": "https://kurser.dtu.dk/course/10960",
+      "info_url": "https://kurser.dtu.dk/course/10960/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "No prior exam found.",
+        "decision": "No prior exams found by maintainer; this does not establish a first offering date.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "10961",
+      "name": "10961 Data (Polytechnical Foundation - B.Eng.)",
+      "course_url": "https://kurser.dtu.dk/course/10961",
+      "info_url": "https://kurser.dtu.dk/course/10961/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "10961 No prior exam found",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "12125",
+      "name": "12125 Design and planning of climate adaptation measures in the\nbuilt environment",
+      "course_url": "https://kurser.dtu.dk/course/12125",
+      "info_url": "https://kurser.dtu.dk/course/12125/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "12125 No prior exam found",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "12150",
+      "name": "12150 Radioactivity in the environment",
+      "course_url": "https://kurser.dtu.dk/course/12150",
+      "info_url": "https://kurser.dtu.dk/course/12150/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "12150 No prior exam found (from now on abbreviated as NPE)",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "12615",
+      "name": "12615 System sustainability tools for the built\nenvironment",
+      "course_url": "https://kurser.dtu.dk/course/12615",
+      "info_url": "https://kurser.dtu.dk/course/12615/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "12615 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "12952",
+      "name": "12952 Sustainability evaluation and communication",
+      "course_url": "https://kurser.dtu.dk/course/12952",
+      "info_url": "https://kurser.dtu.dk/course/12952/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_equivalence_evidence",
+        "evidence": "12952 Sustainability evaluation and communication\n2026/2027\nPlease note: Course 12952 is identical to course 12950 and 12951. Course 12950/12951/12952 is mandatory for all PhD students at DTU enrolled as of 1 April 2019. The course is only for PhD students at DTU.\nhttps://karakterer.dtu.dk/Histogram/1/12950/Summer-2026",
+        "decision": "Same exam as 12950; offered twice yearly, in spring and autumn. Both seasons are regular candidates.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "related_courses": [
+          "12950",
+          "12951"
+        ],
+        "reported_exam_url": "https://karakterer.dtu.dk/Histogram/1/12950/Summer-2026",
+        "source_courses": [
+          "12950"
+        ],
+        "regular_seasons": [
+          "winter",
+          "summer"
+        ]
+      }
+    },
+    {
+      "course": "22170",
+      "name": "22170 Value Creation in Pharma and Biotechnology",
+      "course_url": "https://kurser.dtu.dk/course/22170",
+      "info_url": "https://kurser.dtu.dk/course/22170/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/27692/Summer-2024",
+          "http://karakterer.dtu.dk/Histogram/1/27692/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/27692/Summer-2023",
+          "http://karakterer.dtu.dk/Histogram/1/27692/Winter-2022",
+          "http://karakterer.dtu.dk/Histogram/1/27692/Summer-2022"
+        ],
+        "linked_source_courses": [
+          "27692"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_not_for_default",
+        "evidence": "Prior course: 27692. There is exam data but it is from 2024 so not really fair to display it I would say.",
+        "source_course": "27692",
+        "latest_reported_exam": "http://karakterer.dtu.dk/Histogram/1/27692/Summer-2024",
+        "decision": "Maintainer considers predecessor results unsuitable for current default display. Preserve evidence; do not introduce a global age cutoff.",
+        "open_questions": [
+          "Should predecessor history remain available through explicit selection, or be omitted entirely?"
+        ],
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "excluded_sources": [
+          "27692"
+        ]
+      }
+    },
+    {
+      "course": "22181",
+      "name": "22181 Design Build for PK/PD Controlled Drug Testing:\nInfection-on-Chip",
+      "course_url": "https://kurser.dtu.dk/course/22181",
+      "info_url": "https://kurser.dtu.dk/course/22181/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/22180/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/22180/Winter-2024",
+          "http://karakterer.dtu.dk/Histogram/1/22180/Summer-2024",
+          "http://karakterer.dtu.dk/Histogram/1/22180/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/22180/Winter-2022"
+        ],
+        "linked_source_courses": [
+          "22180"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "confirmed_renumbering",
+        "evidence": "22181 has gotten new number from 22180. The exam data is fair though.",
+        "source_course": "22180",
+        "accepted_exam": "https://karakterer.dtu.dk/Histogram/1/22180/Winter-2025",
+        "decision": "Maintainer accepts historical exam data from 22180 for 22181.",
+        "provenance": "Maintainer message; not independently verified live",
+        "recorded_at": "2026-09-08"
+      }
+    },
+    {
+      "course": "22214",
+      "name": "22214 Technologies in Translational Neuroscience",
+      "course_url": "https://kurser.dtu.dk/course/22214",
+      "info_url": "https://kurser.dtu.dk/course/22214/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "22214 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "22240",
+      "name": "22240 CRISPR engineering of mammalian cells",
+      "course_url": "https://kurser.dtu.dk/course/22240",
+      "info_url": "https://kurser.dtu.dk/course/22240/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "22240 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "22286",
+      "name": "22286 3D printing of soft matter and living tissue\n(bioprinting)",
+      "course_url": "https://kurser.dtu.dk/course/22286",
+      "info_url": "https://kurser.dtu.dk/course/22286/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "22286 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "22461",
+      "name": "22461 Construction and Programming of DC Sensor Systems",
+      "course_url": "https://kurser.dtu.dk/course/22461",
+      "info_url": "https://kurser.dtu.dk/course/22461/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/22433/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/22433/Summer-2023",
+          "http://karakterer.dtu.dk/Histogram/1/22433/Winter-2022"
+        ],
+        "linked_source_courses": [
+          "22433"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "22461: “\nPrior course: 22433\nEvaluations\n22433 Rapid Prototyping of Simple Sensor Systems E22 (E-22-13)\nGrade history\n22433 Rapid prototyping of simple sensor systems v23\n22433 Rapid prototyping of simple sensor systems s23\n22433 Rapid prototyping of simple sensor systems v22\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "22433"
+        ]
+      }
+    },
+    {
+      "course": "22514",
+      "name": "22514 Optical instrumentation design for biomedical\nengineers",
+      "course_url": "https://kurser.dtu.dk/course/22514",
+      "info_url": "https://kurser.dtu.dk/course/22514/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "22514 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "22531",
+      "name": "22531 Ionizing radiation protection and safety",
+      "course_url": "https://kurser.dtu.dk/course/22531",
+      "info_url": "https://kurser.dtu.dk/course/22531/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "22531 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23303",
+      "name": "23303 Fundamentals of sustainable food packaging",
+      "course_url": "https://kurser.dtu.dk/course/23303",
+      "info_url": "https://kurser.dtu.dk/course/23303/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23303 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23513",
+      "name": "23513 Alternative proteins and plant-based foods",
+      "course_url": "https://kurser.dtu.dk/course/23513",
+      "info_url": "https://kurser.dtu.dk/course/23513/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23513 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23721",
+      "name": "23721 Hygienic design in the food industry",
+      "course_url": "https://kurser.dtu.dk/course/23721",
+      "info_url": "https://kurser.dtu.dk/course/23721/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23721 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23750",
+      "name": "23750 Beverage technology",
+      "course_url": "https://kurser.dtu.dk/course/23750",
+      "info_url": "https://kurser.dtu.dk/course/23750/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23750 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23851",
+      "name": "23851 Microbiological risk assessment",
+      "course_url": "https://kurser.dtu.dk/course/23851",
+      "info_url": "https://kurser.dtu.dk/course/23851/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23851 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23934",
+      "name": "23934 Biological chemistry",
+      "course_url": "https://kurser.dtu.dk/course/23934",
+      "info_url": "https://kurser.dtu.dk/course/23934/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23934 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "23955",
+      "name": "23955 Beer and beverage technology",
+      "course_url": "https://kurser.dtu.dk/course/23955",
+      "info_url": "https://kurser.dtu.dk/course/23955/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "23955 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25216",
+      "name": "25216 Quality, processing, and utilization of fish and marine\ningredients",
+      "course_url": "https://kurser.dtu.dk/course/25216",
+      "info_url": "https://kurser.dtu.dk/course/25216/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25216 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25342",
+      "name": "25342 Evidence Based Advice for Aquatic Management",
+      "course_url": "https://kurser.dtu.dk/course/25342",
+      "info_url": "https://kurser.dtu.dk/course/25342/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25342 NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25356",
+      "name": "25356 Coastal Ecological Modelling",
+      "course_url": "https://kurser.dtu.dk/course/25356",
+      "info_url": "https://kurser.dtu.dk/course/25356/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/25314/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/25314/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/25314/Summer-2024",
+          "http://karakterer.dtu.dk/Histogram/1/25314/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/25314/Summer-2023"
+        ],
+        "linked_source_courses": [
+          "25314"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "25356: “Prior course: 25314\nEvaluations\n25314 Computational marine ecological modelling F26 (F-26-13)\n25314 Computational marine ecological modelling F25 (F-25-13)\n25314 Computational marine ecological modelling F24 (F-24-13)\n25314 Computational marine ecological modelling F23 (F-23-13)\n25314 Computational marine ecological modelling F22 (F-22-13)\nGrade history\n25314 Computational marine ecological modelling s26\n25314 Computational marine ecological modelling s25\n25314 Computational marine ecological modelling s24\n25314 Computational marine ecological modelling v23\n25314 Computational marine ecological modelling s23\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "25314"
+        ]
+      }
+    },
+    {
+      "course": "25357",
+      "name": "25357 Innovation in Fisheries and Aquaculture",
+      "course_url": "https://kurser.dtu.dk/course/25357",
+      "info_url": "https://kurser.dtu.dk/course/25357/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25357: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25623",
+      "name": "25623 Methods for implementation of surveillance procedures for\nlisted fish diseases.",
+      "course_url": "https://kurser.dtu.dk/course/25623",
+      "info_url": "https://kurser.dtu.dk/course/25623/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/25617/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/25617/Summer-2022"
+        ],
+        "linked_source_courses": [
+          "25617"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "25623: “\nEvaluations\n25623 Methods for implementation of surveillance procedures for listed fish diseases. E25 (E-25-13)\nPrior course: 25617\nGrade history\n25617 Methods for implementation of surveillance procedures for listed fish diseases v23\n25617 Methods for implementation of surveillance procedures for listed fish diseases s22\n\n“",
+        "decision": "Predecessor grades from 2023 are too old to display; exclude 25617 from extension display, retaining diagnostic evidence.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "25617"
+        ],
+        "excluded_sources": [
+          "25617"
+        ]
+      }
+    },
+    {
+      "course": "25624",
+      "name": "25624 Advanced Fisheries Oceanography",
+      "course_url": "https://kurser.dtu.dk/course/25624",
+      "info_url": "https://kurser.dtu.dk/course/25624/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25624: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25625",
+      "name": "25625 Evidence Based Advice for Aquatic Management",
+      "course_url": "https://kurser.dtu.dk/course/25625",
+      "info_url": "https://kurser.dtu.dk/course/25625/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25625: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25628",
+      "name": "25628 Fisheries Ecology and Advice",
+      "course_url": "https://kurser.dtu.dk/course/25628",
+      "info_url": "https://kurser.dtu.dk/course/25628/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/25349/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/25349/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/25349/Summer-2024"
+        ],
+        "linked_source_courses": [
+          "25349"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "25628: “Prior course: 25349\nEvaluations\n25349 Applied Fisheries Ecology F26 (F-26-13)\n25349 Applied Fisheries Ecology F25 (F-25-13)\n25349 Applied Fisheries Ecology F24 (F-24-13)\nGrade history\n25349 Applied fisheries ecology s26\n25349 Applied fisheries ecology s25\n25349 Applied fisheries ecology s24\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "25349"
+        ]
+      }
+    },
+    {
+      "course": "25825",
+      "name": "25825 Study Group in Population Ecology and Genetics (3)",
+      "course_url": "https://kurser.dtu.dk/course/25825",
+      "info_url": "https://kurser.dtu.dk/course/25825/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/25803/Winter-2022"
+        ],
+        "linked_source_courses": [
+          "25803"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "25825: “Prior course: 25803\nGrade history\nStudy Group in Population Ecology and Genetics v22\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "25803"
+        ]
+      }
+    },
+    {
+      "course": "25840",
+      "name": "25840 Mathematical Modelling of Living Systems Journal\nClub",
+      "course_url": "https://kurser.dtu.dk/course/25840",
+      "info_url": "https://kurser.dtu.dk/course/25840/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25840:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25841",
+      "name": "25841 Mathematical Modelling of Living Systems Journal Club\n(2)",
+      "course_url": "https://kurser.dtu.dk/course/25841",
+      "info_url": "https://kurser.dtu.dk/course/25841/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25841: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "25842",
+      "name": "25842 Mathematical Modelling of Living Systems Journal Club\n(3)",
+      "course_url": "https://kurser.dtu.dk/course/25842",
+      "info_url": "https://kurser.dtu.dk/course/25842/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "25842: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "26250",
+      "name": "26250 Machine learning-driven molecular science",
+      "course_url": "https://kurser.dtu.dk/course/26250",
+      "info_url": "https://kurser.dtu.dk/course/26250/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "26250: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "26470",
+      "name": "26470 Organic Chemistry",
+      "course_url": "https://kurser.dtu.dk/course/26470",
+      "info_url": "https://kurser.dtu.dk/course/26470/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "26470: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27029",
+      "name": "27029 Life science automation and robotics",
+      "course_url": "https://kurser.dtu.dk/course/27029",
+      "info_url": "https://kurser.dtu.dk/course/27029/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27029: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27032",
+      "name": "27032 Introduction to cell factories",
+      "course_url": "https://kurser.dtu.dk/course/27032",
+      "info_url": "https://kurser.dtu.dk/course/27032/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27032: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27064",
+      "name": "27064 Biotechnological protein production",
+      "course_url": "https://kurser.dtu.dk/course/27064",
+      "info_url": "https://kurser.dtu.dk/course/27064/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27064:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27066",
+      "name": "27066 Industrial enzyme discovery: From bioinformatics to\nfunction",
+      "course_url": "https://kurser.dtu.dk/course/27066",
+      "info_url": "https://kurser.dtu.dk/course/27066/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27066: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27200",
+      "name": "27200 Data-driven bioengineering",
+      "course_url": "https://kurser.dtu.dk/course/27200",
+      "info_url": "https://kurser.dtu.dk/course/27200/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27200: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27221",
+      "name": "27221 Microbiome engineering",
+      "course_url": "https://kurser.dtu.dk/course/27221",
+      "info_url": "https://kurser.dtu.dk/course/27221/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27221: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27232",
+      "name": "27232 Modeling cellular metabolism",
+      "course_url": "https://kurser.dtu.dk/course/27232",
+      "info_url": "https://kurser.dtu.dk/course/27232/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27232: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27450",
+      "name": "27450 Development of microbial biofertilizers and other whole-cell\nbiosolutions",
+      "course_url": "https://kurser.dtu.dk/course/27450",
+      "info_url": "https://kurser.dtu.dk/course/27450/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27450: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "27827",
+      "name": "27827 Hands-On Data Analysis and Automation: Better Decision-Making\nwith Bash and Python Basics",
+      "course_url": "https://kurser.dtu.dk/course/27827",
+      "info_url": "https://kurser.dtu.dk/course/27827/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/29905/Winter-2025"
+        ],
+        "linked_source_courses": [
+          "29905"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "27827: “Prior course: 29905\nEvaluations\n29905 Introduction to Python for Data Analysis and Automation in Biology Aug 22 (F-22-03AUG)\nGrade history\n29905 Hands-On Data Analysis and Automation: Better Decision-Making with Bash and Python Basics v25\n“",
+        "decision": "Retain predecessor 29905 history supplied by maintainer. Historical regular season remains unverified.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "29905"
+        ]
+      }
+    },
+    {
+      "course": "27829",
+      "name": "27829 Good Enough Software Engineering for\nBioinformaticians",
+      "course_url": "https://kurser.dtu.dk/course/27829",
+      "info_url": "https://kurser.dtu.dk/course/27829/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "27829: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "28217",
+      "name": "28217 Applied Formulation Science for Coatings – Practical\nExercises",
+      "course_url": "https://kurser.dtu.dk/course/28217",
+      "info_url": "https://kurser.dtu.dk/course/28217/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "28217:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "34063",
+      "name": "34063 Epitaxy: Principles and Applications",
+      "course_url": "https://kurser.dtu.dk/course/34063",
+      "info_url": "https://kurser.dtu.dk/course/34063/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "34063: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "34064",
+      "name": "34064 Waveguide optics",
+      "course_url": "https://kurser.dtu.dk/course/34064",
+      "info_url": "https://kurser.dtu.dk/course/34064/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "34064: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "34375",
+      "name": "34375 Access networks and home networks",
+      "course_url": "https://kurser.dtu.dk/course/34375",
+      "info_url": "https://kurser.dtu.dk/course/34375/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "34375: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "34555",
+      "name": "34555 Thin Films for Energy and Electronics by Solution\nProcessing",
+      "course_url": "https://kurser.dtu.dk/course/34555",
+      "info_url": "https://kurser.dtu.dk/course/34555/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "34555:  NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "34556",
+      "name": "34556 Solar Cells: From Fundamentals to Device\nEngineering",
+      "course_url": "https://kurser.dtu.dk/course/34556",
+      "info_url": "https://kurser.dtu.dk/course/34556/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/34551/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/34551/Winter-2024",
+          "http://karakterer.dtu.dk/Histogram/1/34551/Winter-2023",
+          "http://karakterer.dtu.dk/Histogram/1/34551/Summer-2023"
+        ],
+        "linked_source_courses": [
+          "34551"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "34556:   “Prior course: 34551\nEvaluations\n34551 Thin film photovoltaics Jan 26 (E-25-03)\n34551 Thin film photovoltaics Jan 25 (E-24-03)\n34551 Thin film photovoltaics Jan 24 (E-23-03)\n34551 Thin film photovoltaics Aug 23 (F-23-03AUG)\nGrade history\n34551 Thin Film Photovoltaics v25\n34551 Thin Film Photovoltaics v24\n34551 Thin Film Photovoltaics v23\n34551 Thin Film Photovoltaics s23\n“",
+        "decision": "Maintainer accepts existing 34551 history; retain winter labeling as supplied.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "34551"
+        ]
+      }
+    },
+    {
+      "course": "34766",
+      "name": "34766 Robotic Manipulation: Perception, Planning, Control and\nLearning",
+      "course_url": "https://kurser.dtu.dk/course/34766",
+      "info_url": "https://kurser.dtu.dk/course/34766/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "34766: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38311",
+      "name": "38311 Skylab Startup programme - Stage 1",
+      "course_url": "https://kurser.dtu.dk/course/38311",
+      "info_url": "https://kurser.dtu.dk/course/38311/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38311: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38312",
+      "name": "38312 Skylab Startup programme - Stage 2",
+      "course_url": "https://kurser.dtu.dk/course/38312",
+      "info_url": "https://kurser.dtu.dk/course/38312/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38312: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38400",
+      "name": "38400 Innovation in Engineering (Polytechnical\nFoundation)",
+      "course_url": "https://kurser.dtu.dk/course/38400",
+      "info_url": "https://kurser.dtu.dk/course/38400/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38400: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38401",
+      "name": "38401 Facilitating Innovation in Multidisciplinary Teams",
+      "course_url": "https://kurser.dtu.dk/course/38401",
+      "info_url": "https://kurser.dtu.dk/course/38401/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38401:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38402",
+      "name": "38402 Innovation in Engineering (Polytechnical\nFoundation)",
+      "course_url": "https://kurser.dtu.dk/course/38402",
+      "info_url": "https://kurser.dtu.dk/course/38402/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38402: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38403",
+      "name": "38403 Facilitating Innovation in Multidisciplinary Teams",
+      "course_url": "https://kurser.dtu.dk/course/38403",
+      "info_url": "https://kurser.dtu.dk/course/38403/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38403: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38404",
+      "name": "38404 Innovation in Engineering (Polytechnical\nFoundation)",
+      "course_url": "https://kurser.dtu.dk/course/38404",
+      "info_url": "https://kurser.dtu.dk/course/38404/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38404: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "38405",
+      "name": "38405 Facilitating Innovation in Multidisciplinary Teams",
+      "course_url": "https://kurser.dtu.dk/course/38405",
+      "info_url": "https://kurser.dtu.dk/course/38405/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "38405: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "41264",
+      "name": "41264 Ship Hydrodynamics",
+      "course_url": "https://kurser.dtu.dk/course/41264",
+      "info_url": "https://kurser.dtu.dk/course/41264/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "41264: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "41349",
+      "name": "41349 Advanced combustion in engines",
+      "course_url": "https://kurser.dtu.dk/course/41349",
+      "info_url": "https://kurser.dtu.dk/course/41349/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "41349: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "41518",
+      "name": "41518 Weight Critical Structures",
+      "course_url": "https://kurser.dtu.dk/course/41518",
+      "info_url": "https://kurser.dtu.dk/course/41518/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_replacement_no_prior_exam_found",
+        "evidence": "41518:  “Replaces the course 41517.”  But not exams found under this either",
+        "decision": "Replaces 41517; maintainer found no exams under either number.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "41517"
+        ]
+      }
+    },
+    {
+      "course": "41751",
+      "name": "41751 Metal forming and joining technologies",
+      "course_url": "https://kurser.dtu.dk/course/41751",
+      "info_url": "https://kurser.dtu.dk/course/41751/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/41730/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/41730/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/41730/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/41730/Winter-2024",
+          "http://karakterer.dtu.dk/Histogram/1/41730/Winter-2023"
+        ],
+        "linked_source_courses": [
+          "41730"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "41751: “Prior course: 41730\nEvaluations\n41730 Industrial forming of metals E25 (E-25-13)\n41730 Industrial forming of metals E24 (E-24-13)\n41730 Industrial forming of metals E23 (E-23-13)\n41730 Industrial forming of metals E22 (E-22-13)\nGrade history\n41730 Industrial forming of metals s26\n41730 Industrial forming of metals v25\n41730 Industrial forming of metals s25\n41730 Industrial forming of metals v24\n41730 Industrial forming of metals v23\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "41730"
+        ]
+      }
+    },
+    {
+      "course": "41959",
+      "name": "41959 Computational Structural Modelling: Linear Finite Element\nMethod",
+      "course_url": "https://kurser.dtu.dk/course/41959",
+      "info_url": "https://kurser.dtu.dk/course/41959/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/11305/Winter-2022",
+          "http://karakterer.dtu.dk/Histogram/1/11305/Summer-2022"
+        ],
+        "linked_source_courses": [
+          "11305"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "41959: “Prior course: 11305\nGrade history\n11305 Computational Structural Modelling 1: The Finite Element Method v22\n11305 Computational Structural Modelling 1: The Finite Element Method s22\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "11305"
+        ]
+      }
+    },
+    {
+      "course": "42S17",
+      "name": "42S17 Change Management for Sustainability",
+      "course_url": "https://kurser.dtu.dk/course/42S17",
+      "info_url": "https://kurser.dtu.dk/course/42S17/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "42S17: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "42S18",
+      "name": "42S18 Financing and Sustainability",
+      "course_url": "https://kurser.dtu.dk/course/42S18",
+      "info_url": "https://kurser.dtu.dk/course/42S18/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "42S18: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "42S19",
+      "name": "42S19 Communicating Sustainability",
+      "course_url": "https://kurser.dtu.dk/course/42S19",
+      "info_url": "https://kurser.dtu.dk/course/42S19/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "42S19: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "42S20",
+      "name": "42S20 Master Project",
+      "course_url": "https://kurser.dtu.dk/course/42S20",
+      "info_url": "https://kurser.dtu.dk/course/42S20/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "42S20: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "46220",
+      "name": "46220 Green Energy Transition in Emerging and Developing\nEconomies",
+      "course_url": "https://kurser.dtu.dk/course/46220",
+      "info_url": "https://kurser.dtu.dk/course/46220/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "46220: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "46800",
+      "name": "46800 Renewable Energy Technologies",
+      "course_url": "https://kurser.dtu.dk/course/46800",
+      "info_url": "https://kurser.dtu.dk/course/46800/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "46800: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "46805",
+      "name": "46805 Materials and manufacturing processes for industrial\ntechnology",
+      "course_url": "https://kurser.dtu.dk/course/46805",
+      "info_url": "https://kurser.dtu.dk/course/46805/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "46805: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62106",
+      "name": "62106 Quality management and GMP",
+      "course_url": "https://kurser.dtu.dk/course/62106",
+      "info_url": "https://kurser.dtu.dk/course/62106/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62106: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62117",
+      "name": "62117 Organisation and Management",
+      "course_url": "https://kurser.dtu.dk/course/62117",
+      "info_url": "https://kurser.dtu.dk/course/62117/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62117: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62123",
+      "name": "62123 Operations Management",
+      "course_url": "https://kurser.dtu.dk/course/62123",
+      "info_url": "https://kurser.dtu.dk/course/62123/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62123: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62126",
+      "name": "62126 Automation in Manufacturing",
+      "course_url": "https://kurser.dtu.dk/course/62126",
+      "info_url": "https://kurser.dtu.dk/course/62126/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62126: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62127",
+      "name": "62127 Managerial Economics",
+      "course_url": "https://kurser.dtu.dk/course/62127",
+      "info_url": "https://kurser.dtu.dk/course/62127/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62127: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62128",
+      "name": "62128 IT in production",
+      "course_url": "https://kurser.dtu.dk/course/62128",
+      "info_url": "https://kurser.dtu.dk/course/62128/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62128: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62129",
+      "name": "62129 Innovation and Creative Problem Solving in\nengineering",
+      "course_url": "https://kurser.dtu.dk/course/62129",
+      "info_url": "https://kurser.dtu.dk/course/62129/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62129: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62130",
+      "name": "62130 Sustainability and Life Cycle Assessments",
+      "course_url": "https://kurser.dtu.dk/course/62130",
+      "info_url": "https://kurser.dtu.dk/course/62130/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62130: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62151",
+      "name": "62151 Bridging Business and Technology in a Global\nContext",
+      "course_url": "https://kurser.dtu.dk/course/62151",
+      "info_url": "https://kurser.dtu.dk/course/62151/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62151:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62222",
+      "name": "62222 IT Business",
+      "course_url": "https://kurser.dtu.dk/course/62222",
+      "info_url": "https://kurser.dtu.dk/course/62222/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62229/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/62229/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62229/Summer-2024",
+          "http://karakterer.dtu.dk/Histogram/1/62229/Summer-2023",
+          "http://karakterer.dtu.dk/Histogram/1/62229/Winter-2022"
+        ],
+        "linked_source_courses": [
+          "62229"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "62222: “Prior course: 62229\nEvaluations\n62229 IT Business F26 (F-26-13)\n62229 IT Business F25 (F-25-13)\n62229 IT Business F24 (F-24-13)\n62229 IT Business F23 (F-23-13)\n62229 IT Business E22 (E-22-13)\nGrade history\n62229 IT business s26\n62229 IT business s25\n62229 IT business s24\n62229 IT business s23\n62229 IT business v22\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62229"
+        ]
+      }
+    },
+    {
+      "course": "62226",
+      "name": "62226 Communication, Culture and Global Contexts",
+      "course_url": "https://kurser.dtu.dk/course/62226",
+      "info_url": "https://kurser.dtu.dk/course/62226/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62226:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62237",
+      "name": "62237 Industrial Programming",
+      "course_url": "https://kurser.dtu.dk/course/62237",
+      "info_url": "https://kurser.dtu.dk/course/62237/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62236/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62234/Winter-2024",
+          "http://karakterer.dtu.dk/Histogram/1/62234/Winter-2023"
+        ],
+        "linked_source_courses": [
+          "62234",
+          "62236"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "62237: “Prior course: 62236\nEvaluations\n62236 Industrial Programming E25 (E-25-03)\nGrade history\n62236 Industrial programming v25\nPrior course: 62234\nEvaluations\n62234 Industrial Programming E24 (E-24-03)\n62234 Industrial Programming E23 (E-23-03)\nGrade history\n62234 Industrial programming v24\n62234 Industrial programming v23\n“",
+        "decision": "Use the most recent predecessor as default; retain older predecessor history.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62236",
+          "62234"
+        ],
+        "preferred_sources": [
+          "62236",
+          "62234"
+        ]
+      }
+    },
+    {
+      "course": "62290",
+      "name": "62290 Building renovation energy and installations",
+      "course_url": "https://kurser.dtu.dk/course/62290",
+      "info_url": "https://kurser.dtu.dk/course/62290/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62290: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62414",
+      "name": "62414 Advanced Mobile Application Development",
+      "course_url": "https://kurser.dtu.dk/course/62414",
+      "info_url": "https://kurser.dtu.dk/course/62414/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62414: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62421",
+      "name": "62421 Information Technology 1",
+      "course_url": "https://kurser.dtu.dk/course/62421",
+      "info_url": "https://kurser.dtu.dk/course/62421/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62421: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62451",
+      "name": "62451 Information Technology 2",
+      "course_url": "https://kurser.dtu.dk/course/62451",
+      "info_url": "https://kurser.dtu.dk/course/62451/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62451: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62513",
+      "name": "62513 Telemedicine",
+      "course_url": "https://kurser.dtu.dk/course/62513",
+      "info_url": "https://kurser.dtu.dk/course/62513/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62513:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62580",
+      "name": "62580 Digital Systems and Applications",
+      "course_url": "https://kurser.dtu.dk/course/62580",
+      "info_url": "https://kurser.dtu.dk/course/62580/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62581/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/62581/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62581/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62581/Winter-2024",
+          "http://karakterer.dtu.dk/Histogram/1/62581/Summer-2024"
+        ],
+        "linked_source_courses": [
+          "62581"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "62580: “Prior course: 62581\nEvaluations\n62581 IT and Computer Communication E25 (E-25-13)\n62581 IT and Computer Communication E24 (E-24-13)\n62581 IT and Computer Communication E23 (E-23-13)\n62581 IT and Computer Communication E22 (E-22-13)\nGrade history\n62581 IT and computer communication s26\n62581 IT and computer communication v25\n62581 IT and computer communication s25\n62581 IT and computer communication v24\n62581 IT and computer communication s24\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62581"
+        ]
+      }
+    },
+    {
+      "course": "62678",
+      "name": "62678 Introduction to material's mechanical\nproperties",
+      "course_url": "https://kurser.dtu.dk/course/62678",
+      "info_url": "https://kurser.dtu.dk/course/62678/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62678: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62713",
+      "name": "62713 Basic C Programming",
+      "course_url": "https://kurser.dtu.dk/course/62713",
+      "info_url": "https://kurser.dtu.dk/course/62713/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62712/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/62712/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62712/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62712/Winter-2024"
+        ],
+        "linked_source_courses": [
+          "62712"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "62713: “Prior course: 62712\nEvaluations\n62712 Basic C Programming E25 (E-25-13)\n62712 Basic C Programming E24 (E-24-13)\nGrade history\n62712 Basic C Programming s26\n62712 Basic C Programming v25\n62712 Basic C Programming s25\n62712 Basic C Programming v24\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62712"
+        ]
+      }
+    },
+    {
+      "course": "62776",
+      "name": "62776 Applied electrical engineering",
+      "course_url": "https://kurser.dtu.dk/course/62776",
+      "info_url": "https://kurser.dtu.dk/course/62776/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62775/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Winter-2024"
+        ],
+        "linked_source_courses": [
+          "62775"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "62776: “Prior course: 62775\nEvaluations\n62775 Applied electrical engineering E25 (E-25-13)\n62775 Applied electrical engineering E24 (E-24-13)\nGrade history\n62775 Applied electrical engineering s26\n62775 Applied electrical engineering v25\n62775 Applied electrical engineering s25\n62775 Applied electrical engineering v24\n“",
+        "decision": "Use shared 62775 results; indicative of this course.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62775"
+        ]
+      }
+    },
+    {
+      "course": "62812",
+      "name": "62812 Materials selection",
+      "course_url": "https://kurser.dtu.dk/course/62812",
+      "info_url": "https://kurser.dtu.dk/course/62812/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62812: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62813",
+      "name": "62813 Semesterproject 1: Wind turbine technology",
+      "course_url": "https://kurser.dtu.dk/course/62813",
+      "info_url": "https://kurser.dtu.dk/course/62813/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62813: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "62814",
+      "name": "62814 Mechanics",
+      "course_url": "https://kurser.dtu.dk/course/62814",
+      "info_url": "https://kurser.dtu.dk/course/62814/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "62814:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA100",
+      "name": "MA100 Problem-Based Project Work and Research Methods",
+      "course_url": "https://kurser.dtu.dk/course/MA100",
+      "info_url": "https://kurser.dtu.dk/course/MA100/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA100: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA239",
+      "name": "MA239 Numerical Methods in Structural Mechanics",
+      "course_url": "https://kurser.dtu.dk/course/MA239",
+      "info_url": "https://kurser.dtu.dk/course/MA239/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA239: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA263",
+      "name": "MA263 Experimental and numerical methods for ship resistance and\npropulsion",
+      "course_url": "https://kurser.dtu.dk/course/MA263",
+      "info_url": "https://kurser.dtu.dk/course/MA263/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/41263/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/41263/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/41263/Summer-2024"
+        ],
+        "linked_source_courses": [
+          "41263"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "MA263: “Prior course: 41263\nEvaluations\n41263 Experimental and numerical methods for ship resistance and propulsion Jun 26 (F-26-03JUN)\n41263 Experimental and numerical methods for ship resistance and propulsion Aug 25 (F-25-03AUG)\n41263 Experimental and numerical methods for ship resistance and propulsion Aug 24 (F-24-03AUG)\nGrade history\n41263 Experimental and numerical methods for ship resistance and propulsion s26\n41263 Experimental and numerical methods for ship resistance and propulsion s25\n41263 Experimental and numerical methods for ship resistance and propulsion s24\n“",
+        "decision": "Retain predecessor 41263 history supplied by maintainer. August-to-June teaching change is preserved as evidence.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "41263"
+        ]
+      }
+    },
+    {
+      "course": "MA264",
+      "name": "MA264 Ship Hydrodynamics",
+      "course_url": "https://kurser.dtu.dk/course/MA264",
+      "info_url": "https://kurser.dtu.dk/course/MA264/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA264: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA270",
+      "name": "MA270 Economic and environmental performance of ships",
+      "course_url": "https://kurser.dtu.dk/course/MA270",
+      "info_url": "https://kurser.dtu.dk/course/MA270/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA270: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA271",
+      "name": "MA271 Ship design",
+      "course_url": "https://kurser.dtu.dk/course/MA271",
+      "info_url": "https://kurser.dtu.dk/course/MA271/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA271: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA534",
+      "name": "MA534 Dimensioning and strength 2",
+      "course_url": "https://kurser.dtu.dk/course/MA534",
+      "info_url": "https://kurser.dtu.dk/course/MA534/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA534: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA657",
+      "name": "MA657 Fluid Mechanics",
+      "course_url": "https://kurser.dtu.dk/course/MA657",
+      "info_url": "https://kurser.dtu.dk/course/MA657/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA657:NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA678",
+      "name": "MA678 Introduction to material's mechanical\nproperties",
+      "course_url": "https://kurser.dtu.dk/course/MA678",
+      "info_url": "https://kurser.dtu.dk/course/MA678/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA678: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA694",
+      "name": "MA694 Dynamics",
+      "course_url": "https://kurser.dtu.dk/course/MA694",
+      "info_url": "https://kurser.dtu.dk/course/MA694/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA694: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    },
+    {
+      "course": "MA722",
+      "name": "MA722 Linear control design 1",
+      "course_url": "https://kurser.dtu.dk/course/MA722",
+      "info_url": "https://kurser.dtu.dk/course/MA722/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/31301/Summer-2022"
+        ],
+        "linked_source_courses": [
+          "31301"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "MA722: “Prior course: 31301\nEvaluations\n31301 Linear Control Design 1 F22 (F-22-13)\nGrade history\n31301 Linear Control Design 1 s22\n“",
+        "decision": "Official predecessor wording reported by maintainer; preserve source-specific exams. Historical schedule and default suitability still need assessment.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "31301"
+        ]
+      }
+    },
+    {
+      "course": "MA776",
+      "name": "MA776 Applied electrical engineering",
+      "course_url": "https://kurser.dtu.dk/course/MA776",
+      "info_url": "https://kurser.dtu.dk/course/MA776/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [
+          "http://karakterer.dtu.dk/Histogram/1/62775/Summer-2026",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Winter-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Summer-2025",
+          "http://karakterer.dtu.dk/Histogram/1/62775/Winter-2024"
+        ],
+        "linked_source_courses": [
+          "62775"
+        ],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_predecessor_evidence",
+        "evidence": "MA776: “Prior course: 62775\nEvaluations\n62775 Applied electrical engineering E25 (E-25-13)\n62775 Applied electrical engineering E24 (E-24-13)\nGrade history\n62775 Applied electrical engineering s26\n62775 Applied electrical engineering v25\n62775 Applied electrical engineering s25\n62775 Applied electrical engineering v24\n“",
+        "decision": "Use shared 62775 results independently for this course; do not sum counts.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt",
+        "source_courses": [
+          "62775"
+        ]
+      }
+    },
+    {
+      "course": "MA922",
+      "name": "MA922 Linear Algebra and Modelling",
+      "course_url": "https://kurser.dtu.dk/course/MA922",
+      "info_url": "https://kurser.dtu.dk/course/MA922/info?lang=en-GB",
+      "saved_evidence": {
+        "reports": [
+          "test8/report.json",
+          "test9/report.json"
+        ],
+        "histogram_destinations": [],
+        "linked_source_courses": [],
+        "collected_exams": 0
+      },
+      "review": {
+        "status": "reviewed_no_prior_exam_found",
+        "evidence": "MA922: NPE",
+        "decision": "Maintainer found no prior exams. This is an observation, not confirmation of new-course status.",
+        "provenance": "Maintainer pasted manual inspection; not independently verified live",
+        "recorded_at": "2026-09-08",
+        "evidence_file": "docs/manual-review-notes-2026-09-08.txt"
+      }
+    }
+  ],
+  "npe_policy": "NPE means maintainer did not find prior results on the website. Accepted unknown availability, not proof of a new course; transport/authentication failures still fail."
+}

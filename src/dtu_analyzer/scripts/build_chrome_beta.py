@@ -57,16 +57,20 @@ def build_dataset(base, reports):
         record = records.get(course, {})
         if record.get("name"):
             data["name_en"] = record["name"]
-        history = [exam_record(e) for e in record.get("exams", [])]
-        history.sort(key=lambda e: (e["year"] or 0, {"winter": 0, "summer": 1}.get(e["season"], -1), e["id"]), reverse=True)
+        history = [exam_record(e) for e in record.get("exams", []) if e.get("display_eligible", True)]
+        history.sort(key=lambda e: (e["year"] or 0, {"summer": 0, "winter": 1}.get(e["season"], -1), e["id"]), reverse=True)
         primary = record.get("primary_exam")
         data["default_exam_id"] = primary["url"] if primary else None
         data["exam_history"] = history
         data["history_collected_at"] = record.get("collected_at", "")
         data["exam_default_note"] = (
-            "Latest regular exam inferred from the current schedule. Historical schedules may differ."
+            record.get("default_selection_note", "Latest regular exam inferred from the current schedule. Historical schedules may differ.")
             if primary else "New course: no historical exam results expected."
             if record.get("history_status") == "new_course_no_history_expected"
+            else "No prior exam was found during manual review. Availability is unknown."
+            if record.get("history_status") == "reviewed_no_prior_exam_found"
+            else "Older predecessor results were excluded from display by maintainer review."
+            if record.get("exams") and not history
             else "Regular exam could not be determined. Choose an available exam to inspect its results."
             if history else "No exam history was collected for this course.")
         for exam in history:

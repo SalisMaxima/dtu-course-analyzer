@@ -17,12 +17,13 @@ from yarl import URL
 
 from ..analysis.exam_classification import classify_course, extract_schedule, parse_period, schedule_from_text
 from ..analysis.analyzer import extract_grade_results
+from ..analysis.course_history_reviews import APPROVED_HISTORY
 from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
 SCHEMA_VERSION = 5
-RULE_VERSION = "schedule-hypothesis-v7-reviewed"
+RULE_VERSION = "schedule-hypothesis-v8-maintainer-history"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -112,6 +113,9 @@ def info_evidence(html: str, url: str, course: str) -> dict:
              else "no_links_unknown" if re.search(rf"\b{re.escape(course)}\b", text)
              else "info_page_unrecognized")
     return {"state": state, "link_count": len(anchors),
+            "evaluation_link_count": len({urljoin(url, a["href"]) for a in anchors
+                                          if urlsplit(urljoin(url, a["href"])).hostname == "evaluering.dtu.dk"}),
+            "predecessor_courses": sorted(set(re.findall(r"Prior course:\s*([0-9A-Z]{5})\b", text, re.I))),
             "histogram_link_count": len(links), "relevant_links": list(dict.fromkeys(relevant))[:30],
             "course_content_excerpts": excerpts[:8]}
 
@@ -237,6 +241,22 @@ async def collect_course(session, semaphore, course: str) -> dict:
                 state = diagnostics["content"]["state"]
                 if state in {"info_page_unrecognized", "empty_response"}:
                     record["errors"].append({"source": kind, "reason": state})
+
+        # A reviewed equivalence may have no links on the current course's page.
+        # Visit only explicitly approved source info pages; never follow arbitrary
+        # predecessor chains or silently approve newly discovered identities.
+        present_sources = {e["histogram_course"] for e in record["exams"]}
+        for source in APPROVED_HISTORY.get(course, {}):
+            if source in present_sources:
+                continue
+            diagnostics = record["pages"].setdefault("reviewed_sources", {}).setdefault(source, {})
+            try:
+                html = await fetch_page(session, f"{config.scraper.base_url}/course/{source}/info?lang=en-GB", diagnostics)
+                diagnostics["content"] = info_evidence(html, f"{config.scraper.base_url}/course/{source}/info", source)
+                extra = [e for e in extract_histogram_links(html, course) if e["histogram_course"] == source]
+                record["exams"].extend(extra)
+            except ValueError as exc:
+                record["errors"].append({"source": "reviewed_history:" + source, "reason": str(exc)})
 
         for exam in record["exams"]:
             try:

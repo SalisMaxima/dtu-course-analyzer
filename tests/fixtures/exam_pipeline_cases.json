@@ -1,0 +1,1813 @@
+{
+  "finished_at": "2026-09-08",
+  "courses": {
+    "01001": {
+      "course": "01001",
+      "schedule": {
+        "raw": "Autumn Course is given in two different schedules dependent on BSc\nprogramme. Scheme A: E1A, E2, Scheme B: E3A, E4.",
+        "explicit": "Autumn",
+        "explanation": "Course is given in two different schedules dependent on BSc\nprogramme.\nScheme A: E1A, E2, Scheme B: E3A, E4.",
+        "periods": [
+          "autumn"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "structured_schedule"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01001/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "01001",
+          "grades": {
+            "12": "1",
+            "10": "6",
+            "7": "18",
+            "4": "36",
+            "02": "18",
+            "00": "18",
+            "-3": "0",
+            "Ejm\u00f8dt": "8",
+            "timestamp": "Summer-2026",
+            "participants": 105,
+            "pass_percentage": 75,
+            "avg": 3.9
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 105,
+            "retained_total": 105,
+            "participants": 105,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01001/Winter-2025",
+          "period": {
+            "label": "Winter-2025",
+            "season": "winter",
+            "year": 2025
+          },
+          "histogram_course": "01001",
+          "grades": {
+            "12": "244",
+            "10": "176",
+            "7": "196",
+            "4": "171",
+            "02": "85",
+            "00": "158",
+            "-3": "0",
+            "Ejm\u00f8dt": "50",
+            "timestamp": "Winter-2025",
+            "participants": 1080,
+            "pass_percentage": 80,
+            "avg": 6.7
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 1080,
+            "retained_total": 1080,
+            "participants": 1080,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01001/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "01001",
+          "grades": {
+            "12": "1",
+            "10": "7",
+            "7": "20",
+            "4": "22",
+            "02": "11",
+            "00": "22",
+            "-3": "0",
+            "Ejm\u00f8dt": "10",
+            "timestamp": "Summer-2025",
+            "participants": 93,
+            "pass_percentage": 65,
+            "avg": 4.0
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 93,
+            "retained_total": 93,
+            "participants": 93,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01001/Winter-2024",
+          "period": {
+            "label": "Winter-2024",
+            "season": "winter",
+            "year": 2024
+          },
+          "histogram_course": "01001",
+          "grades": {
+            "12": "143",
+            "10": "170",
+            "7": "336",
+            "4": "150",
+            "02": "92",
+            "00": "142",
+            "-3": "0",
+            "Ejm\u00f8dt": "69",
+            "timestamp": "Winter-2024",
+            "participants": 1102,
+            "pass_percentage": 80,
+            "avg": 6.3
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 1102,
+            "retained_total": 1102,
+            "participants": 1102,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01001/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "01001",
+          "grades": {
+            "12": "0",
+            "10": "0",
+            "7": "11",
+            "4": "19",
+            "02": "9",
+            "00": "0",
+            "-3": "0",
+            "Best\u00e5et": "0",
+            "Ikkebest\u00e5et": "24",
+            "Ejm\u00f8dt": "8",
+            "timestamp": "Summer-2024",
+            "participants": 71,
+            "pass_percentage": 54,
+            "avg": 4.4
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 71,
+            "retained_total": 71,
+            "participants": 71,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "provisional",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 15,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01001",
+              "https://kurser.dtu.dk/course/01001/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01001/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/01001/Winter-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01001/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01001/Winter-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01001/Summer-2024"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01020": {
+      "course": "01020",
+      "schedule": {
+        "raw": "Spring F2B (Thurs 8-12)",
+        "explicit": "Spring F2B (Thurs 8-12)",
+        "explanation": "",
+        "periods": [
+          "spring"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01020/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "01020",
+          "grades": {
+            "Best\u00e5et": "79",
+            "Ikkebest\u00e5et": "7",
+            "Ejm\u00f8dt": "6",
+            "timestamp": "Summer-2026",
+            "participants": 92,
+            "pass_percentage": 85
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 92,
+            "retained_total": 92,
+            "participants": 92,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "pass_fail",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01020/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "01020",
+          "grades": {
+            "12": "0",
+            "10": "0",
+            "7": "0",
+            "4": "0",
+            "02": "0",
+            "00": "1",
+            "-3": "0",
+            "Best\u00e5et": "67",
+            "Ikkebest\u00e5et": "5",
+            "Ejm\u00f8dt": "6",
+            "timestamp": "Summer-2025",
+            "participants": 79,
+            "pass_percentage": 84,
+            "avg": 0.0
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 79,
+            "retained_total": 79,
+            "participants": 79,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01020/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "01020",
+          "grades": {
+            "Best\u00e5et": "65",
+            "Ikkebest\u00e5et": "13",
+            "Ejm\u00f8dt": "6",
+            "timestamp": "Summer-2024",
+            "participants": 84,
+            "pass_percentage": 77
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 84,
+            "retained_total": 84,
+            "participants": 84,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "pass_fail",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01020/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "01020",
+          "grades": {
+            "Best\u00e5et": "68",
+            "Ikkebest\u00e5et": "7",
+            "Ejm\u00f8dt": "5",
+            "timestamp": "Summer-2023",
+            "participants": 80,
+            "pass_percentage": 85
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 80,
+            "retained_total": 80,
+            "participants": 80,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "pass_fail",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01020/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "01020",
+          "grades": {
+            "Best\u00e5et": "64",
+            "Ikkebest\u00e5et": "8",
+            "Ejm\u00f8dt": "6",
+            "timestamp": "Summer-2022",
+            "participants": 78,
+            "pass_percentage": 82
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 78,
+            "retained_total": 78,
+            "participants": 78,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "pass_fail",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "provisional",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 17,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01020",
+              "https://kurser.dtu.dk/course/01020/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01020/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/01020/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01020/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01020/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/01020/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01025": {
+      "course": "01025",
+      "schedule": {
+        "raw": "Autumn E5A (Wed 8-12)",
+        "explicit": "Autumn E5A (Wed 8-12)",
+        "explanation": "",
+        "periods": [
+          "autumn"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "01025-2",
+          "distribution_status": "suppressed",
+          "grades": null
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Winter-2025",
+          "period": {
+            "label": "Winter-2025",
+            "season": "winter",
+            "year": 2025
+          },
+          "histogram_course": "01025-2",
+          "grades": {
+            "12": "11",
+            "10": "15",
+            "7": "11",
+            "4": "8",
+            "02": "9",
+            "00": "7",
+            "-3": "1",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Winter-2025",
+            "participants": 63,
+            "pass_percentage": 85,
+            "avg": 6.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 63,
+            "retained_total": 63,
+            "participants": 63,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "01025-2",
+          "distribution_status": "suppressed",
+          "grades": null
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Winter-2024",
+          "period": {
+            "label": "Winter-2024",
+            "season": "winter",
+            "year": 2024
+          },
+          "histogram_course": "01025-2",
+          "grades": {
+            "12": "10",
+            "10": "8",
+            "7": "16",
+            "4": "7",
+            "02": "5",
+            "00": "8",
+            "-3": "3",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Winter-2024",
+            "participants": 59,
+            "pass_percentage": 77,
+            "avg": 6.0
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 59,
+            "retained_total": 59,
+            "participants": 59,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "01025-2",
+          "grades": {
+            "12": "0",
+            "10": "1",
+            "7": "1",
+            "4": "1",
+            "02": "0",
+            "00": "2",
+            "-3": "0",
+            "timestamp": "Summer-2024",
+            "participants": 5,
+            "pass_percentage": 60,
+            "avg": 4.2
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 5,
+            "retained_total": 5,
+            "participants": 5,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 16,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01025",
+              "https://kurser.dtu.dk/course/01025/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/01025-2/Winter-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01025-2/Winter-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01025-2/Summer-2024"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01037": {
+      "course": "01037",
+      "schedule": {
+        "raw": "August In the fall one can follow the course either in 1A (course 01034)\nor 2B (course 01035). In the August version (course 01037) the full\ncurriculum is covered in a period of 3 weeks in Danish.",
+        "explicit": "August",
+        "explanation": "In the fall one can follow the course either in 1A (course 01034)\nor 2B (course 01035). In the August version (course 01037) the full\ncurriculum is covered in a period of 3 weeks in Danish.",
+        "periods": [
+          "august"
+        ],
+        "referenced_courses": [
+          "01034",
+          "01035"
+        ],
+        "contains_course_references": true,
+        "ambiguous_explanation": true,
+        "basis": "structured_schedule"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01037/Winter-2025",
+          "period": {
+            "label": "Winter-2025",
+            "season": "winter",
+            "year": 2025
+          },
+          "histogram_course": "01037",
+          "grades": {
+            "12": "1",
+            "10": "0",
+            "7": "1",
+            "4": "2",
+            "02": "2",
+            "00": "4",
+            "-3": "0",
+            "timestamp": "Winter-2025",
+            "participants": 10,
+            "pass_percentage": 60,
+            "avg": 3.1
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 10,
+            "retained_total": 10,
+            "participants": 10,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01037/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "01037",
+          "grades": {
+            "12": "29",
+            "10": "38",
+            "7": "41",
+            "4": "35",
+            "02": "19",
+            "00": "42",
+            "-3": "10",
+            "Ejm\u00f8dt": "19",
+            "timestamp": "Summer-2025",
+            "participants": 233,
+            "pass_percentage": 69,
+            "avg": 5.4
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 233,
+            "retained_total": 233,
+            "participants": 233,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01037/Winter-2024",
+          "period": {
+            "label": "Winter-2024",
+            "season": "winter",
+            "year": 2024
+          },
+          "histogram_course": "01037",
+          "grades": {
+            "12": "0",
+            "10": "1",
+            "7": "3",
+            "4": "9",
+            "02": "7",
+            "00": "4",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Winter-2024",
+            "participants": 26,
+            "pass_percentage": 76,
+            "avg": 3.4
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 26,
+            "retained_total": 26,
+            "participants": 26,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01037/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "01037",
+          "grades": {
+            "12": "19",
+            "10": "34",
+            "7": "41",
+            "4": "40",
+            "02": "27",
+            "00": "57",
+            "-3": "3",
+            "Ejm\u00f8dt": "7",
+            "timestamp": "Summer-2024",
+            "participants": 228,
+            "pass_percentage": 70,
+            "avg": 4.8
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 228,
+            "retained_total": 228,
+            "participants": 228,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01037/Winter-2023",
+          "period": {
+            "label": "Winter-2023",
+            "season": "winter",
+            "year": 2023
+          },
+          "histogram_course": "01037",
+          "grades": {
+            "12": "0",
+            "10": "2",
+            "7": "4",
+            "4": "6",
+            "02": "1",
+            "00": "3",
+            "-3": "1",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Winter-2023",
+            "participants": 19,
+            "pass_percentage": 68,
+            "avg": 4.2
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 19,
+            "retained_total": 19,
+            "participants": 19,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 17,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01037",
+              "https://kurser.dtu.dk/course/01037/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01037/Winter-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01037/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01037/Winter-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01037/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01037/Winter-2023"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01426": {
+      "course": "01426",
+      "schedule": {
+        "raw": "Autumn E3A (Tues 8-12)",
+        "explicit": "Autumn E3A (Tues 8-12)",
+        "explanation": "",
+        "periods": [
+          "autumn"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01426/Winter-2025",
+          "period": {
+            "label": "Winter-2025",
+            "season": "winter",
+            "year": 2025
+          },
+          "histogram_course": "01426",
+          "distribution_status": "suppressed",
+          "grades": null
+        }
+      ],
+      "errors": [],
+      "status": "provisional",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 11,
+            "histogram_link_count": 1,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01426",
+              "https://kurser.dtu.dk/course/01426/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01426/Winter-2025"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01666": {
+      "course": "01666",
+      "schedule": {
+        "raw": "Spring F5B (Wed 13-17) and June 13 week period plus 3 week period. About 5 lectures will take\nplace Wednesday afternoon in the 13 week period. In special cases,\nthe course may be taken individually in the fall term.",
+        "explicit": "Spring F5B (Wed 13-17) and June",
+        "explanation": "13 week period plus 3 week period. About 5 lectures will take\nplace Wednesday afternoon in the 13 week period. In special cases,\nthe course may be taken individually in the fall term.",
+        "periods": [
+          "spring",
+          "june"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": true,
+        "basis": "structured_schedule"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01666/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "01666",
+          "grades": {
+            "12": "36",
+            "10": "11",
+            "7": "3",
+            "4": "0",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Summer-2026",
+            "participants": 52,
+            "pass_percentage": 96,
+            "avg": 11.3
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 52,
+            "retained_total": 52,
+            "participants": 52,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01666/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "01666",
+          "grades": {
+            "12": "43",
+            "10": "4",
+            "7": "1",
+            "4": "2",
+            "02": "0",
+            "00": "1",
+            "-3": "0",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2025",
+            "participants": 52,
+            "pass_percentage": 96,
+            "avg": 11.2
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 52,
+            "retained_total": 52,
+            "participants": 52,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01666/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "01666",
+          "grades": {
+            "12": "44",
+            "10": "3",
+            "7": "4",
+            "4": "0",
+            "02": "0",
+            "00": "1",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Summer-2024",
+            "participants": 54,
+            "pass_percentage": 94,
+            "avg": 11.3
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 54,
+            "retained_total": 54,
+            "participants": 54,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01666/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "01666",
+          "grades": {
+            "12": "37",
+            "10": "14",
+            "7": "3",
+            "4": "0",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2023",
+            "participants": 55,
+            "pass_percentage": 98,
+            "avg": 11.2
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 55,
+            "retained_total": 55,
+            "participants": 55,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/01666/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "01666",
+          "grades": {
+            "12": "31",
+            "10": "23",
+            "7": "2",
+            "4": "0",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "3",
+            "timestamp": "Summer-2022",
+            "participants": 59,
+            "pass_percentage": 94,
+            "avg": 11.0
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 59,
+            "retained_total": 59,
+            "participants": 59,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 17,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01666",
+              "https://kurser.dtu.dk/course/01666/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/01666/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/01666/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/01666/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/01666/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/01666/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "01822": {
+      "course": "01822",
+      "schedule": {
+        "raw": "Autumn E5 (Wed 8-17)",
+        "explicit": "Autumn E5 (Wed 8-17)",
+        "explanation": "",
+        "periods": [
+          "autumn"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "no_links_unknown",
+            "link_count": 7,
+            "histogram_link_count": 0,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/01822",
+              "https://kurser.dtu.dk/course/01822/info?lang=en-GB"
+            ],
+            "course_content_excerpts": []
+          }
+        }
+      }
+    },
+    "02262": {
+      "course": "02262",
+      "schedule": {
+        "raw": "Autumn E1A (Mon 8-12)",
+        "explicit": "Autumn E1A (Mon 8-12)",
+        "explanation": "",
+        "periods": [
+          "autumn"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "no_links_unknown",
+            "link_count": 7,
+            "histogram_link_count": 0,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/02262",
+              "https://kurser.dtu.dk/course/02262/info?lang=en-GB"
+            ],
+            "course_content_excerpts": []
+          }
+        }
+      }
+    },
+    "02280": {
+      "course": "02280",
+      "schedule": {
+        "raw": "Spring F4A (Tues 13-17)",
+        "explicit": "Spring F4A (Tues 13-17)",
+        "explanation": "",
+        "periods": [
+          "spring"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "02285",
+          "grades": {
+            "12": "32",
+            "10": "101",
+            "7": "78",
+            "4": "8",
+            "02": "7",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "9",
+            "timestamp": "Summer-2026",
+            "participants": 235,
+            "pass_percentage": 96,
+            "avg": 8.8
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 235,
+            "retained_total": 235,
+            "participants": 235,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "02285",
+          "grades": {
+            "12": "22",
+            "10": "44",
+            "7": "59",
+            "4": "23",
+            "02": "8",
+            "00": "11",
+            "-3": "0",
+            "Ejm\u00f8dt": "4",
+            "timestamp": "Summer-2025",
+            "participants": 171,
+            "pass_percentage": 91,
+            "avg": 7.3
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 171,
+            "retained_total": 171,
+            "participants": 171,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "02285",
+          "grades": {
+            "12": "15",
+            "10": "43",
+            "7": "72",
+            "4": "25",
+            "02": "10",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "9",
+            "timestamp": "Summer-2024",
+            "participants": 174,
+            "pass_percentage": 94,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 174,
+            "retained_total": 174,
+            "participants": 174,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "02285",
+          "grades": {
+            "12": "33",
+            "10": "47",
+            "7": "61",
+            "4": "39",
+            "02": "4",
+            "00": "4",
+            "-3": "5",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2023",
+            "participants": 194,
+            "pass_percentage": 94,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 194,
+            "retained_total": 194,
+            "participants": 194,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02285/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "02285",
+          "distribution_status": "suppressed",
+          "grades": null
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 16,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/02280",
+              "https://kurser.dtu.dk/course/02280/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/02285/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/02285/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/02285/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/02285/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/02285/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "02426": {
+      "course": "02426",
+      "schedule": {
+        "raw": "Spring F4B (Fri 8-12)",
+        "explicit": "Spring F4B (Fri 8-12)",
+        "explanation": "",
+        "periods": [
+          "spring"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02424/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "02424",
+          "grades": {
+            "12": "1",
+            "10": "1",
+            "7": "1",
+            "4": "1",
+            "02": "2",
+            "00": "1",
+            "-3": "0",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2024",
+            "participants": 8,
+            "pass_percentage": 75,
+            "avg": 5.3
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 8,
+            "retained_total": 8,
+            "participants": 8,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02424/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "02424",
+          "grades": {
+            "12": "10",
+            "10": "7",
+            "7": "8",
+            "4": "8",
+            "02": "1",
+            "00": "3",
+            "-3": "0",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2023",
+            "participants": 38,
+            "pass_percentage": 89,
+            "avg": 7.6
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 38,
+            "retained_total": 38,
+            "participants": 38,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/02424/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "02424",
+          "grades": {
+            "12": "10",
+            "10": "3",
+            "7": "12",
+            "4": "3",
+            "02": "4",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Summer-2022",
+            "participants": 34,
+            "pass_percentage": 94,
+            "avg": 7.9
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 34,
+            "retained_total": 34,
+            "participants": 34,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 13,
+            "histogram_link_count": 3,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/02426",
+              "https://kurser.dtu.dk/course/02426/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/02424/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/02424/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/02424/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "23103": {
+      "course": "23103",
+      "schedule": {
+        "raw": "Spring F2B (Thurs 8-12)",
+        "explicit": "Spring F2B (Thurs 8-12)",
+        "explanation": "",
+        "periods": [
+          "spring"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "13",
+            "7": "34",
+            "4": "4",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Summer-2026",
+            "participants": 53,
+            "pass_percentage": 96,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 53,
+            "retained_total": 53,
+            "participants": 53,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "11",
+            "7": "23",
+            "4": "3",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Best\u00e5et": "0",
+            "Ikkebest\u00e5et": "4",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2025",
+            "participants": 42,
+            "pass_percentage": 88,
+            "avg": 7.6
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 42,
+            "retained_total": 42,
+            "participants": 42,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "1",
+            "10": "13",
+            "7": "21",
+            "4": "8",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Best\u00e5et": "0",
+            "Ikkebest\u00e5et": "1",
+            "timestamp": "Summer-2024",
+            "participants": 44,
+            "pass_percentage": 97,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 44,
+            "retained_total": 44,
+            "participants": 44,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "2",
+            "10": "18",
+            "7": "6",
+            "4": "3",
+            "02": "0",
+            "00": "3",
+            "-3": "0",
+            "Syg": "1",
+            "timestamp": "Summer-2023",
+            "participants": 33,
+            "pass_percentage": 87,
+            "avg": 8.1
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 33,
+            "retained_total": 33,
+            "participants": 33,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "12",
+            "7": "22",
+            "4": "4",
+            "02": "0",
+            "00": "1",
+            "-3": "0",
+            "timestamp": "Summer-2022",
+            "participants": 39,
+            "pass_percentage": 97,
+            "avg": 7.4
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 39,
+            "retained_total": 39,
+            "participants": 39,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 17,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/23103",
+              "https://kurser.dtu.dk/course/23103/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    },
+    "23104": {
+      "course": "23104",
+      "schedule": {
+        "raw": "Spring F2A (Mon 13-17)",
+        "explicit": "Spring F2A (Mon 13-17)",
+        "explanation": "",
+        "periods": [
+          "spring"
+        ],
+        "referenced_courses": [],
+        "contains_course_references": false,
+        "ambiguous_explanation": false,
+        "basis": "text_prefix"
+      },
+      "exams": [
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2026",
+          "period": {
+            "label": "Summer-2026",
+            "season": "summer",
+            "year": 2026
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "13",
+            "7": "34",
+            "4": "4",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Ejm\u00f8dt": "2",
+            "timestamp": "Summer-2026",
+            "participants": 53,
+            "pass_percentage": 96,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 53,
+            "retained_total": 53,
+            "participants": 53,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2025",
+          "period": {
+            "label": "Summer-2025",
+            "season": "summer",
+            "year": 2025
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "11",
+            "7": "23",
+            "4": "3",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Best\u00e5et": "0",
+            "Ikkebest\u00e5et": "4",
+            "Ejm\u00f8dt": "1",
+            "timestamp": "Summer-2025",
+            "participants": 42,
+            "pass_percentage": 88,
+            "avg": 7.6
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 42,
+            "retained_total": 42,
+            "participants": 42,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2024",
+          "period": {
+            "label": "Summer-2024",
+            "season": "summer",
+            "year": 2024
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "1",
+            "10": "13",
+            "7": "21",
+            "4": "8",
+            "02": "0",
+            "00": "0",
+            "-3": "0",
+            "Best\u00e5et": "0",
+            "Ikkebest\u00e5et": "1",
+            "timestamp": "Summer-2024",
+            "participants": 44,
+            "pass_percentage": 97,
+            "avg": 7.5
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 44,
+            "retained_total": 44,
+            "participants": 44,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "mixed",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2023",
+          "period": {
+            "label": "Summer-2023",
+            "season": "summer",
+            "year": 2023
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "2",
+            "10": "18",
+            "7": "6",
+            "4": "3",
+            "02": "0",
+            "00": "3",
+            "-3": "0",
+            "Syg": "1",
+            "timestamp": "Summer-2023",
+            "participants": 33,
+            "pass_percentage": 87,
+            "avg": 8.1
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 33,
+            "retained_total": 33,
+            "participants": 33,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        },
+        {
+          "url": "https://karakterer.dtu.dk/Histogram/1/23102/Summer-2022",
+          "period": {
+            "label": "Summer-2022",
+            "season": "summer",
+            "year": 2022
+          },
+          "histogram_course": "23102",
+          "grades": {
+            "12": "0",
+            "10": "12",
+            "7": "22",
+            "4": "4",
+            "02": "0",
+            "00": "1",
+            "-3": "0",
+            "timestamp": "Summer-2022",
+            "participants": 39,
+            "pass_percentage": 97,
+            "avg": 7.4
+          },
+          "distribution_status": "published",
+          "result_counts": {
+            "source_total": 39,
+            "retained_total": 39,
+            "participants": 39,
+            "all_categories_retained": true,
+            "matches_participants": true,
+            "grading_scale": "seven_point",
+            "participant_difference": 0
+          }
+        }
+      ],
+      "errors": [],
+      "status": "undetermined",
+      "pages": {
+        "info": {
+          "content": {
+            "state": "links_found",
+            "link_count": 17,
+            "histogram_link_count": 5,
+            "relevant_links": [
+              "https://kurser.dtu.dk/course/23104",
+              "https://kurser.dtu.dk/course/23104/info?lang=en-GB",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2026",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2025",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2024",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2023",
+              "http://karakterer.dtu.dk/Histogram/1/23102/Summer-2022"
+            ],
+            "course_content_excerpts": [
+              "Grade history"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
