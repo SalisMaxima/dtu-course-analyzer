@@ -153,7 +153,7 @@ async def test_request_records_content_metadata_but_not_login_content():
     assert attempt["response_bytes"] == len(response.html.encode("utf-8"))
     diagnostics = {}
     with pytest.raises(ValueError, match="authentication_required"):
-        await probe.fetch_page(Session([Response(html='<form><input type="password" value="secret"></form>')]),
+        await probe.fetch_page(Session([Response(html='<form><input type="password" value="secret"></form>') for _ in range(2)]),
                                "https://kurser.dtu.dk", diagnostics)
     assert diagnostics["attempts"][0]["state"] == "authentication_required_or_expired"
     assert "page" not in diagnostics["attempts"][0]

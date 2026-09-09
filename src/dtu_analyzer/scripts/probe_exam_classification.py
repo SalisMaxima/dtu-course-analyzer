@@ -17,13 +17,13 @@ from yarl import URL
 
 from ..analysis.exam_classification import classify_course, extract_schedule, parse_period, schedule_from_text
 from ..analysis.analyzer import extract_grade_results
-from ..analysis.course_history_reviews import APPROVED_HISTORY
+from ..analysis.course_history_reviews import APPROVED_HISTORY, EXTRA_HISTORY_URLS
 from ..config import config
 from ..parsers.grade_parser import parse_grades
 from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
 
 SCHEMA_VERSION = 5
-RULE_VERSION = "schedule-hypothesis-v8-maintainer-history"
+RULE_VERSION = "schedule-hypothesis-v9-reviewed-recovery"
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -175,6 +175,21 @@ def result_count_check(sheet: dict) -> dict:
 
 
 async def fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str:
+    """Retry one unexpected login response from the original public URL.
+
+    Wrapper recursion uses the inner fetcher, so the retry budget cannot multiply.
+    A second login response still fails; no authentication is bypassed.
+    """
+    for login_attempt in range(2):
+        try:
+            return await _fetch_page(session, url, diagnostics, _frame_depth)
+        except ValueError as exc:
+            if str(exc) not in {"authentication_required_or_expired", "authentication_wrapper_unresolved"} or login_attempt:
+                raise
+            await asyncio.sleep(2)
+
+
+async def _fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str:
     """Use existing pacing/retry policy, but retain individual failures."""
     for attempt in range(config.scraper.max_retries + 1):
         await pace_request()
@@ -204,7 +219,7 @@ async def fetch_page(session, url: str, diagnostics=None, _frame_depth=0) -> str
                 if wrapper:
                     if _frame_depth:
                         raise ValueError('authentication_wrapper_unresolved')
-                    return await fetch_page(session, wrapper, diagnostics, _frame_depth=1)
+                    return await _fetch_page(session, wrapper, diagnostics, _frame_depth=1)
                 return html
         except (aiohttp.ClientError, asyncio.TimeoutError):
             if attempt == config.scraper.max_retries:
@@ -257,6 +272,13 @@ async def collect_course(session, semaphore, course: str) -> dict:
                 record["exams"].extend(extra)
             except ValueError as exc:
                 record["errors"].append({"source": "reviewed_history:" + source, "reason": str(exc)})
+
+        existing = {e["url"] for e in record["exams"]}
+        for url in EXTRA_HISTORY_URLS.get(course, []):
+            if url not in existing:
+                record["exams"].append({"url": url, "period": parse_period(url),
+                    "histogram_course": course, "identity_status": "exact_course_id",
+                    "link_origin": "previously_collected_history"})
 
         for exam in record["exams"]:
             try:

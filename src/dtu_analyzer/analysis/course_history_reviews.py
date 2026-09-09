@@ -50,7 +50,25 @@ PREFERRED_SOURCES = {
     "27827": ["29905"], "MA263": ["41263"],
 }
 REGULAR_SEASON_OVERRIDES = {("12952", "12950"): {"winter", "summer"}}
-REGULAR_EXAM_OVERRIDES = {("02581", "02580", "Summer-2025")}
+REGULAR_EXAM_OVERRIDES = {
+    ("02581", "02580", "Summer-2025"),
+    ("22181", "22180", "Winter-2025"),
+}
+
+# Confirmed broken source: ignore only this course/URL when it returns 404.
+KNOWN_BROKEN_HISTOGRAMS = {
+    ("22461", "https://karakterer.dtu.dk/Histogram/1/22433/Summer-2023"),
+}
+# Previously collected exam omitted from the latest info-page link list.
+# Fetch again; do not infer suppression or manufacture counts from its absence.
+EXTRA_HISTORY_URLS = {
+    "25205": ["https://karakterer.dtu.dk/Histogram/1/25205/Summer-2022"],
+}
+
+
+def reviewed_broken_histogram(course, exam):
+    return ((course, exam.get("url")) in KNOWN_BROKEN_HISTOGRAMS
+            and exam.get("error") == "HTTP 404")
 
 
 def history_review(course, source):
