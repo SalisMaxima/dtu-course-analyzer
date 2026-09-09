@@ -6,9 +6,10 @@ Load the root `extension/` directory in Chrome to use it. The previous 2.4.0
 build is preserved in `archive/dtu-course-analyzer-2.4.0.zip`.
 
 Exam history is a bundled snapshot. **Update Course Data** now builds a complete
-exam-history candidate and defaults to a dry run. Leave **publish** unchecked
-until its candidate artifact has been reviewed. See
-[production validation](production-pipeline-validation.md) for the current rules.
+exam-history candidate without publishing. After review, use **Promote Course
+Data** to install that exact artifact without re-scraping. See
+[promotion instructions](promoting-course-data.md) and
+[production validation](production-pipeline-validation.md).
 
 This beta bundles the full test8 evidence, refreshed by the test9 sample, plus
 the existing feedback dataset. No DTU login or live scraping is needed to use it.

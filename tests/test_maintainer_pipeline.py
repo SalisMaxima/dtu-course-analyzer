@@ -119,6 +119,9 @@ def test_production_command_dry_run_and_incomplete_feedback_protection(tmp_path)
     evidence["courses"]["10415"]["pages"]["info"]["content"]["evaluation_link_count"] = 1
     path.write_text(json.dumps(evidence))
     args[-1] = str(tmp_path / "failed")
-    assert main(args + ["--publish"]) == 1
+    assert main(args) == 1
     assert (ext / "db/data.json").read_text() == original
     assert not json.loads((tmp_path / "failed/validation.json").read_text())["publishable"]
+    assert (tmp_path / "candidate/provenance.json").exists()
+    with pytest.raises(SystemExit):
+        main(args + ["--publish"])

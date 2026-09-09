@@ -1,7 +1,4 @@
-"""Build, validate and optionally publish an exam-history dataset.
-
-The default is an isolated candidate artifact. Publication is explicit and guarded.
-"""
+"""Build and validate an isolated exam-history candidate for later promotion."""
 
 import argparse
 import json
@@ -10,8 +7,9 @@ import re
 import shutil
 
 from ..analysis.analyzer import process_courses
-from ..analysis.publication_guard import publication_issues, publish_candidate
+from ..analysis.publication_guard import publication_issues
 from .build_chrome_beta import build_dataset
+from .candidate_provenance import write_provenance
 
 
 def main(argv=None):
@@ -21,7 +19,6 @@ def main(argv=None):
     parser.add_argument("--course-file", type=Path, required=True)
     parser.add_argument("--extension", type=Path, default=Path("extension"))
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--publish", action="store_true")
     args = parser.parse_args(argv)
     if args.output.exists():
         parser.error("Output already exists; choose a new directory")
@@ -29,7 +26,8 @@ def main(argv=None):
         parser.error("Candidate output must be outside the installed extension")
     raw = json.loads(args.raw.read_text())
     report = json.loads(args.report.read_text())
-    previous = json.loads((args.extension / "db/data.json").read_text())
+    baseline_bytes = (args.extension / "db/data.json").read_bytes()
+    previous = json.loads(baseline_bytes)
     expected = set(filter(None, re.split(r"[,\s]+", args.course_file.read_text().strip())))
     candidate = build_dataset(process_courses(raw), [report])
     issues = publication_issues(previous, candidate, report, expected)
@@ -51,12 +49,11 @@ def main(argv=None):
     }, indent=2) + "\n")
     shutil.copytree(args.extension, args.output / "extension")
     (args.output / "extension/db/data.json").write_text(json.dumps(candidate, ensure_ascii=False, separators=(",", ":")))
+    write_provenance(args.output, baseline_bytes)
     if issues:
         print(f"Publication blocked: {len(issues)} issues. See {args.output / 'validation.json'}")
         return 1
-    if args.publish:
-        publish_candidate(args.extension / "db/data.json", candidate, report, expected)
-    print(f"{'Published' if args.publish else 'Validated candidate'}: {len(candidate)} courses")
+    print(f"Validated candidate: {len(candidate)} courses. No installed data was changed.")
     return 0
 
 

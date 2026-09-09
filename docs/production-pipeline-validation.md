@@ -6,15 +6,17 @@
 then `build_production_candidate`. The standalone legacy analyzer remains
 available, but the workflow no longer uses it to overwrite the extension.
 
-In Actions, choose **Update Course Data**, select the branch containing these
-changes, and leave **publish** unchecked. Download `course-data-candidate` and
-inspect `validation.json` and the diagnostic summary. Its `extension/` directory
-is the candidate Chrome build. A failed run can still upload diagnostic artifacts;
-a candidate with `publishable: false` must not be treated as a release.
+In Actions, choose **Update Course Data** and select the branch containing these
+changes. This workflow only creates candidates; the publish checkbox is removed.
+Download `course-data-candidate` and the separate `exam-classification-report`.
+Inspect `validation.json` and the diagnostic summary. The candidate's `extension/`
+directory is the Chrome build. Failed candidates must not be released.
 
-Only after that full candidate is reviewed should **publish** be enabled on a
-subsequent run. Publication validates again, writes atomically, then commits the
-data. Runs are serialized per branch. No Actions run has been launched locally.
+After review, use **Promote Course Data** with the original run ID and artifact
+ID. It verifies provenance, checksums, the baseline, and code compatibility, then
+commits the exact tested dataset without scraping. Both artifacts request 30-day
+retention. See [promotion instructions](promoting-course-data.md). Collection and
+promotion are serialized per branch. No Actions run has been launched locally.
 
 The collector records predecessor IDs and evaluation-link counts, retains all
 valid histogram links regardless of source ID, and queries explicitly approved
