@@ -20,7 +20,7 @@ from ..analysis.analyzer import extract_grade_results
 from ..analysis.course_history_reviews import APPROVED_HISTORY, EXTRA_HISTORY_URLS
 from ..config import config
 from ..parsers.grade_parser import parse_grades
-from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES
+from ..scrapers.async_scraper import is_login_page, pace_request, retry_delay, RETRY_STATUSES, course_wrapper_url
 
 SCHEMA_VERSION = 5
 RULE_VERSION = "schedule-hypothesis-v9-reviewed-recovery"
@@ -141,23 +141,6 @@ def read_distribution(exam: dict, html: str) -> None:
     else:
         exam["distribution_status"] = "published"
         exam["result_counts"] = result_count_check(exam["grades"])
-
-
-def course_wrapper_url(html: str, url: str) -> str | None:
-    """Follow only DTU's known same-course forceLogin wrapper."""
-    current = urlsplit(url)
-    if current.hostname != 'kurser.dtu.dk':
-        return None
-    for frame in BeautifulSoup(html, 'lxml').find_all('iframe', src=True):
-        target = urlsplit(urljoin(url, frame['src']))
-        query = dict(parse_qsl(target.query))
-        if (target.hostname == current.hostname and target.path == current.path
-                and query.get('forceLogin', '').lower() == 'true'):
-            lang = dict(parse_qsl(current.query)).get('lang')
-            if lang:
-                query['lang'] = lang
-            return urlunsplit(('https', current.hostname, target.path, urlencode(query), ''))
-    return None
 
 
 def result_count_check(sheet: dict) -> dict:
