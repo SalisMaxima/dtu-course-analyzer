@@ -120,7 +120,8 @@ records. Use the JSON's period labels and table evidence to determine whether
 August is a distinct histogram period or grouped with summer. Coverage totals
 alone do not establish correctness: manually verify assignments before applying
 these rules to production. Both the Chrome beta builder and the production
-candidate builder use these rules. Update Course Data defaults to a dry run;
+candidate builder use these rules. Update Course Data only builds candidates;
+Promote Course Data installs a reviewed artifact without re-scraping;
 the standalone legacy `dtu-analyze` command still emits the legacy dataset.
 
 Maintainer-approved historical identities are stored in

@@ -1,0 +1,105 @@
+name: Promote Course Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Successful Update Course Data run ID'
+        required: true
+        type: string
+      artifact_id:
+        description: 'Exact reviewed course-data-candidate artifact ID (from run summary)'
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: course-data-update-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CANDIDATE_RUN_ID: ${{ inputs.run_id }}
+      CANDIDATE_ARTIFACT_ID: ${{ inputs.artifact_id }}
+      TARGET_BRANCH: ${{ github.ref_name }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read source run and artifact metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const runId = process.env.CANDIDATE_RUN_ID;
+            const artifactId = process.env.CANDIDATE_ARTIFACT_ID;
+            if (![runId, artifactId].every(id => /^[1-9][0-9]*$/.test(id))) {
+              throw new Error('Run ID and artifact ID must be positive integers');
+            }
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              ...context.repo, run_id: runId
+            });
+            const { data: artifact } = await github.rest.actions.getArtifact({
+              ...context.repo, artifact_id: artifactId
+            });
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'source-run.json'), JSON.stringify(run));
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'source-artifact.json'), JSON.stringify(artifact));
+
+      - name: Check artifact origin before download
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from dtu_analyzer.scripts.promote_course_data import verify_origin
+          temporary = Path(os.environ['RUNNER_TEMP'])
+          verify_origin(json.loads((temporary / 'source-run.json').read_text()),
+                        json.loads((temporary / 'source-artifact.json').read_text()),
+                        os.environ['GITHUB_REPOSITORY'], os.environ['CANDIDATE_RUN_ID'],
+                        os.environ['CANDIDATE_ARTIFACT_ID'])
+          PY
+
+      - name: Download the exact reviewed artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ inputs.artifact_id }}
+          merge-multiple: true
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/reviewed-candidate
+
+      - name: Verify provenance, checksums and current baseline
+        run: >-
+          python -m dtu_analyzer.scripts.promote_course_data
+          --candidate "$RUNNER_TEMP/reviewed-candidate"
+          --run-metadata "$RUNNER_TEMP/source-run.json"
+          --artifact-metadata "$RUNNER_TEMP/source-artifact.json"
+          --repository "$GITHUB_REPOSITORY"
+          --run-id "$CANDIDATE_RUN_ID" --artifact-id "$CANDIDATE_ARTIFACT_ID"
+
+      - name: Commit the verified dataset and checker baselines together
+        run: |
+          git add -- extension/db/data.json data/coursenumbers.txt data/coursedic.json
+          if git diff --cached --quiet; then
+            echo 'The reviewed dataset is already installed; no commit needed.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Promote course dataset from run $CANDIDATE_RUN_ID (artifact $CANDIDATE_ARTIFACT_ID) [skip ci]"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          echo "Promoted the exact dataset from run $CANDIDATE_RUN_ID, artifact $CANDIDATE_ARTIFACT_ID." >> "$GITHUB_STEP_SUMMARY"
