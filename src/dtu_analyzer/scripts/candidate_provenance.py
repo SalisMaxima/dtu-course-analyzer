@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import subprocess
 
+PROMOTION_FILES = ("extension/db/data.json", "data/coursenumbers.txt", "data/coursedic.json")
+
 
 def sha256(content):
     return hashlib.sha256(content).hexdigest()
@@ -29,15 +31,23 @@ def runtime_hash(root):
 def write_provenance(output, baseline_bytes, root=Path(".")):
     output = Path(output)
     metadata = {
-        "schema_version": 1,
+        "schema_version": 2,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "repository": os.environ.get("GITHUB_REPOSITORY"),
         "run_id": os.environ.get("GITHUB_RUN_ID"),
         "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
         "source_sha": git(root, "rev-parse", "HEAD"),
         "runtime_sha256": runtime_hash(root),
-        "baseline_sha256": sha256(baseline_bytes),
-        "dataset_sha256": sha256((output / "extension/db/data.json").read_bytes()),
+        "files": {
+            path: {
+                "sha256": sha256((output / path).read_bytes()),
+                # The scraper has already refreshed its working files. Compare
+                # promotion against the committed pre-scrape checker baselines.
+                "baseline_sha256": sha256(baseline_bytes if path == "extension/db/data.json"
+                    else subprocess.check_output(["git", "-C", str(root), "show", f"HEAD:{path}"])),
+            }
+            for path in PROMOTION_FILES
+        },
         "validation_sha256": sha256((output / "validation.json").read_bytes()),
     }
     (output / "provenance.json").write_text(json.dumps(metadata, indent=2) + "\n")

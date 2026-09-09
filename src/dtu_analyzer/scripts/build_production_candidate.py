@@ -24,11 +24,13 @@ def main(argv=None):
         parser.error("Output already exists; choose a new directory")
     if args.output.resolve().is_relative_to(args.extension.resolve()):
         parser.error("Candidate output must be outside the installed extension")
-    raw = json.loads(args.raw.read_text())
+    raw_bytes = args.raw.read_bytes()
+    course_bytes = args.course_file.read_bytes()
+    raw = json.loads(raw_bytes)
     report = json.loads(args.report.read_text())
     baseline_bytes = (args.extension / "db/data.json").read_bytes()
     previous = json.loads(baseline_bytes)
-    expected = set(filter(None, re.split(r"[,\s]+", args.course_file.read_text().strip())))
+    expected = set(filter(None, re.split(r"[,\s]+", course_bytes.decode().strip())))
     candidate = build_dataset(process_courses(raw), [report])
     issues = publication_issues(previous, candidate, report, expected)
     for course in sorted(expected):
@@ -49,6 +51,9 @@ def main(argv=None):
     }, indent=2) + "\n")
     shutil.copytree(args.extension, args.output / "extension")
     (args.output / "extension/db/data.json").write_text(json.dumps(candidate, ensure_ascii=False, separators=(",", ":")))
+    (args.output / "data").mkdir()
+    (args.output / "data/coursenumbers.txt").write_bytes(course_bytes)
+    (args.output / "data/coursedic.json").write_bytes(raw_bytes)
     write_provenance(args.output, baseline_bytes)
     if issues:
         print(f"Publication blocked: {len(issues)} issues. See {args.output / 'validation.json'}")

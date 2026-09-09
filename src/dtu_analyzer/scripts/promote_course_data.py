@@ -1,4 +1,4 @@
-"""Verify a selected Actions artifact and install only its exact dataset bytes.
+"""Verify and install exact candidate dataset and checker-baseline bytes.
 
 Uses Python's standard library; no artifact scripts or extension code are executed.
 """
@@ -11,7 +11,7 @@ import re
 import subprocess
 import tempfile
 
-from .candidate_provenance import git, runtime_hash, sha256
+from .candidate_provenance import PROMOTION_FILES, git, runtime_hash, sha256
 
 
 def verify_origin(run, artifact, repository, run_id, artifact_id):
@@ -36,24 +36,30 @@ def verify_candidate(candidate_dir, root, run, artifact, repository, run_id, art
     candidate_dir, root = Path(candidate_dir), Path(root)
     metadata = json.loads((candidate_dir / "provenance.json").read_text())
     validation_bytes = (candidate_dir / "validation.json").read_bytes()
-    data_bytes = (candidate_dir / "extension/db/data.json").read_bytes()
-    if metadata.get("schema_version") != 1:
+    if metadata.get("schema_version") != 2:
         raise ValueError("Unsupported or missing candidate provenance; build a new candidate")
+    files = metadata.get("files", {})
+    if set(files) != set(PROMOTION_FILES):
+        raise ValueError("Candidate must include exactly the dataset and both checker baselines")
+    payloads = {path: (candidate_dir / path).read_bytes() for path in PROMOTION_FILES}
     if (metadata.get("repository") != repository
             or str(metadata.get("run_id")) != str(run_id)
             or str(metadata.get("run_attempt")) != str(run.get("run_attempt"))
             or metadata.get("source_sha") != run.get("head_sha")):
         raise ValueError("Candidate provenance does not match the selected source run/attempt")
-    if sha256(data_bytes) != metadata.get("dataset_sha256") or sha256(validation_bytes) != metadata.get("validation_sha256"):
-        raise ValueError("Candidate dataset or validation checksum mismatch")
+    if sha256(validation_bytes) != metadata.get("validation_sha256"):
+        raise ValueError("Candidate validation checksum mismatch")
+    for path, content in payloads.items():
+        if sha256(content) != files[path].get("sha256"):
+            raise ValueError(f"Candidate checksum mismatch: {path}")
+        if sha256((root / path).read_bytes()) != files[path].get("baseline_sha256"):
+            raise ValueError(f"Installed baseline changed since collection: {path}; build a new candidate")
     validation = json.loads(validation_bytes)
-    data = json.loads(data_bytes)
+    data = json.loads(payloads["extension/db/data.json"])
     if validation.get("schema_version") != 1 or validation.get("publishable") is not True or validation.get("issues") != []:
         raise ValueError("Candidate did not pass publication validation")
     if not isinstance(data, dict) or not data or validation.get("courses") != len(data):
         raise ValueError("Candidate course count is invalid")
-    if sha256((root / "extension/db/data.json").read_bytes()) != metadata.get("baseline_sha256"):
-        raise ValueError("Installed dataset changed since collection; build and review a new candidate")
     source = metadata["source_sha"]
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("Invalid source commit")
@@ -62,22 +68,37 @@ def verify_candidate(candidate_dir, root, run, artifact, repository, run_id, art
         raise ValueError("Candidate source commit is not in this branch's history")
     if runtime_hash(root) != metadata.get("runtime_sha256"):
         raise ValueError("Extension or pipeline code changed since testing; build a new candidate")
-    return data_bytes
+    return payloads
 
 
-def install_dataset(root, data_bytes):
-    destination = Path(root) / "extension/db/data.json"
-    temporary = None
-    try:
+def install_files(root, payloads):
+    """Prepare all writes before replacing files; roll back a failed replacement.
+
+    Repository visibility is atomic at the subsequent single Git commit.
+    """
+    staged, backups, replaced = {}, {}, []
+    def prepare(destination, content, entries, path):
         with tempfile.NamedTemporaryFile(dir=destination.parent, prefix=".promotion-", delete=False) as stream:
             temporary = Path(stream.name)
-            stream.write(data_bytes)
+            entries[path] = temporary
+            stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
         temporary.chmod(destination.stat().st_mode & 0o777)
-        os.replace(temporary, destination)
+    try:
+        for path in PROMOTION_FILES:
+            destination = Path(root) / path
+            prepare(destination, payloads[path], staged, path)
+            prepare(destination, destination.read_bytes(), backups, path)
+        for path in PROMOTION_FILES:
+            os.replace(staged[path], Path(root) / path)
+            replaced.append(path)
+    except OSError:
+        for path in reversed(replaced):
+            os.replace(backups[path], Path(root) / path)
+        raise
     finally:
-        if temporary is not None:
+        for temporary in [*staged.values(), *backups.values()]:
             temporary.unlink(missing_ok=True)
 
 
@@ -97,11 +118,12 @@ def main(argv=None):
         data = verify_candidate(args.candidate, args.root,
                                 json.loads(args.run_metadata.read_text()), json.loads(args.artifact_metadata.read_text()),
                                 args.repository, args.run_id, args.artifact_id)
-        install_dataset(args.root, data)
+        install_files(args.root, data)
     except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError) as exc:
         print(f"Promotion refused: {exc}")
         return 1
-    print(f"Verified and installed dataset SHA-256: {sha256(data)}")
+    for path, content in data.items():
+        print(f"Verified and installed {path} SHA-256: {sha256(content)}")
     return 0
 
 

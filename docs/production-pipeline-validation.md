@@ -13,8 +13,10 @@ Inspect `validation.json` and the diagnostic summary. The candidate's `extension
 directory is the Chrome build. Failed candidates must not be released.
 
 After review, use **Promote Course Data** with the original run ID and artifact
-ID. It verifies provenance, checksums, the baseline, and code compatibility, then
-commits the exact tested dataset without scraping. Both artifacts request 30-day
+ID. It verifies provenance, checksums, all three pre-scrape baselines, and code
+compatibility, then commits the exact tested dataset and its collected
+`data/coursenumbers.txt` and `data/coursedic.json` checker baselines together,
+without scraping. Both artifacts request 30-day
 retention. See [promotion instructions](promoting-course-data.md). Collection and
 promotion are serialized per branch. No Actions run has been launched locally.
 

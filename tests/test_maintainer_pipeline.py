@@ -123,5 +123,7 @@ def test_production_command_dry_run_and_incomplete_feedback_protection(tmp_path)
     assert (ext / "db/data.json").read_text() == original
     assert not json.loads((tmp_path / "failed/validation.json").read_text())["publishable"]
     assert (tmp_path / "candidate/provenance.json").exists()
+    assert (tmp_path / "candidate/data/coursedic.json").read_bytes() == (tmp_path / "raw.json").read_bytes()
+    assert (tmp_path / "candidate/data/coursenumbers.txt").read_bytes() == (tmp_path / "courses.txt").read_bytes()
     with pytest.raises(SystemExit):
         main(args + ["--publish"])

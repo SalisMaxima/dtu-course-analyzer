@@ -91,9 +91,9 @@ jobs:
           --repository "$GITHUB_REPOSITORY"
           --run-id "$CANDIDATE_RUN_ID" --artifact-id "$CANDIDATE_ARTIFACT_ID"
 
-      - name: Commit only the verified dataset
+      - name: Commit the verified dataset and checker baselines together
         run: |
-          git add -- extension/db/data.json
+          git add -- extension/db/data.json data/coursenumbers.txt data/coursedic.json
           if git diff --cached --quiet; then
             echo 'The reviewed dataset is already installed; no commit needed.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
