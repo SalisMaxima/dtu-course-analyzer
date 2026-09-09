@@ -26,6 +26,14 @@ source course info pages when their history is absent from the current page.
 New unapproved identities stay unclassified and appear in `review_needed`.
 No recursive or transitive predecessor approval is inferred.
 
+The main async scraper now retries the original URL once, after a short delay,
+when DTU returns a login page or its known same-course forceLogin iframe wrapper.
+It never parses that wrapper as an empty evaluation list. A persistent response
+sets the existing authentication-failure flag and stops collection. HTTP/network
+retry limits remain separate. The main scraper and exam diagnostic share the
+wrapper recognizer. This covers both course-info pages and individual evaluation
+requests; it does not change the evaluation parser or relax publication checks.
+
 Reviewed policy:
 
 - NPE is accepted unknown availability, not new-course status. Actual request,

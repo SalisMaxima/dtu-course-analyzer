@@ -13,7 +13,7 @@ import random
 import time
 import aiohttp
 import json
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
 from bs4 import BeautifulSoup
 from tqdm.asyncio import tqdm
 
@@ -123,12 +123,53 @@ async def pace_request():
         _last_request_time = time.monotonic()
 
 
+def course_wrapper_url(html: str, url: str) -> str | None:
+    """Recognize only DTU's known same-course forceLogin wrapper."""
+    current = urlsplit(url)
+    if current.hostname != 'kurser.dtu.dk':
+        return None
+    for frame in BeautifulSoup(html, 'lxml').find_all('iframe', src=True):
+        target = urlsplit(urljoin(url, frame['src']))
+        query = dict(parse_qsl(target.query))
+        if (target.hostname == current.hostname and target.path == current.path
+                and query.get('forceLogin', '').lower() == 'true'):
+            lang = dict(parse_qsl(current.query)).get('lang')
+            if lang:
+                query['lang'] = lang
+            return urlunsplit(('https', current.hostname, target.path, urlencode(query), ''))
+    return None
+
+
+class _AuthenticationResponse(ValueError):
+    """A login page or wrapper is not course/evaluation content."""
+
+
 async def fetch_url(session: aiohttp.ClientSession, url: str) -> str | None:
+    """Retry an unexpected authentication response once at the original URL.
+
+    The authentication budget is separate from transient HTTP/network retries.
+    Never submit a login form or parse a wrapper as an empty results page.
+    """
+    global auth_failed
+    for login_attempt in range(2):
+        try:
+            return await _fetch_url(session, url)
+        except _AuthenticationResponse:
+            if login_attempt:
+                auth_failed = True
+                logger.error("Authentication response persisted after retry; stopping collection")
+                return None
+            logger.warning("Unexpected authentication response; retrying original URL once")
+            await asyncio.sleep(2)
+
+
+async def _fetch_url(session: aiohttp.ClientSession, url: str) -> str | None:
     """
     Fetch a URL asynchronously and return HTML content.
 
     Retries with exponential backoff on timeouts, 429 and 5xx responses.
-    Sets the global auth_failed flag if a login page is returned.
+    Raises _AuthenticationResponse for login pages/wrappers, for the caller's
+    independent bounded retry policy.
 
     Args:
         session: aiohttp ClientSession
@@ -153,10 +194,10 @@ async def fetch_url(session: aiohttp.ClientSession, url: str) -> str | None:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=TIMEOUT)) as response:
                 if response.status == 200:
                     html = await response.text()
-                    if is_login_page(html, str(response.url)):
-                        auth_failed = True
-                        logger.error(f"Session expired: login page returned for {url}")
-                        return None
+                    if (is_login_page(html, str(response.url))
+                            or BeautifulSoup(html, "lxml").select_one('input[type="password"]')
+                            or course_wrapper_url(html, str(response.url))):
+                        raise _AuthenticationResponse()
                     return html
 
                 if response.status in RETRY_STATUSES and attempt < MAX_RETRIES:
@@ -191,6 +232,8 @@ async def fetch_url(session: aiohttp.ClientSession, url: str) -> str | None:
                 continue
             logger.warning(f"Client error for {url}: {e}")
             return None
+        except _AuthenticationResponse:
+            raise
         except Exception as e:
             logger.error(f"Request failed for {url}: {e}")
             return None
