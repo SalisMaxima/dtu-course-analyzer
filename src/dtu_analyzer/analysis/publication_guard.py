@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from .course_history_reviews import NEW_COURSES, REVIEWED_NPE, EXCLUDED_HISTORY
+from .course_history_reviews import NEW_COURSES, REVIEWED_NPE, EXCLUDED_HISTORY, reviewed_broken_histogram
 from ..scripts.build_chrome_beta import build_dataset
 
 
@@ -39,6 +39,8 @@ def publication_issues(previous, candidate, report, expected_courses):
             if state != "no_published_results":
                 flag(course, "absence_of_results_unconfirmed")
         for exam in exams:
+            if reviewed_broken_histogram(course, exam):
+                continue
             if exam.get("distribution_status") not in {"published", "suppressed"} or exam.get("error"):
                 flag(course, "histogram_collection_failed")
             if exam.get("distribution_status") == "published":

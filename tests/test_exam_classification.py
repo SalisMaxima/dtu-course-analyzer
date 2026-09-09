@@ -240,10 +240,11 @@ async def test_fetch_retries_transient_failure():
     (Response(url="https://auth.dtu.dk/login"), "authentication_required_or_expired"),
 ])
 async def test_fetch_distinguishes_login_and_http_failure(response, reason):
-    session = Session([response])
+    expected_calls = 1 if reason == "HTTP 404" else 2
+    session = Session([response] * expected_calls)
     with pytest.raises(ValueError, match=reason):
         await probe.fetch_page(session, "https://kurser.dtu.dk")
-    assert session.calls == 1
+    assert session.calls == expected_calls
 
 
 @pytest.mark.asyncio
@@ -266,10 +267,10 @@ async def test_force_login_wrapper_is_followed_once_and_diagnosed():
 async def test_repeated_wrapper_fails_instead_of_becoming_missing_schedule():
     url = 'https://kurser.dtu.dk/course/01001?lang=en-GB'
     html = '<iframe src="?forceLogin=true"></iframe>'
-    session = Session([Response(html=html, url=url), Response(html=html, url=url)])
+    session = Session([Response(html=html, url=url) for _ in range(4)])
     with pytest.raises(ValueError, match='authentication_wrapper_unresolved'):
         await probe.fetch_page(session, url)
-    assert session.calls == 2
+    assert session.calls == 4
 
 
 def test_wrapper_does_not_follow_other_hosts_or_other_course_paths():

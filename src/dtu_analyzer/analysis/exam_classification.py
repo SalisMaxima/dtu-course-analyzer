@@ -6,7 +6,8 @@ Keep unknown periods and mixed schedules visible instead of guessing.
 
 import re
 from .course_history_reviews import (NEW_COURSES, REVIEWED_NPE, history_review,
-    EXCLUDED_HISTORY, PREFERRED_SOURCES, REGULAR_SEASON_OVERRIDES, REGULAR_EXAM_OVERRIDES)
+    EXCLUDED_HISTORY, PREFERRED_SOURCES, REGULAR_SEASON_OVERRIDES, REGULAR_EXAM_OVERRIDES,
+    reviewed_broken_histogram)
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -152,6 +153,7 @@ def classify_course(record: dict) -> dict:
     exams = []
     for source in record.get("exams", []):
         exam = {**source, "classification": "undetermined", "reason": None}
+        exam.pop("reviewed_unavailable", None)
         period = exam["period"]
         exam.setdefault("distribution_status", "failed" if exam.get("error") else "published")
         # Infer from the source URL too, so replayed/legacy records cannot
@@ -170,6 +172,9 @@ def classify_course(record: dict) -> dict:
             exam["identity_status"] = "manually_approved_history"
             exam["identity_review"] = review
         exam["display_eligible"] = source_id not in EXCLUDED_HISTORY.get(record.get("course"), set())
+        if reviewed_broken_histogram(record.get("course"), exam):
+            exam["display_eligible"] = False
+            exam["reviewed_unavailable"] = True
         if exam.get("error"):
             exam["reason"] = "histogram_fetch_or_parse_failed"
         elif exam.get("identity_status") == "different_course_requires_review":
@@ -235,7 +240,7 @@ def classify_course(record: dict) -> dict:
     status = "provisional" if primary and not unresolved and not reasons else "partial"
     if primary is None:
         status = "undetermined"
-    if errors or any(e.get("error") for e in exams):
+    if errors or any(e.get("error") and not e.get("reviewed_unavailable") for e in exams):
         status = "error"
     record.update(
         status=status, primary_exam=primary, ordinary_exams=ordinary,
