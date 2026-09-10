@@ -8,7 +8,7 @@ Proposed implementation PR title: **Fetch reviewed course-data updates securely 
 
 Related work:
 - [Issue #30: Hosting updated data](https://github.com/SMKIDRaadet/dtu-course-analyzer/issues/30)
-- [PR #37: add pipeline and use env var for the cookie](https://github.com/SMKIDRaadet/dtu-course-analyzer/pull/37)
+- [PR #37: comparison reference after independent implementation](https://github.com/SMKIDRaadet/dtu-course-analyzer/pull/37)
 - [Existing collection and promotion workflow](promoting-course-data.md)
 
 ## Objective and scope
@@ -23,14 +23,57 @@ workflows collect candidates, validate them, and promote the exact reviewed
 artifact into the repository. Extend that process to publish approved public
 datasets and securely activate them in the extension.
 
-PR #37 proposed scraping and GitHub Pages deployment against older scripts;
-its description deferred the extension's remote-data consumer to later work.
-Reuse the current authentication, collection, validation, and promotion logic.
-Do not revive the old scripts or treat publishing alone as completion of #30.
+Develop the solution from issue #30's user need, this repository's current
+architecture, and the security and acceptance requirements below. Reuse the
+current authentication, collection, validation, and promotion logic. Publishing
+alone is not completion of #30.
 
 This work does not include user accounts, telemetry, syncing course selections,
 live scraping from users' browsers, remote UI templates, or remotely supplied
 code. Existing grade-selection and reviewed course-history rules must hold.
+
+## Methodology: implement independently, then compare
+
+The sequence is **our own design → working implementation → validation →
+comparison with PR #37 → evidence-based refinements**.
+
+PR #37 has already been read during initial discussion; this is not a claim of
+an unseen or clean-room implementation. From this point, use it as a deferred
+comparison reference, not as the implementation plan or starting code.
+
+1. **Design from our requirements.** Inspect the current repository and relevant
+   browser policies. Record our architecture, release contract, trust model,
+   privacy decisions, alternatives, and reasons before implementation. Choose
+   hosting and other components on their merits; matching a choice in #37 is
+   acceptable when independently justified.
+2. **Build the complete workflow ourselves.** Implement publication and client
+   consumption against the current pipeline. Do not cherry-pick, port, or adapt
+   #37 as the starting implementation, and do not consult its diff to guide
+   this phase. Resolve questions through current code, requirements, tests,
+   and official documentation.
+3. **Validate and preserve a baseline.** Complete the applicable automated tests,
+   manual Chrome/Firefox checks, and staging end-to-end run below. Record the
+   implementation commit and test evidence before comparison. Production
+   deployment and store approval are not prerequisites for this checkpoint.
+   If an external dependency blocks a check, record it explicitly; do not label
+   the baseline fully validated until the check can be completed.
+4. **Compare with the proposed PR.** Only after the working baseline is ready,
+   inspect the then-current #37 description, diff, and discussion. Record its
+   exact head commit. Compare intended scope, authentication, collection,
+   publication, hosting, client updates, security, operations, and testing.
+   Distinguish what #37 implements from work it explicitly defers; an omitted
+   future feature is not automatically a defect in that PR.
+5. **Refine based on evidence.** For each useful difference, explain whether to
+   adopt the idea, retain our approach, or defer it. Apply justified refinements
+   in separate commits after the baseline and rerun affected checks. Attribute
+   any subsequently reused contribution appropriately. Agreement with #37 is
+   not an acceptance criterion; the user need and requirements remain the test.
+
+Deliver a comparison note alongside the implementation containing both commit
+references, baseline test evidence, a concise comparison table, decisions and
+reasons, and any resulting changes. Use it to explain whether #37 is superseded,
+still contributes useful work, or needs a separate follow-up. Do not close or
+modify #37 merely as part of writing the comparison.
 
 ## Required end-to-end flow
 
@@ -209,8 +252,9 @@ Policy references checked during planning (2026-09-10):
 
 ## Required verification and acceptance criteria
 
-The implementation PR must supply automated coverage and manual browser evidence
-for the following behaviours:
+The independent implementation baseline must supply automated coverage and
+manual browser evidence for the following behaviours before comparison with
+PR #37. Any refinements following comparison must retain these guarantees:
 
 - A reviewed candidate is published byte-for-byte, including digest/provenance
   checks. Unreviewed, mismatched, expired, or wrong-repository artifacts fail.
@@ -250,8 +294,10 @@ Suggested opening:
 The final PR must describe the implemented endpoint and trust model, publication
 approval path, signature and schema formats, permissions and privacy changes,
 fallback/rollback behaviour, browser compatibility, and concrete test evidence.
-List any required maintainer setup separately from completed code. Explain how
-the implementation relates to #37; close #30 as implemented only when the full
+List any required maintainer setup separately from completed code. Include the
+independent baseline commit and validation evidence, then link the comparison
+note and explain any refinements made after reviewing #37. Close #30 as
+implemented only when the full
 publication-and-consumption path is delivered, not after planning or hosting
 alone. If delivered in multiple PRs, make dependencies and remaining scope
 explicit on each PR.
