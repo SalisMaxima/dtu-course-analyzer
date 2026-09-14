@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12.3'
 
@@ -34,7 +34,7 @@ jobs:
         run: pytest -v --tb=short
 
       - name: Run extension tests
-        run: node --test tests/  # Extension helpers, uses node:test only - no npm install
+        run: node --test tests/*.test.js  # Explicit files also work on Node 24+
 
       - name: Run validator on sample data (if exists)
         run: |

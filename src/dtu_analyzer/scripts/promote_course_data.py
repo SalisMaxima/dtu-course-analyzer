@@ -84,18 +84,22 @@ def install_files(root, payloads):
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
-        temporary.chmod(destination.stat().st_mode & 0o777)
+        temporary.chmod(destination.stat().st_mode & 0o777 if destination.exists() else 0o644)
     try:
-        for path in PROMOTION_FILES:
+        for path in payloads:
             destination = Path(root) / path
             prepare(destination, payloads[path], staged, path)
-            prepare(destination, destination.read_bytes(), backups, path)
-        for path in PROMOTION_FILES:
+            if destination.exists():
+                prepare(destination, destination.read_bytes(), backups, path)
+        for path in payloads:
             os.replace(staged[path], Path(root) / path)
             replaced.append(path)
     except OSError:
         for path in reversed(replaced):
-            os.replace(backups[path], Path(root) / path)
+            if path in backups:
+                os.replace(backups[path], Path(root) / path)
+            else:
+                (Path(root) / path).unlink(missing_ok=True)
         raise
     finally:
         for temporary in [*staged.values(), *backups.values()]:
@@ -111,13 +115,20 @@ def main(argv=None):
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--artifact-id", required=True)
     parser.add_argument("--root", type=Path, default=Path("."))
+    parser.add_argument("--receipt", action="store_true", help="Commit durable workflow approval evidence")
     args = parser.parse_args(argv)
     try:
         if git(args.root, "status", "--porcelain", "--untracked-files=no"):
             raise ValueError("Tracked worktree must be clean before promotion")
+        run = json.loads(args.run_metadata.read_text())
+        artifact = json.loads(args.artifact_metadata.read_text())
         data = verify_candidate(args.candidate, args.root,
-                                json.loads(args.run_metadata.read_text()), json.loads(args.artifact_metadata.read_text()),
+                                run, artifact,
                                 args.repository, args.run_id, args.artifact_id)
+        if args.receipt:
+            from .promotion_receipt import make_receipt, RECEIPT_PATH
+            receipt = make_receipt(args.candidate, args.root, run, artifact)
+            data[RECEIPT_PATH] = (json.dumps(receipt, sort_keys=True, indent=2) + "\n").encode()
         install_files(args.root, data)
     except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError) as exc:
         print(f"Promotion refused: {exc}")

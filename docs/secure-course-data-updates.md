@@ -1,6 +1,10 @@
 # Secure course-data updates: implementation requirements
 
-Status: planning document; the remote updater and hosting pipeline are not implemented by this branch yet.
+Status: requirements document. The signed data publication pipeline is implemented;
+see [release operations](publishing-course-data.md) and
+[independent design](course-data-release-design.md). Production remains disabled
+pending configuration. The remote browser updater and full staging/browser
+acceptance evidence are still outstanding; this does not close issue #30.
 
 Branch: `feature/secure-course-data-updates`
 

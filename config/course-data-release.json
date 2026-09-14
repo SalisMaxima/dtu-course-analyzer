@@ -1,0 +1,12 @@
+{
+  "production": {
+    "origin": null,
+    "signing_key_id": null,
+    "trusted_keys": {}
+  },
+  "staging": {
+    "origin": null,
+    "signing_key_id": null,
+    "trusted_keys": {}
+  }
+}

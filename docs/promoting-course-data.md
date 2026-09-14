@@ -25,6 +25,10 @@
 Promotion downloads that exact artifact, verifies it, then commits
 `extension/db/data.json`, `data/coursenumbers.txt`, and `data/coursedic.json`
 together on the selected branch. All three files are copied byte-for-byte.
+The workflow also commits `data/course-data-promotion.json`, containing the
+exact validation evidence, candidate provenance and promotion identity, in
+that same commit. The summary gives the resulting full commit SHA for the
+separate [Publish Course Data workflow](publishing-course-data.md).
 Advancing the checker baselines prevents already-collected courses and semesters
 from being reported repeatedly as new. Promotion does not scrape, regenerate
 percentiles, install archived extension code, or submit anything to the stores.
