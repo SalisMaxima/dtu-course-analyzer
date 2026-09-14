@@ -34,7 +34,9 @@ jobs:
         run: pytest -v --tb=short
 
       - name: Run extension tests
-        run: node --test tests/*.test.js  # Explicit files also work on Node 24+
+        run: |
+          npm ci --ignore-scripts
+          node --test tests/*.test.js
 
       - name: Run validator on sample data (if exists)
         run: |

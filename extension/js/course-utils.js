@@ -158,6 +158,7 @@
   }
 
   const api = {
+    isSafeGradeSource: value => typeof value === "string" && /^https:\/\/karakterer\.dtu\.dk\/Histogram\/[1-9][0-9]{0,3}\/[0-9A-Z]{5}(?:-[0-9]{1,3})?\/(Summer|Winter)-[0-9]{4}$/.test(value),
     COMPARISON_KEY,
     GRADE_ORDER,
     MAX_COMPARISONS,

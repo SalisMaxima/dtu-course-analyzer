@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "fake-indexeddb": "6.2.5"
+  },
+  "name": "dtu-course-analyzer-extension-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

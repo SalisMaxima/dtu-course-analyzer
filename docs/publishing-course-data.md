@@ -5,9 +5,9 @@ successful **Promote Course Data** commit. Collection, repository promotion
 and public deployment have separate success states. No scrape occurs in
 publication, verification, retry or rollback.
 
-This is the publication part of the secure-updates specification. Installed
-extensions still read bundled data; a reviewed browser updater is required
-before users can consume these releases automatically.
+The publication pipeline is paired with the implemented [browser updater](course-data-client.md).
+Existing installations need the reviewed 2.6.0 extension build, a configured
+origin/trust root, optional host access and explicit consent before downloading.
 
 ## Required maintainer setup
 
@@ -137,6 +137,7 @@ For ordinary development, `pip install -e ".[dev]"` includes release tests.
 
 ```sh
 python -m pytest
+npm ci --ignore-scripts
 node --test tests/*.test.js
 ```
 
@@ -151,8 +152,7 @@ deployment failures. It includes a local simulated review → promotion →
 publication → fetch-verification run. GitHub API evidence is simulated there;
 this is not a live authenticated staging run.
 
-Before declaring the full secure-updates feature complete, implement and test
-the browser updater, consent and local cache; run authenticated staging
+Before declaring the full secure-updates feature fully validated, run authenticated staging
 collection/review/promotion/publication and Chrome/Firefox activation; verify
 real browser quotas and network behavior. Only then make the deferred
 comparison with PR #37 under the branch's required methodology.

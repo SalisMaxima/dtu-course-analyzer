@@ -1,7 +1,9 @@
 // background.js - Chrome Version
 // We don't handle data here anymore. The content script handles it via direct injection.
 
-importScripts("js/course-utils.js");
+if (typeof importScripts === "function") {
+    importScripts("js/course-utils.js", "js/data-contract.js", "js/data-updater.js", "js/data-background.js");
+}
 
 // All tabs submit operations to one queue; no tab overwrites a stale snapshot.
 let comparisonQueue = Promise.resolve();

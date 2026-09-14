@@ -2,6 +2,7 @@
 // Loads db/data.json, renders pages of 50 rows with sorting and bilingual search.
 
 const PAGE_SIZE = 50;
+let refreshRequest = 0;
 
 const COLUMNS = [
   { key: "course", numeric: false, cssClass: "" },
@@ -365,13 +366,15 @@ function initEvents() {
 }
 
 async function initTable() {
+  const request = ++refreshRequest;
   let db;
   try {
-    const response = await fetch("db/data.json");
-    if (!response.ok) {
-      throw new Error("HTTP " + response.status);
+    if (typeof DTUData !== "undefined") db = (await DTUData.read()).data;
+    else {
+      const response = await fetch("db/data.json");
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      db = await response.json();
     }
-    db = await response.json();
   } catch (e) {
     console.error("DTU Analyzer: Failed to load db/data.json:", e);
     const info = document.getElementById("table-info");
@@ -379,7 +382,7 @@ async function initTable() {
     return;
   }
 
-  state.rows = buildRows(db);
+  if (request === refreshRequest) state.rows = buildRows(db);
   initEvents();
   update();
 
@@ -396,3 +399,16 @@ async function initTable() {
 }
 
 initTable();
+
+if (typeof DTUData !== "undefined") DTUData.subscribe(async () => {
+  const request = ++refreshRequest;
+  try {
+    const view = await DTUData.read();
+    if (request !== refreshRequest) return;
+    state.rows = buildRows(view.data);
+    update();
+    renderComparison();
+  } catch (e) {
+    document.getElementById("table-info").textContent = "Refresh failed; the previous dataset is still displayed.";
+  }
+});

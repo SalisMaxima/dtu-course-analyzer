@@ -1,10 +1,10 @@
 # Secure course-data updates: implementation requirements
 
-Status: requirements document. The signed data publication pipeline is implemented;
+Status: requirements document. Signed publication and the shared browser updater are implemented;
 see [release operations](publishing-course-data.md) and
 [independent design](course-data-release-design.md). Production remains disabled
-pending configuration. The remote browser updater and full staging/browser
-acceptance evidence are still outstanding; this does not close issue #30.
+pending configuration. Live staging and installed-browser acceptance evidence
+are still outstanding; this does not close issue #30. See [client operation and review](course-data-client.md).
 
 Branch: `feature/secure-course-data-updates`
 

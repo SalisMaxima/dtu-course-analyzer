@@ -1,0 +1,100 @@
+{
+  "approved": {
+    "02280": {
+      "02285": "Previous course number; accepted as the same course."
+    },
+    "02426": {
+      "02424": "Previous course number; accepted as the same course."
+    },
+    "02581": {
+      "02580": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "12952": {
+      "12950": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "22170": {
+      "27692": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "22181": {
+      "22180": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "22461": {
+      "22433": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "23103": {
+      "23102": "Shared historical exam with 23104; counts must not be combined."
+    },
+    "23104": {
+      "23102": "Shared historical exam with 23103; counts must not be combined."
+    },
+    "25356": {
+      "25314": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "25623": {
+      "25617": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "25628": {
+      "25349": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "25825": {
+      "25803": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "27827": {
+      "29905": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "34556": {
+      "34551": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "41751": {
+      "41730": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "41959": {
+      "11305": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "62222": {
+      "62229": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "62237": {
+      "62234": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined.",
+      "62236": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "62580": {
+      "62581": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "62713": {
+      "62712": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "62776": {
+      "62775": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "MA263": {
+      "41263": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "MA722": {
+      "31301": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    },
+    "MA776": {
+      "62775": "Maintainer-reviewed predecessor/shared exam history; source counts are not combined."
+    }
+  },
+  "excluded": {
+    "22170": [
+      "27692"
+    ],
+    "25623": [
+      "25617"
+    ]
+  },
+  "preferred": {
+    "27827": [
+      "29905"
+    ],
+    "62237": [
+      "62236",
+      "62234"
+    ],
+    "MA263": [
+      "41263"
+    ]
+  }
+}

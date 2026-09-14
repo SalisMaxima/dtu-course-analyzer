@@ -198,6 +198,18 @@
 </head>
 <body>
 
+<section aria-labelledby="data-updates-title">
+  <h2 id="data-updates-title">Course data</h2>
+  <p id="data-update-status" role="status">Loading dataset status…</p>
+  <p id="data-update-disclosure">Optional updates download the same public course dataset for everyone. The host receives your IP address and request time. Course views, searches, comparison choices and DTU credentials are never sent.</p>
+  <label><input id="data-download-consent" type="checkbox"> Allow public dataset downloads</label>
+  <label><input id="data-download-auto" type="checkbox"> Check automatically about once a day</label>
+  <button id="data-check-now" type="button">Check now</button>
+  <button id="data-use-bundled" type="button">Use bundled data only</button>
+  <button id="data-clear-cache" type="button">Clear downloaded data</button>
+  <p><a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy and downloads</a></p>
+</section>
+
 <div class="controls">
   <span class="language-label">Display language:</span>
   <button id="lang-da" class="language-toggle-btn">Dansk</button>
@@ -244,6 +256,8 @@
 </div>
 
 <script src="js/course-utils.js"></script>
+<script src="js/data-provider.js"></script>
+<script src="js/data-controls.js"></script>
 <script src="js/table.js"></script>
 <script src="js/language-toggle.js"></script>
 

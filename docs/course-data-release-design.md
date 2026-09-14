@@ -6,11 +6,12 @@ consulted during this implementation.
 
 ## Delivery boundary
 
-This change implements the **data publication pipeline** requested on the
-secure-updates branch: collect → validate → review → promote → sign → publish
-→ verify. The browser updater is a dependent deliverable; publishing does not
-close issue #30 or complete the entire secure-updates specification. Existing
-extensions continue using their bundled data until that updater is released.
+The first implementation commit delivered publication. The implementation was
+then extended through browser consumption to cover the branch's complete flow:
+collect → validate → review → promote → sign → publish → verify → activate.
+The shared provider, IndexedDB cache and explicit opt-in are implemented for
+Chrome and Firefox. Existing installations receive them only through a reviewed
+extension release. Live staging/browser acceptance remains outstanding.
 
 ## Decisions
 
@@ -39,8 +40,10 @@ extensions continue using their bundled data until that updater is released.
 - Current payload: 4,458,318 bytes / 1,554 courses. Limits: 16 MiB payload,
   32 KiB envelope, 10,000 courses, 128 exams/course, bounded fields. Keep at
   most 900 MiB in a Pages tree, failing before the hosting limit; no automatic
-  deletion of old releases. The future client should reserve space for two
-  payloads in IndexedDB, not assume storage.local can fit them.
+  deletion of old releases. The client keeps two committed payloads and one
+  staged candidate in IndexedDB; transaction writes may temporarily require
+  additional space. Budget 64 MiB plus overhead at the 16 MiB payload cap.
+  Quota failures retain existing data; actual browser quotas still need testing.
 - Serialize all staging/production publication jobs repository-wide. Assign
   sequence from the durable ledger. Commit the release before deployment;
   retry by the same release-request identifier reuses the exact signed bytes.
@@ -63,12 +66,15 @@ keys. A signing-workflow compromise can authorize false data; signing cannot
 prevent outages or withheld releases. Rotation/compromise recovery requires
 an extension update removing revoked keys, followed by a higher sequence.
 
-No extension permissions or privacy claims change in this pipeline-only
-delivery because installed extensions do not make remote requests yet. The
-client follow-up must provide explicit opt-in before any remote request,
-bundled-only operation, local cache controls and an accurate disclosure that
-the host receives IP addresses and request times. Actual provider log retention
-must be established before enabling production downloads.
+The extension adds the alarms API and requests optional access to the single
+configured download host only from a consent gesture. Downloads default off
+for new and upgrading installations. The database provides explicit consent,
+automatic/manual controls, bundled-only mode and cache clearing. Firefox's
+built-in technical-data consent is also checked where supported; older supported
+versions use the explicit custom consent. The privacy policy now describes
+host IP/request metadata and GitHub's published security logging/retention terms.
+The production origin and trust roots remain unset, so this branch cannot
+silently begin production downloads.
 
 Official references checked during design:
 - [Chrome's remote hosted code guidance](https://developer.chrome.com/docs/extensions/develop/migrate/remote-hosted-code)
@@ -87,7 +93,7 @@ interoperability on the real payload. Keep existing regression tests.
 
 Authenticated collection, protected staging publication, installed Chrome and
 Firefox activation, consent, quotas and network inspection require external
-configuration and the browser updater. Record these as incomplete; do not call
+configuration and installed-browser testing. Record these as incomplete; do not call
 this a fully validated end-to-end baseline. The specification explicitly puts
 comparison with #37 after the complete working baseline, so that comparison
 remains deferred, with neither #30 nor #37 closed or modified.

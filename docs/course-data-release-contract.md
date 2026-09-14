@@ -44,11 +44,11 @@ invalid UTF-8 are rejected.
 | `promotion_commit` | Full 40-character Git commit SHA containing the approved dataset and receipt |
 | `request_id` | Stable lowercase letter/digit/hyphen token, maximum 64 characters |
 
-The compatibility floor reserves the future updater release, not a claim that
-the current 2.5.0 extension can consume these releases. The publisher's verifier
-accepts this precise contract. Future clients must also compare their installed
-version/browser version against these requirements and persist their highest
-accepted sequence; the offline signature verifier alone is not a client updater.
+The compatibility floor matches the implemented 2.6.0 updater; the older 2.5.0
+extension cannot consume these releases. The client compares its installed
+extension version, uses manifest-enforced browser minimums and persists the
+highest accepted sequence. The standalone signature verifier remains useful
+for offline review but does not itself manage client activation.
 
 Collection precedes publication. Publication times over five minutes in the
 future are rejected. A new release's path includes its sequence and digest.
@@ -88,8 +88,8 @@ Names and feedback fields remain optional when genuinely unavailable.
   Existing reviewed predecessor preferences may select a historical exam
   with unknown regular/reexam classification; that explicit exception is
   preserved. With no default, default-derived grade fields must be absent.
-- Content strings remain untrusted even after authentication. The client
-  follow-up must render them with safe DOM APIs and fixed URL derivation.
+- Content strings remain untrusted even after authentication. Client renderers
+  use safe DOM APIs and fixed URL derivation, with a second source-link check.
 
 This validator checks schema and consistency; collection completeness and
 default-selection provenance remain governed by the existing publication
@@ -106,11 +106,12 @@ the fixed pointer and its signed immutable paths. A mismatched pointer or
 partial generation fails publication verification.
 
 GitHub Pages controls response cache headers; custom header behavior is not
-claimed. Pointer requests use `Cache-Control: no-cache`; the future client
-must revalidate its pointer and authenticate every candidate. Payload hashes
+claimed. Publisher pointer requests use `Cache-Control: no-cache`; the client
+uses fetch cache revalidation and authenticates every candidate. Payload hashes
 and immutable paths provide content identity, not freshness by themselves.
 
 The public tree is capped at 900 MiB. All release files and evidence remain in
 the append-only release history until an explicitly reviewed hosting/archival
-migration. Browser cache limits and atomic activation are a separate client
-requirement; this pipeline does not assume the payload fits storage.local.
+migration. Browser cache state and activation use IndexedDB transactions;
+payloads are not stored in storage.local. See the client operations note for
+cache limits and the remaining installed-browser quota checks.

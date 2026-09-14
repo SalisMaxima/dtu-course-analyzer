@@ -9,6 +9,7 @@ const outputArr = [
   ["Workscore percentile", "workload", "%", 100],
   ["Lazyscore percentile", "lazyscore", "%", 100],
 ];
+let comparisonStorageListener;
 
 const METRIC_HELP = {
   "Average grade": "DTU's published average numerical grade for the selected exam, on the Danish seven-point scale. Higher is better. Pass/fail and mixed distributions show percentage passed instead.",
@@ -50,6 +51,11 @@ function getCourseId() {
 // distinguishable from a course we simply have no data for
 async function loadData() {
   try {
+    if (typeof DTUData !== "undefined") {
+      const courseId = getCourseId();
+      const view = await DTUData.read(courseId);
+      return { ok: true, db: { [courseId]: view.data }, view };
+    }
     const response = await fetch(chrome.runtime.getURL("db/data.json"));
     if (!response.ok) {
       console.error("DTU Analyzer: Failed to load db/data.json (HTTP " + response.status + ")");
@@ -245,7 +251,7 @@ function addExamHistory(tbody, data) {
     if (!exam) { addRow(body, "Select an exam to view its results."); return; }
     addRow(body, "Exam period", formatExamPeriod(exam.grade_period));
     const link = document.createElement("a");
-    link.href = exam.grade_source;
+    if (DTUAnalyzer.isSafeGradeSource(exam.grade_source)) link.href = exam.grade_source;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = exam.title || `DTU results for ${exam.histogram_course}`;
@@ -506,13 +512,15 @@ function addComparisonControls(tbody, courseId) {
     });
   });
 
-  chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (comparisonStorageListener && chrome.storage.onChanged.removeListener) chrome.storage.onChanged.removeListener(comparisonStorageListener);
+  comparisonStorageListener = (changes, areaName) => {
     if (areaName !== "local" || !changes[DTUAnalyzer.COMPARISON_KEY]) return;
     const selection = DTUAnalyzer.normalizeSelection(changes[DTUAnalyzer.COMPARISON_KEY].newValue);
     // Our own writes have already refreshed the controls - skip the echo
     if (selection.join(",") === renderedSelection) return;
     refresh(selection);
-  });
+  };
+  chrome.storage.onChanged.addListener(comparisonStorageListener);
 
   td.appendChild(button);
   td.appendChild(viewButton);
@@ -584,7 +592,9 @@ function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxV
 }
 
 // 5. Main Execution Logic
+let dataRenderRequest = 0;
 async function main() {
+  const request = ++dataRenderRequest;
   try {
     const courseId = getCourseId();
 
@@ -594,10 +604,16 @@ async function main() {
     }
 
     const result = await loadData();
+    if (request !== dataRenderRequest) return;
+    const previous = document.getElementById("DTU-Course-Analyzer");
+    const previousSelect = previous && previous.querySelector('select[aria-label="Displayed exam"]');
+    const previousExam = previousSelect ? previousSelect.value : undefined;
     if (!result.ok) {
+      if (previous) { addRow(previous, "Data refresh unavailable; the previously displayed dataset is retained."); return; }
       presentData(null, courseId, result.reason);
       return;
     }
+    if (previous) previous.closest("table").remove();
 
     const courseData = result.db[courseId];
     if (courseData) {
@@ -605,6 +621,15 @@ async function main() {
     } else {
       console.info("DTU Analyzer: No data available for course " + courseId);
       presentData(null, courseId);
+    }
+    const body = document.getElementById("DTU-Course-Analyzer");
+    if (body && result.view) addRow(body, "Dataset", DTUData.status(result.view));
+    const select = body && body.querySelector('select[aria-label="Displayed exam"]');
+    if (select && previousExam !== undefined) {
+      const available = Array.from(select.options).some(option => option.value === previousExam);
+      select.value = available ? previousExam : "";
+      select.dispatchEvent(new Event("change"));
+      if (!available) addRow(body, "The selected exam is no longer available. Choose an exam to continue.");
     }
   } catch (e) {
     // Never let an unexpected error escape onto DTU's page
@@ -618,3 +643,4 @@ if (document.readyState === "loading") {
 } else {
   main();
 }
+if (typeof DTUData !== "undefined") DTUData.subscribe(main);

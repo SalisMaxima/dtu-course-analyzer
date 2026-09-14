@@ -52,3 +52,6 @@ htmlcov/
 # Environment variables
 .env
 .env.local
+
+# JavaScript development dependencies
+node_modules/
