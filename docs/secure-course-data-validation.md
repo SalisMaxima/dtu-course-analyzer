@@ -2,6 +2,44 @@
 
 Recorded 2026-09-14 for `feature/secure-course-data-updates`.
 
+## Browser compliance fixes — 2026-09-14
+
+The follow-up to the preserved baseline below corrects the Firefox manifest,
+disables private-window support in both browsers, rejects private-tab messages,
+and replaces the technical-telemetry download dependency with explicit personal
+data consent for IP-linked connection metadata. Consent revision 2 invalidates
+the old disclosure while preserving release high watermarks. Downloads check
+actual host access and, where supported, native data consent before each request.
+Permission revocation disables downloads; unrelated telemetry permissions do not.
+
+Validation after these changes:
+
+| Check | Result |
+| --- | --- |
+| Full Python suite | 344 passed in 16.44 seconds |
+| Full JavaScript suite | 53 passed, including permission refusal/revocation, old-consent invalidation and private-window write rejection |
+| Mozilla addons-linter 10.12.0, offline Firefox package | 0 errors; 2 compatibility warnings |
+| Mozilla addons-linter 10.12.0, remote-enabled Firefox package | 0 errors; 2 compatibility warnings |
+| Updated workflow | actionlint passed |
+
+The linter reproduced the previous empty `required` list error. Corrected builds
+use `required: ["none"]`; remote-enabled builds add optional
+`personallyIdentifyingInfo`. The pinned validator and its lockfile are now part of
+the test workflow (`npm run lint:firefox`). Public fixture keys let CI check the
+remote-enabled package without secrets or deployment.
+
+The two warnings concern the minimum version for the native data-consent key:
+desktop 140 and Android 142. Desktop support remains 128 with explicit custom
+consent below 140; Android distribution is not enabled. The warnings are not
+suppressed. See the [client and store checklist](course-data-client.md) for the
+classification rationale, disclosures and minimum-version testing.
+
+These checks do not establish installed-browser behavior or store acceptance.
+The IP-linked classification is a documented application of Mozilla's guidance,
+not a ruling from its reviewers. Confirm actual hosting practices and explain the
+classification during submission. The live staging and browser checks below,
+and the subsequent PR #37 comparison, remain outstanding.
+
 ## Preserved baseline
 
 - Publication implementation: [`872202ddbeb9c59bbea246716bf403eb7e1182d7`](https://github.com/SalisMaxima/dtu-course-analyzer/commit/872202ddbeb9c59bbea246716bf403eb7e1182d7).

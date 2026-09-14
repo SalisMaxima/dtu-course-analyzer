@@ -7,9 +7,13 @@ Downloads are optional and off by default. Enable them in the extension database
 choose automatic or manual checks, or keep using bundled data offline. Releases
 are signed and validated before activation; dataset age and refresh status are shown.
 
-The hosting provider receives your IP address and request time when you download.
+The hosting provider receives your IP address, request time and browser-managed
+connection headers to serve and secure downloads.
 Course views, searches, exam choices, comparisons and DTU credentials are never sent.
+Private/incognito windows are not supported.
 See the [privacy policy](PrivacyPolicy.md) and [reviewer instructions](course-data-client.md).
+
+Before submission, complete the [store disclosure checklist](course-data-client.md#store-submission-disclosures).
 
 ## Earlier listing text
 

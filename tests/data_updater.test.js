@@ -49,6 +49,18 @@ test("default and upgrading installations make no request before affirmative con
   assert.equal(h.calls.length, 0);
   assert.equal((await h.engine.read()).source, "bundled");
 });
+test("old disclosure consent cannot authorize downloads after upgrade", async () => {
+  const h = await harness();
+  await h.engine.preferences(true, true);
+  await h.cache.change(s => ({ ...s, consentRevision: 1, highest: 7 }));
+  assert.equal((await h.cache.state()).consented, false);
+  await h.engine.check(); await h.engine.check(true);
+  assert.equal(h.calls.length, 0);
+  assert.equal((await h.engine.read()).source, "bundled");
+  assert.equal((await h.cache.state()).highest, 7);
+  await h.engine.preferences(true, false);
+  assert.equal((await new Engine(h.options).cache.state()).consented, true);
+});
 test("valid activation is atomic and survives a terminated background", async () => {
   const h = await harness();
   await h.engine.preferences(true, true);
@@ -207,13 +219,15 @@ test("course pages cannot invoke privileged update controls or supply fetch URLs
   const context = vm.createContext({ chrome, DTUDataEngine: FakeEngine, DTUDataCache: class {},
     fetch: async () => ({ ok: true, json: async () => ({ origin: null, trusted_keys: {} }) }), URL, console });
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../extension/js/data-background.js"), "utf8"), context);
-  const send = (message, url) => new Promise(resolve => listeners[0](message, { id: "test", url }, resolve));
+  const send = (message, url, tab) => new Promise(resolve => listeners[0](message, { id: "test", url, tab }, resolve));
   const denied = await send({ type: "courseDataCheck", url: "https://evil.example/" }, "https://kurser.dtu.dk/course/01001");
   assert.match(denied.error, /only in the extension/); assert.equal(checks, 0);
   const data = await send({ type: "courseDataGet", courseId: "01001", url: "https://evil.example/" }, "https://kurser.dtu.dk/course/01001");
   assert.equal(data.data.name, "Course"); assert.equal(checks, 0);
   await send({ type: "courseDataCheck" }, "chrome-extension://test/db.html#compare");
   assert.equal(checks, 1);
+  const privateResult = await send({ type: "courseDataGet", courseId: "01001" }, "https://kurser.dtu.dk/course/01001", { incognito: true });
+  assert.match(privateResult.error, /Private windows/);
 });
 
 test("the complete real payload survives IndexedDB activation and restart", async () => {

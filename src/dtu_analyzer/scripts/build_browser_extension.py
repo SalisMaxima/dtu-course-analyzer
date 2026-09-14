@@ -63,10 +63,13 @@ def build(output, browser, channel="production", enable_remote=False, root=Path(
                 "id": ("staging-" if channel == "staging" else "")
                 + "dtu.course.analyzer@gmail.com",
                 "strict_min_version": "128.0",
-                "data_collection_permissions": {
-                    "required": [],
-                    "optional": ["technicalAndInteraction"],
-                },
+                # Connection metadata is linked to the requester's IP address.
+                # Downloads are optional; this is not an analytics permission.
+                "data_collection_permissions": (
+                    {"required": ["none"], "optional": ["personallyIdentifyingInfo"]}
+                    if enable_remote
+                    else {"required": ["none"]}
+                ),
             }
         }
     elif browser != "chrome":

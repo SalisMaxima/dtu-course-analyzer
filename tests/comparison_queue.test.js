@@ -32,9 +32,9 @@ function worker({ failFirstWrite = false } = {}) {
     fs.readFileSync(path.join(__dirname, '../extension', file), 'utf8'), context
   );
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../extension/background.js'), 'utf8'), context);
-  const send = (action, courseId) => new Promise(resolve => {
-    assert.equal(listeners[0]({ type: 'updateComparison', action, courseId }, {},
-      result => resolve(JSON.parse(JSON.stringify(result)))), true);
+  const send = (action, courseId, sender = {}) => new Promise(resolve => {
+    listeners[0]({ type: 'updateComparison', action, courseId }, sender,
+      result => resolve(JSON.parse(JSON.stringify(result))));
   });
   return { send, stored: () => Array.from(stored) };
 }
@@ -43,6 +43,15 @@ test('concurrent adds from separate tabs preserve both selections', async () => 
   const w = worker();
   await Promise.all([w.send('toggle', '01001'), w.send('toggle', '01911')]);
   assert.deepEqual(w.stored(), ['01001', '01911']);
+});
+
+test('private-window messages cannot persist or clear comparison selections', async () => {
+  const w = worker();
+  await w.send('toggle', '01001');
+  const sender = { tab: { incognito: true } };
+  assert.match((await w.send('toggle', '01911', sender)).error, /Private windows/);
+  assert.match((await w.send('clear', undefined, sender)).error, /Private windows/);
+  assert.deepEqual(w.stored(), ['01001']);
 });
 
 test('queued changes enforce the limit and order clears with toggles', async () => {

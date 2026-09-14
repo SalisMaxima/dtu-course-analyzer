@@ -21,7 +21,7 @@
       (view.state.error ? " " + view.state.error : "");
     if (view.origin) document.getElementById("data-update-disclosure").textContent =
       "Optional updates download the same public dataset from " + new URL(view.origin).hostname +
-      " for everyone. The host receives your IP address and request time. Course views, searches, comparison choices and DTU credentials are never sent.";
+      " for everyone. To serve and secure downloads, the host receives your IP address, request time and browser-managed connection headers. Course views, searches, comparison choices and DTU credentials are never sent. Declining keeps bundled statistics and comparison available, without online data refreshes.";
   }
   async function change(consented, auto) {
     await DTUData.message("courseDataPreferences", { consented, automatic: auto });
@@ -33,11 +33,11 @@
     if (!view || !view.configured) return;
     // Host access is requested directly from the user's consent gesture.
     const permissions = { origins: [new URL(view.origin).origin + "/*"] };
-    if (builtinDataConsent) permissions.data_collection = ["technicalAndInteraction"];
+    if (builtinDataConsent) permissions.data_collection = ["personallyIdentifyingInfo"];
     chrome.permissions.request(permissions, granted => {
       if (chrome.runtime.lastError || !granted) {
         consent.checked = false;
-        status.textContent = "Host access was not granted. Bundled data remains available.";
+        status.textContent = "Download permission was not granted. Bundled data remains available.";
         return;
       }
       change(true, false).catch(failed);

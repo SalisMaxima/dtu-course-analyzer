@@ -21,9 +21,10 @@ def test_firefox_package_uses_shared_updater_and_existing_addon_identity(tmp_pat
     assert manifest["browser_specific_settings"]["gecko"]["strict_min_version"] == "128.0"
     assert manifest["background"]["scripts"][-1] == "background.js"
     assert "js/data-background.js" in manifest["background"]["scripts"]
-    assert manifest["browser_specific_settings"]["gecko"]["data_collection_permissions"][
-        "optional"
-    ] == ["technicalAndInteraction"]
+    assert manifest["browser_specific_settings"]["gecko"]["data_collection_permissions"] == {
+        "required": ["none"]
+    }
+    assert manifest["incognito"] == "not_allowed"
     assert "optional_host_permissions" not in manifest
     assert json.loads((output / "js/data-update-config.json").read_text())["origin"] is None
 
@@ -74,3 +75,11 @@ def test_client_key_rotation_does_not_retrust_archived_signing_keys(tmp_path):
     assert json.loads((output / "manifest.json").read_text())["optional_host_permissions"] == [
         "https://staging.example.org/*"
     ]
+    assert json.loads((output / "manifest.json").read_text())["incognito"] == "not_allowed"
+    firefox = build(tmp_path / "firefox-remote", "firefox", "staging", True, root)
+    assert json.loads((firefox / "manifest.json").read_text())["browser_specific_settings"][
+        "gecko"
+    ]["data_collection_permissions"] == {
+        "required": ["none"],
+        "optional": ["personallyIdentifyingInfo"],
+    }

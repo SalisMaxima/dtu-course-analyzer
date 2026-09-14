@@ -48,10 +48,24 @@ sequence and download preferences. You can disable automatic checks separately.
 Removing the extension removes its browser-managed extension storage.
 
 On Firefox versions supporting built-in data consent, optional download-related
-network metadata is conservatively declared as technical and interaction data.
+connection metadata is declared as personally identifying information because
+the host receives it together with your IP address. This permission covers that
+connection metadata; the extension does not request your name, email address or
+account details. There is no separate analytics or technical-telemetry collection.
 The extension also requires its own explicit opt-in. Older supported Firefox
 versions use that explicit consent screen. Revoking relevant host/data permission
-disables further downloads. No browsing-activity permission is requested.
+disables further downloads. Changing from the earlier technical-data disclosure
+requires fresh consent; existing permission grants alone do not enable downloads.
+No browsing-activity permission is requested.
+
+Private/incognito windows are not supported. The browser prevents the extension
+from running there, so private-session comparison choices are not saved.
+
+The extension's use of information is limited to its stated course-statistics
+and comparison features, including serving and securing optional data downloads.
+It does not use or transfer user information for advertising, profiling or sale.
+These practices follow the Chrome Web Store User Data Policy's Limited Use
+requirements.
 
 ## Contact
 

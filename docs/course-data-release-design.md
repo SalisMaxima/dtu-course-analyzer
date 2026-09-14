@@ -70,7 +70,7 @@ The extension adds the alarms API and requests optional access to the single
 configured download host only from a consent gesture. Downloads default off
 for new and upgrading installations. The database provides explicit consent,
 automatic/manual controls, bundled-only mode and cache clearing. Firefox's
-built-in technical-data consent is also checked where supported; older supported
+built-in consent for IP-linked connection metadata is also checked where supported; older supported
 versions use the explicit custom consent. The privacy policy now describes
 host IP/request metadata and GitHub's published security logging/retention terms.
 The production origin and trust roots remain unset, so this branch cannot

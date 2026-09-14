@@ -37,19 +37,30 @@ metadata; the manifests enforce browser minimums. Existing archived
 
 ## Consent and requests
 
-A new or upgrading installation starts with both download consent and automatic
-checks disabled. Configured builds show the database consent page on installation
-or upgrade when no consent exists. That focused page explains the host, transmitted
+A new installation or upgrade from the previous disclosure starts with both
+download consent and automatic checks disabled. Consent revision 2 is persisted;
+later code-only upgrades retain this consent. Configured builds show the database
+consent page on installation or upgrade when current consent is absent. That focused page explains the host, transmitted
 network metadata and the continued availability of bundled-only use.
 
 Opting in requests the configured host permission directly from the user's gesture.
-Firefox builds declare optional `technicalAndInteraction` consent conservatively
-for download-related network metadata. Where Firefox exposes its built-in
-`data_collection` permission API, the UI requests that permission too and the
-background checks it before every request. Firefox 128–139 uses the explicit
-custom opt-in. Revoking host/data permission aborts active work and disables
-downloads. This classification and disclosure must be reviewed against Mozilla's
-then-current policy before store submission; no approval is claimed.
+Firefox builds declare `required: ["none"]`: no transmitted data is required to
+use the bundled features. Remote-enabled builds additionally declare optional
+`personallyIdentifyingInfo` for connection metadata linked to the requester's IP
+address. Offline builds declare no optional data category. There is no technical
+telemetry or analytics permission, and downloads never depend on an analytics
+choice. This categorization applies Mozilla's guidance that technical information
+linked to identifying information needs personal-data consent; it is an
+implementation judgment, not a Mozilla determination about this specific host.
+See [Mozilla's classification guidance](https://extensionworkshop.com/documentation/develop/best-practices-for-collecting-user-data-consents/#know-your-privacy-settings).
+
+Where Firefox exposes its built-in `data_collection` permission API, the UI
+requests personal-data consent together with optional host access. The background
+checks actual host access and data consent before every remote request, including
+after restart. Firefox 128–139 uses the explicit custom opt-in. Revoking host/data
+permission aborts active work and disables downloads. Legacy disclosure consent
+is invalidated even on those older versions. Confirm the host's actual practices
+and explain this classification to Mozilla during review; no approval is claimed.
 
 Policy sources checked 2026-09-14:
 [Mozilla's built-in consent](https://extensionworkshop.com/documentation/develop/firefox-builtin-data-consent/)
@@ -100,6 +111,11 @@ Clearing downloaded payloads preserves the high watermark and preferences.
 Bundled-only mode revokes local download consent and immediately uses the bundle.
 Complete browser removal/reset of extension storage resets installation state.
 
+Both manifests set `incognito: "not_allowed"`. The extension does not run in
+private windows. Background handlers also reject private-tab comparison and
+data-control messages, and notifications exclude private tabs. Supporting private
+windows later requires a separate design that does not persist session activity.
+
 Activation notifies extension pages and matching DTU content scripts. Each
 render reads one complete generation; stale asynchronous refreshes are discarded.
 Comparison selections absent from the new dataset remain visibly removable.
@@ -113,6 +129,7 @@ additional fixed-origin/path check.
 ```sh
 npm ci --ignore-scripts
 npm test
+npm run lint:firefox
 python -m pytest
 ```
 
@@ -124,6 +141,14 @@ rollback and message boundaries. Both Python and JavaScript validate the real
 4,458,318-byte dataset. The signed sample is verified across Python and Web Crypto.
 
 Remaining installed-browser/staging checks:
+
+Mozilla's `addons-linter` 10.12.0 runs on both offline and remote-enabled Firefox
+packages in CI. Both must have zero errors. It reports two compatibility warnings
+for `data_collection_permissions`: desktop support starts at 140 and Android at
+142, while the supported desktop minimum remains 128. These warnings are retained
+and visible. Desktop 128–139 uses custom consent, as Mozilla's guidance permits;
+Android distribution is not enabled (no `gecko_android` entry). The fallback still
+needs installed-browser testing. Successful lint is not store approval.
 
 1. Load the staging Chrome and Firefox builds with the actual staged trust root.
    Inspect initial/upgrade consent; confirm no remote requests before acceptance.
@@ -141,3 +166,32 @@ Remaining installed-browser/staging checks:
 Browser binary installation was attempted in this execution environment but the
 Playwright CDN downloads timed out. Installed Chrome/Firefox tests and live
 protected staging publication therefore remain explicitly unverified.
+
+## Store submission disclosures
+
+Prepare submissions from the generated browser packages, not the archived
+`source-code/` copies. The following checklist does not change any live listing.
+
+| Item | Required content or action |
+| --- | --- |
+| Purpose | Public DTU course statistics, course comparison and optional reviewed-data refreshes. |
+| Local data | Course identifiers, searches, selected exams and comparisons stay local; comparison choices persist in browser storage. |
+| Remote data | The fixed dataset host receives IP address, request time and browser-managed connection headers for delivery and security. No course-view URLs, queries, identifiers, credentials or cookies are added to download requests. |
+| Choice | Downloads default off. Declining leaves bundled course statistics and comparison usable. Show manual/automatic controls and revocation behavior. |
+| Permissions | `storage` saves comparisons; `alarms` schedules opted-in refreshes; DTU host access supports course pages; the one optional release host serves data. No private-window access. |
+| Firefox declaration | Offline builds: required `none`. Configured builds: required `none` plus optional `personallyIdentifyingInfo` for IP-linked connection metadata. No technical analytics. Explain this inference and actual host logging to the reviewer. |
+| Privacy URL | Publish a reachable policy matching `docs/PrivacyPolicy.md` and the packaged `privacy.html`; enter its URL in the store dashboard. |
+| Chrome dashboard | Disclose handling of local user data as well as host-side connection metadata. Complete Privacy practices and Limited Use certification accurately; do not claim that local processing is exempt. |
+| Reviewer access | Supply the configured staging package, fixed origin, public trust root, build instructions and recorded end-to-end run. Explain signature verification, bundled code and bundled-only operation. |
+
+Before submission, verify consistency between the actual build, hosting practices,
+listing, privacy page and dashboard answers. Do not promise a provider retention
+period without evidence. Obtain reviewer clarification if the classification of
+this deployment's connection metadata is disputed; a unit test cannot settle a
+policy interpretation.
+
+Sources checked 2026-09-14:
+[Chrome data handling and disclosure](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq),
+[Mozilla classification and consent](https://extensionworkshop.com/documentation/develop/best-practices-for-collecting-user-data-consents/),
+[Mozilla manifest](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings),
+[private-window manifest setting](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/incognito).

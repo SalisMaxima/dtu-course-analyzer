@@ -12,15 +12,26 @@
     chrome.runtime.sendMessage(message, () => { void chrome.runtime.lastError; });
     chrome.tabs.query({ url: "https://kurser.dtu.dk/course/*" }, tabs => {
       if (chrome.runtime.lastError) return;
-      for (const tab of tabs || []) chrome.tabs.sendMessage(tab.id, message, () => { void chrome.runtime.lastError; });
+      for (const tab of tabs || []) {
+        if (!tab.incognito) chrome.tabs.sendMessage(tab.id, message, () => { void chrome.runtime.lastError; });
+      }
     });
   };
   let bundled;
   const ready = Promise.all([localJSON("js/data-update-config.json"), localJSON("js/data-schema-policy.json")]).then(([config, policy]) =>
     new DTUDataEngine({ config: { ...config, clientVersion: chrome.runtime.getManifest().version }, policy, cache: new DTUDataCache(), notify,
       fetcher: async (url, options) => {
-        const permissions = await new Promise(resolve => chrome.permissions.getAll(resolve));
-        if (permissions.data_collection && !permissions.data_collection.includes("technicalAndInteraction")) {
+        const host = new URL(config.origin).origin + "/*";
+        const granted = await new Promise((resolve, reject) => chrome.permissions.contains({ origins: [host] }, value => {
+          if (chrome.runtime.lastError) reject(new Error("Download permission could not be checked."));
+          else resolve(value);
+        }));
+        if (!granted) throw new Error("Download host access is not granted.");
+        const permissions = await new Promise((resolve, reject) => chrome.permissions.getAll(value => {
+          if (chrome.runtime.lastError) reject(new Error("Download consent could not be checked."));
+          else resolve(value);
+        }));
+        if (permissions.data_collection && !permissions.data_collection.includes("personallyIdentifyingInfo")) {
           throw new Error("Firefox download consent is not granted.");
         }
         return fetch(url, options);
@@ -40,6 +51,7 @@
     if (!message || !["courseDataGet", "courseDataStatus", "courseDataPreferences", "courseDataCheck", "courseDataClear"].includes(message.type)) return;
     const operation = ready.then(async engine => {
       if (sender.id !== chrome.runtime.id) throw new Error("Untrusted message sender");
+      if (sender.tab && sender.tab.incognito) throw new Error("Private windows are not supported.");
       if (message.type === "courseDataGet") {
         const view = await engine.read();
         if (message.courseId !== undefined && !/^[0-9A-Z]{5}$/.test(message.courseId)) throw new Error("Invalid course ID");
@@ -64,16 +76,19 @@
   });
   const resume = () => ready.then(engine => engine.check()).finally(schedule).catch(() => {});
   chrome.runtime.onStartup.addListener(resume);
-  chrome.runtime.onInstalled.addListener(() => {
+  chrome.runtime.onInstalled.addListener(details => {
+    if (details.reason !== "install" && details.reason !== "update") return;
     ready.then(async engine => {
       if (engine.configured() && !(await engine.cache.state()).consented) chrome.tabs.create({ url: chrome.runtime.getURL("db.html"), active: true });
       resume();
     }).catch(() => {});
   });
   chrome.permissions.onRemoved.addListener(permissions => {
-    ready.then(engine => {
+    ready.then(async engine => {
       const host = engine.config.origin && new URL(engine.config.origin).origin + "/*";
-      if ((permissions.origins || []).includes(host) || (permissions.data_collection || []).includes("technicalAndInteraction")) {
+      const hostRemoved = host && (permissions.origins || []).length &&
+        !await new Promise(resolve => chrome.permissions.contains({ origins: [host] }, resolve));
+      if (hostRemoved || (permissions.data_collection || []).includes("personallyIdentifyingInfo")) {
         return engine.preferences(false, false).then(schedule);
       }
     }).catch(() => {});

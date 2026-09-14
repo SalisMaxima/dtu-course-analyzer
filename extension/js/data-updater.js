@@ -2,7 +2,8 @@
 (function (root) {
   "use strict";
   const DAY = 86400000;
-  const defaults = () => ({ consented: false, automatic: false, highest: 0, epoch: 0, failures: 0, nextDue: 0, manualAfter: 0, lastSuccess: null });
+  const CONSENT_REVISION = 2;
+  const defaults = () => ({ consented: false, automatic: false, consentRevision: 0, highest: 0, epoch: 0, failures: 0, nextDue: 0, manualAfter: 0, lastSuccess: null });
   class Cache {
     async open() {
       if (!this.db) this.db = new Promise((resolve, reject) => {
@@ -35,7 +36,9 @@
       DTURelease.assert(s && Number.isSafeInteger(s.highest) && s.highest >= 0 && Number.isSafeInteger(s.epoch) &&
         typeof s.consented === "boolean" && typeof s.automatic === "boolean" &&
         Number.isFinite(s.nextDue) && Number.isFinite(s.manualAfter), "Corrupt cache state");
-      return s;
+      // Earlier builds described download metadata as technical data. Never
+      // carry that opt-in into the IP-linked disclosure without a new gesture.
+      return s.consentRevision === CONSENT_REVISION ? s : { ...s, consented: false, automatic: false };
     }
     async change(fn) {
       await this.state();
@@ -59,7 +62,7 @@
         request.onsuccess = () => {
           try {
             const s = request.result || defaults();
-            DTURelease.assert(s.consented && s.epoch === epoch && metadata.sequence >= s.highest, "Update was cancelled or superseded");
+            DTURelease.assert(s.consented && s.consentRevision === CONSENT_REVISION && s.epoch === epoch && metadata.sequence >= s.highest, "Update was cancelled or superseded");
             const previous = s.active && s.active !== metadata.sequence ? s.active : s.previous;
             if (s.previous && s.previous !== previous && s.previous !== metadata.sequence) records.delete("release:" + s.previous);
             records.put(record, "release:" + metadata.sequence);
@@ -121,7 +124,7 @@
     async preferences(consented, automatic) {
       DTURelease.assert(typeof consented === "boolean" && typeof automatic === "boolean", "Invalid download preference");
       if (!consented && this.controller) this.controller.abort();
-      const state = await this.cache.change(s => ({ ...s, consented, automatic: consented && automatic, epoch: s.epoch + 1 }));
+      const state = await this.cache.change(s => ({ ...s, consented, consentRevision: CONSENT_REVISION, automatic: consented && automatic, epoch: s.epoch + 1 }));
       this.snapshot = null;
       await this.notify();
       return state;
@@ -142,6 +145,7 @@
       const time = this.now();
       let reserved = false;
       const state = await this.cache.change(s => {
+        if (s.consentRevision !== CONSENT_REVISION) return { ...s, consented: false, automatic: false };
         if (!s.consented || (!manual && (!s.automatic || time < s.nextDue)) || time < s.manualAfter) return s;
         reserved = true;
         return { ...s, lastAttempt: time, nextDue: time + DAY + Math.floor(this.random() * 3600000),

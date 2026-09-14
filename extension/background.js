@@ -1,5 +1,4 @@
-// background.js - Chrome Version
-// We don't handle data here anymore. The content script handles it via direct injection.
+// Shared comparison handlers; Chrome also imports the background data provider.
 
 if (typeof importScripts === "function") {
     importScripts("js/course-utils.js", "js/data-contract.js", "js/data-updater.js", "js/data-background.js");
@@ -9,6 +8,10 @@ if (typeof importScripts === "function") {
 let comparisonQueue = Promise.resolve();
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || message.type !== "updateComparison") return;
+    if (sender.tab && sender.tab.incognito) {
+        sendResponse({ error: "Private windows are not supported." });
+        return;
+    }
     const operation = comparisonQueue.then(async () => {
         if (!["toggle", "clear"].includes(message.action)) throw new Error("Invalid comparison action");
         const current = await DTUAnalyzer.readSelection();
@@ -30,8 +33,9 @@ chrome.action.onClicked.addListener((tab) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('db.html') });
 });
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
     if (!message || message.type !== "openComparison") return;
+    if (sender.tab && sender.tab.incognito) return;
 
     const comparisonPage = chrome.runtime.getURL("db.html");
     const comparisonUrl = comparisonPage + "#compare";

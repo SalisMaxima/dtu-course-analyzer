@@ -37,6 +37,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
           node --test tests/*.test.js
+          npm run lint:firefox
 
       - name: Run validator on sample data (if exists)
         run: |

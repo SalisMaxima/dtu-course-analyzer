@@ -3,6 +3,7 @@
   "description": "Analyzes and scores courses on kurser.dtu.dk",
   "version": "2.6.0",
   "manifest_version": 3,
+  "incognito": "not_allowed",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
