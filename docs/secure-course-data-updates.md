@@ -5,6 +5,8 @@ see [release operations](publishing-course-data.md) and
 [independent design](course-data-release-design.md). Production remains disabled
 pending configuration. Live staging and installed-browser acceptance evidence
 are still outstanding; this does not close issue #30. See [client operation and review](course-data-client.md).
+The [validation record](secure-course-data-validation.md) preserves the implementation
+commit, automated results and outstanding external acceptance checks.
 
 Branch: `feature/secure-course-data-updates`
 
