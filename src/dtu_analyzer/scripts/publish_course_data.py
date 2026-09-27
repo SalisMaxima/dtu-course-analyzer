@@ -7,6 +7,7 @@ collection, authentication, arbitrary artifact execution or data regeneration.
 import argparse
 import base64
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPException
 import json
 import os
 from pathlib import Path
@@ -434,6 +435,20 @@ def verify_deployed(origin, channel, keys, expected, fetch=fetch_bytes):
     return metadata
 
 
+def verify_with_retries(
+    origin, channel, keys, expected, attempts=1, delay=30, fetch=fetch_bytes, sleep=time.sleep
+):
+    """Repeat the complete check while the host may still serve the previous generation."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return verify_deployed(origin, channel, keys, expected, fetch)
+        except (OSError, ValueError, HTTPException) as exc:
+            if attempt == attempts:
+                raise
+            print(f"Verification attempt {attempt} failed: {type(exc).__name__}: {exc}; retrying")
+            sleep(delay)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=["package", "verify", "export"])
@@ -447,6 +462,10 @@ def main(argv=None):
     parser.add_argument("--approval", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--rollback", action="store_true")
+    parser.add_argument("--attempts", type=int, default=1, choices=range(1, 21), metavar="1-20")
+    parser.add_argument(
+        "--retry-delay", type=int, default=30, choices=range(0, 301), metavar="0-300"
+    )
     args = parser.parse_args(argv)
     try:
         config = strict_json(args.config.read_bytes(), 128 * 1024)[args.channel]
@@ -486,11 +505,16 @@ def main(argv=None):
             )
             shutil.copytree(args.ledger / "public", args.output)
         else:
-            metadata = verify_deployed(
-                origin, args.channel, keys, (args.ledger / "public/current.json").read_bytes()
+            metadata = verify_with_retries(
+                origin,
+                args.channel,
+                keys,
+                (args.ledger / "public/current.json").read_bytes(),
+                args.attempts,
+                args.retry_delay,
             )
             print(f"Verified deployed release {metadata['sequence']}: {origin}{metadata['path']}")
-    except (OSError, ValueError, KeyError, TypeError, InvalidSignature) as exc:
+    except (OSError, ValueError, KeyError, TypeError, InvalidSignature, HTTPException) as exc:
         # Never echo the signing key or raw GitHub authentication responses.
         print(f"Publication {args.command} failed: {type(exc).__name__}: {exc}")
         return 1

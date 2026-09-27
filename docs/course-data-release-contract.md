@@ -103,7 +103,9 @@ encoding, checks actual received byte counts rather than trusting
 Content-Length, uses a 30-second transfer budget with a five-second socket
 timeout, and sends no cookies, authentication or referrer. It fetches only
 the fixed pointer and its signed immutable paths. A mismatched pointer or
-partial generation fails publication verification.
+partial generation fails publication verification. The workflow repeats the
+complete verification up to six times, 30 seconds apart, to allow for hosting
+cache propagation; no attempt accepts a partial or unexpected generation.
 
 GitHub Pages controls response cache headers; custom header behavior is not
 claimed. Publisher pointer requests use `Cache-Control: no-cache`; the client

@@ -79,6 +79,8 @@ Untrusted PRs do not run this manual publication workflow.
 6. Pages deploys the complete public tree in one artifact. A separate job
    fetches the fixed HTTPS pointer, payload and immutable envelope, requiring
    the expected exact pointer bytes, valid signature, length, digest and schema.
+   While hosting caches may still serve the previous pointer, it repeats the
+   complete check up to six times, 30 seconds apart, before failing.
 7. Only a successful **verify** job means publication succeeded. The final
    report explicitly distinguishes preparation, deployment and verification.
 

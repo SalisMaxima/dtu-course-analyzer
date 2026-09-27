@@ -243,6 +243,34 @@ def test_deployed_smoke_check_detects_mixed_generation_and_http_failure(release)
     assert (public / "current.json").read_bytes() == expected
 
 
+def test_verification_retries_while_hosting_serves_the_previous_generation(release):
+    from dtu_analyzer.scripts.publish_course_data import verify_with_retries
+
+    package_release(**release)
+    public = release["ledger"] / "public"
+    previous = (public / "current.json").read_bytes()
+    package_release(**{**release, "request_id": "test-2"})
+    expected = (public / "current.json").read_bytes()
+    stale, sleeps = [2], []
+
+    def fetch(url, limit):
+        if url.endswith("current.json") and stale[0]:
+            stale[0] -= 1
+            return previous
+        return (public / url.removeprefix(ORIGIN)).read_bytes()
+
+    metadata = verify_with_retries(
+        ORIGIN, "staging", release["keys"], expected, 3, 7, fetch, sleeps.append
+    )
+    assert metadata["sequence"] == 2 and sleeps == [7, 7]
+    stale[0], sleeps[:] = 3, []
+    with pytest.raises(ValueError, match="expected release"):
+        verify_with_retries(
+            ORIGIN, "staging", release["keys"], expected, 3, 7, fetch, sleeps.append
+        )
+    assert sleeps == [7, 7]
+
+
 @pytest.mark.parametrize(
     "origin",
     [

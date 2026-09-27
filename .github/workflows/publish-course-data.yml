@@ -174,7 +174,7 @@ jobs:
   verify:
     needs: [prepare, deploy]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
     env:
@@ -193,10 +193,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install --require-hashes -r requirements-release.txt
+      # Hosting caches may briefly serve the previous pointer; each attempt repeats every check.
       - name: Verify the public HTTPS pointer and immutable payload
         run: |
           python -m dtu_analyzer.scripts.publish_course_data verify \
-            --ledger release-ledger --channel "$RELEASE_CHANNEL"
+            --ledger release-ledger --channel "$RELEASE_CHANNEL" --attempts 6 --retry-delay 30
           echo 'Publication succeeded: the deployed HTTPS pointer, signature, schema and exact payload bytes were verified.' >> "$GITHUB_STEP_SUMMARY"
 
   report:
