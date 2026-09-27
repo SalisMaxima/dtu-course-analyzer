@@ -2,6 +2,57 @@
 
 Recorded 2026-09-14 for `feature/secure-course-data-updates`.
 
+## Pre-testing review — 2026-09-27
+
+A review of the complete branch diff (publisher, workflows, client and documents)
+before installed-browser and staging testing, starting from `3859fa4`. It found
+and fixed the following; each fix has a regression test that fails on `3859fa4`.
+
+| Finding | Effect | Change |
+| --- | --- | --- |
+| Every background start and privileged status/settings message re-created the one-shot alarm at now + 60 s | A due automatic check could be postponed repeatedly; reproduced in Chromium | A pending alarm is kept unless it is later than the persisted due time |
+| The consent page reopened on every extension update for users who had declined | Repeated unsolicited tabs | Prompt only until a choice is recorded under the current disclosure revision |
+| A failed or abnormally closed IndexedDB connection was kept | Cache unusable until the background restarted | Reopen on next use |
+| Refused cache writes lost their reason | "Course cache write failed" instead of the cancellation reason | Preserve the reason |
+| Cancelled attempts counted as host failures; error kept after opting out | Longer cooldown; "update unavailable" shown in bundled-only mode | Superseded attempts are not failures; opting out clears the error |
+| One message covered every skipped check | "Downloads are disabled or the next check is not due yet" during a manual cooldown | Specific reasons, including the remaining cooldown |
+| Post-deployment verification failed on the first stale pointer | Hosting cache lag would fail a publication and require a re-approved rerun | Up to six complete checks, 30 seconds apart |
+
+| Check | Result |
+| --- | --- |
+| Python suite, CPython 3.12.3 (CI version) | 345 passed |
+| JavaScript suite, Node 20.20.2 (CI major) and 22.22.2 | 58 passed |
+| Mozilla addons-linter 10.12.0, offline and remote-enabled Firefox packages | 0 errors; the same 2 compatibility warnings |
+| actionlint 1.7.7, promotion/publication/test workflows | Passed |
+| Pinned action commits | Match the tags in their comments: checkout v4.4.0, setup-python v5.6.0, github-script v7.1.0, download-artifact v4.3.0, upload-artifact v4.6.2, deploy-pages v4.0.5 |
+| Locked signing dependencies | Install with `--require-hashes` on CPython 3.12 x86_64; publication and promotion import no scraper dependencies |
+| Publisher `export` and `verify` commands | Exported the allowlisted tree and verified a local HTTPS host |
+
+A local Chromium 141 run (Playwright, headless) used a throwaway staging
+RSA-3072 key, a local HTTPS release host and a stand-in DTU course page:
+
+- As built, the consent page opened on installation, no dataset request was made
+  before consent, and course and database pages used bundled data. Automation
+  cannot answer the host-permission prompt.
+- With host access pre-granted, opting in made no request. A manual check
+  activated release 1 using only `current.json` and its immutable payload, without
+  cookie, referrer or authorization headers.
+- Release 2 (one course renamed, one removed) refreshed the database and an open
+  course page to the same generation. The removed course stayed visible in the
+  comparison as not in this dataset, and an explicitly selected exam was kept.
+- A tampered payload, HTTP 500 and a redirect kept release 2. An older signed
+  pointer was rejected. Clearing fell back to bundled data with the high watermark
+  kept, then recovered the same sequence. A cold restart revalidated the cached
+  release, and bundled-only mode applied immediately.
+- In automatic mode a due alarm activated release 4 within 30 seconds and re-armed
+  about a day ahead. Before the fix, it did not fire while status requests continued.
+- Bumping the extension version (an update) did not reopen the consent page after
+  a recorded refusal; an older disclosure revision reopened it.
+
+Not covered: installed Firefox (Mozilla download hosts are blocked in this
+environment), real permission prompts, browser quotas, live protected staging
+publication and store review. The outstanding acceptance work below still applies.
+
 ## Browser compliance fixes — 2026-09-14
 
 The follow-up to the preserved baseline below corrects the Firefox manifest,

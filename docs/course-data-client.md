@@ -40,7 +40,10 @@ metadata; the manifests enforce browser minimums. Existing archived
 A new installation or upgrade from the previous disclosure starts with both
 download consent and automatic checks disabled. Consent revision 2 is persisted;
 later code-only upgrades retain this consent. Configured builds show the database
-consent page on installation or upgrade when current consent is absent. That focused page explains the host, transmitted
+consent page on installation or upgrade until a choice is recorded under the current
+disclosure. Choosing "Use bundled data only" or turning downloads off is also a
+recorded choice, so later updates do not reopen the page; a new disclosure revision
+asks again. That focused page explains the host, transmitted
 network metadata and the continued availability of bundled-only use.
 
 Opting in requests the configured host permission directly from the user's gesture.
@@ -76,10 +79,16 @@ revalidates caches, times out each transfer after 30 seconds and bounds actual
 streamed/decompressed bytes to 32 KiB metadata and 16 MiB payload.
 
 Automatic checks are at least 24 hours apart, with up to one hour of jitter.
-One-shot alarms and persisted timing survive sleep/restarts. Manual checks can
+One-shot alarms and persisted timing survive sleep/restarts. A pending alarm is
+never postponed by background restarts or status requests; an early alarm is
+skipped by the engine and re-armed. Manual checks can
 bypass the daily interval but use a five-minute minimum cooldown, increasing
-to at most one hour after repeated failures. Failures do not trigger rapid
+to at most one hour after repeated failures. A skipped check states why:
+downloads are off, the automatic check is not due, or the manual cooldown is
+active. Failures do not trigger rapid
 automatic retries. There is one in-flight operation per background instance.
+An attempt superseded by a consent change or cache clear is not counted as a
+host failure, and withdrawing consent clears the last update error.
 
 ## Verification, storage and rendering
 
@@ -164,8 +173,12 @@ needs installed-browser testing. Successful lint is not store approval.
    in the branch requirements. Do not close #30 or claim store acceptance early.
 
 Browser binary installation was attempted in this execution environment but the
-Playwright CDN downloads timed out. Installed Chrome/Firefox tests and live
-protected staging publication therefore remain explicitly unverified.
+Playwright CDN downloads timed out. A later review ran a local Chromium 141
+lifecycle against a throwaway staging key and a local HTTPS release host; see the
+[validation record](secure-course-data-validation.md#pre-testing-review--2026-09-27).
+That run pre-granted host access because automation cannot answer the permission
+prompt, and it is not a substitute for steps 1–5. Installed Firefox, the real
+permission prompts and live protected staging publication remain unverified.
 
 ## Store submission disclosures
 
