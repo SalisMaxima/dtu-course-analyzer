@@ -40,9 +40,15 @@
   async function schedule() {
     const engine = await ready;
     const s = await engine.cache.state();
-    if (engine.configured() && s.consented && s.automatic) {
-      chrome.alarms.create(alarmName, { when: Math.max(Date.now() + 60000, s.nextDue || 0, s.manualAfter || 0) });
-    } else chrome.alarms.clear(alarmName);
+    if (!engine.configured() || !s.consented || !s.automatic) {
+      chrome.alarms.clear(alarmName);
+      return;
+    }
+    const when = Math.max(Date.now() + 60000, s.nextDue || 0, s.manualAfter || 0);
+    const pending = await new Promise(resolve => chrome.alarms.get(alarmName, resolve));
+    // Worker restarts and status requests must not keep postponing a pending check.
+    // An early alarm is harmless: the engine skips checks that are not yet due.
+    if (!pending || pending.scheduledTime > when) chrome.alarms.create(alarmName, { when });
   }
   function privileged(sender) {
     return sender.id === chrome.runtime.id && typeof sender.url === "string" && sender.url.split("#")[0] === chrome.runtime.getURL("db.html");
@@ -79,7 +85,7 @@
   chrome.runtime.onInstalled.addListener(details => {
     if (details.reason !== "install" && details.reason !== "update") return;
     ready.then(async engine => {
-      if (engine.configured() && !(await engine.cache.state()).consented) chrome.tabs.create({ url: chrome.runtime.getURL("db.html"), active: true });
+      if (await engine.consentDecisionPending()) chrome.tabs.create({ url: chrome.runtime.getURL("db.html"), active: true });
       resume();
     }).catch(() => {});
   });

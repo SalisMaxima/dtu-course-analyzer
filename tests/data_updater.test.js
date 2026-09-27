@@ -131,9 +131,58 @@ test("revoking consent during a download cancels activation", async () => {
     if (url.endsWith("data.json")) await h.engine.preferences(false, false);
     return original(url, options);
   };
-  assert.equal((await h.engine.check(true)).updated, false);
-  assert.equal((await h.cache.state()).highest, 0);
+  const result = await h.engine.check(true);
+  assert.equal(result.updated, false);
+  assert.match(result.reason, /cancelled or superseded/);
+  const state = await h.cache.state();
+  assert.equal(state.highest, 0);
+  // A user cancellation is not reported or rate-limited as a host failure.
+  assert.equal(state.failures, 0); assert.equal(state.error, null);
   assert.equal((await h.engine.read()).source, "bundled");
+});
+test("skipped checks explain why no request was made", async () => {
+  const h = await harness();
+  assert.match((await h.engine.check(true)).reason, /not enabled/);
+  await h.engine.preferences(true, false);
+  assert.match((await h.engine.check()).reason, /automatic check is not due/);
+  assert.equal((await h.engine.check(true)).updated, true);
+  assert.match((await h.engine.check(true)).reason, /try again in 5 min/);
+  assert.equal(h.calls.length, 2);
+});
+test("opting out clears a stale update error", async () => {
+  const h = await harness();
+  await h.engine.preferences(true, false);
+  h.set(new Error("offline"));
+  await h.engine.check(true);
+  assert.match((await h.cache.state()).error, /offline/);
+  await h.engine.preferences(false, false);
+  assert.equal((await h.cache.state()).error, null);
+  assert.equal((await h.engine.read()).source, "bundled");
+});
+test("consent prompt is pending only until a choice is recorded under the current disclosure", async () => {
+  const h = await harness();
+  assert.equal(await h.engine.consentDecisionPending(), true);
+  await h.engine.preferences(false, false);
+  assert.equal(await h.engine.consentDecisionPending(), false);
+  await h.cache.change(s => ({ ...s, consentRevision: 1 }));
+  assert.equal(await h.engine.consentDecisionPending(), true);
+  await h.engine.preferences(true, false);
+  assert.equal(await h.engine.consentDecisionPending(), false);
+  assert.equal(await new Engine({ ...h.options, config: { ...config, origin: null } }).consentDecisionPending(), false);
+});
+test("a failed cache open is retried instead of disabling the cache until restart", async () => {
+  const real = new IDBFactory();
+  let failures = 1;
+  global.indexedDB = { open: (...args) => {
+    if (!failures) return real.open(...args);
+    failures--;
+    const request = {};
+    setImmediate(() => { request.error = new Error("transient open failure"); request.onerror(); });
+    return request;
+  } };
+  const cache = new Cache();
+  await assert.rejects(cache.state(), /transient open failure/);
+  assert.equal((await cache.state()).highest, 0);
 });
 test("requests omit credentials, referrers and all browsing information", async () => {
   const h = await harness();

@@ -6,23 +6,34 @@
   const defaults = () => ({ consented: false, automatic: false, consentRevision: 0, highest: 0, epoch: 0, failures: 0, nextDue: 0, manualAfter: 0, lastSuccess: null });
   class Cache {
     async open() {
-      if (!this.db) this.db = new Promise((resolve, reject) => {
-        const request = indexedDB.open("dtu-course-data-v1", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("records");
-        request.onsuccess = () => { request.result.onversionchange = () => request.result.close(); resolve(request.result); };
-        request.onerror = () => reject(request.error);
-        request.onblocked = () => reject(new Error("Course cache is blocked by another extension page"));
-      });
+      if (!this.db) {
+        const pending = this.db = new Promise((resolve, reject) => {
+          const request = indexedDB.open("dtu-course-data-v1", 1);
+          request.onupgradeneeded = () => request.result.createObjectStore("records");
+          request.onsuccess = () => {
+            const db = request.result;
+            // A closed or failed connection is reopened on next use, not kept for the background's lifetime.
+            db.onversionchange = () => { db.close(); if (this.db === pending) this.db = null; };
+            db.onclose = () => { if (this.db === pending) this.db = null; };
+            resolve(db);
+          };
+          request.onerror = () => reject(request.error);
+          request.onblocked = () => reject(new Error("Course cache is blocked by another extension page"));
+        });
+        pending.catch(() => { if (this.db === pending) this.db = null; });
+      }
       return this.db;
     }
     async transaction(mode, work) {
       const db = await this.open();
       return new Promise((resolve, reject) => {
         const tx = db.transaction("records", mode), records = tx.objectStore("records");
-        let result;
+        let result, failure;
+        // Abort with the original reason so callers can report why a write was refused.
+        const fail = error => { failure = failure || error; try { tx.abort(); } catch (_) { /* already finished */ } };
         tx.oncomplete = () => resolve(result);
-        tx.onerror = tx.onabort = () => reject(tx.error || new Error("Course cache write failed"));
-        try { work(records, value => { result = value; }, tx); } catch (e) { tx.abort(); reject(e); }
+        tx.onerror = tx.onabort = () => reject(failure || tx.error || new Error("Course cache write failed"));
+        try { work(records, value => { result = value; }, fail); } catch (e) { fail(e); }
       });
     }
     get(key) {
@@ -42,13 +53,13 @@
     }
     async change(fn) {
       await this.state();
-      return this.transaction("readwrite", (records, done, tx) => {
+      return this.transaction("readwrite", (records, done, fail) => {
         const request = records.get("state");
         request.onsuccess = () => {
           try {
             const next = fn(request.result || defaults());
             records.put(next, "state"); done(next);
-          } catch (e) { tx.abort(); }
+          } catch (e) { fail(e); }
         };
       });
     }
@@ -57,7 +68,7 @@
     }
     async activate(record, metadata, envelopeHash, epoch) {
       await this.state();
-      return this.transaction("readwrite", (records, done, tx) => {
+      return this.transaction("readwrite", (records, done, fail) => {
         const request = records.get("state");
         request.onsuccess = () => {
           try {
@@ -71,7 +82,7 @@
               highestDigest: metadata.sha256, highestEnvelope: envelopeHash,
               lastSuccess: Date.now(), failures: 0, error: null };
             records.put(next, "state"); done(next);
-          } catch (e) { tx.abort(); }
+          } catch (e) { fail(e); }
         };
       });
     }
@@ -92,6 +103,10 @@
       this.flight = null; this.snapshot = null;
     }
     configured() { return Boolean(this.config.origin && Object.keys(this.config.trusted_keys).length); }
+    // Any recorded choice under the current disclosure, including a refusal, is not prompted again.
+    async consentDecisionPending() {
+      return this.configured() && (await this.cache.state()).consentRevision !== CONSENT_REVISION;
+    }
     async read() {
       let s;
       try {
@@ -124,7 +139,8 @@
     async preferences(consented, automatic) {
       DTURelease.assert(typeof consented === "boolean" && typeof automatic === "boolean", "Invalid download preference");
       if (!consented && this.controller) this.controller.abort();
-      const state = await this.cache.change(s => ({ ...s, consented, consentRevision: CONSENT_REVISION, automatic: consented && automatic, epoch: s.epoch + 1 }));
+      const state = await this.cache.change(s => ({ ...s, consented, consentRevision: CONSENT_REVISION, automatic: consented && automatic,
+        epoch: s.epoch + 1, error: consented ? s.error : null }));
       this.snapshot = null;
       await this.notify();
       return state;
@@ -143,15 +159,23 @@
     async perform(manual) {
       if (!this.configured()) return { updated: false, reason: "Remote updates are not configured in this build." };
       const time = this.now();
-      let reserved = false;
+      let reserved = false, reason = "Downloads are not enabled.";
       const state = await this.cache.change(s => {
         if (s.consentRevision !== CONSENT_REVISION) return { ...s, consented: false, automatic: false };
-        if (!s.consented || (!manual && (!s.automatic || time < s.nextDue)) || time < s.manualAfter) return s;
+        if (!s.consented) return s;
+        if (!manual && (!s.automatic || time < s.nextDue)) {
+          reason = "The next automatic check is not due yet.";
+          return s;
+        }
+        if (time < s.manualAfter) {
+          reason = "Checked recently; try again in " + Math.ceil((s.manualAfter - time) / 60000) + " min.";
+          return s;
+        }
         reserved = true;
         return { ...s, lastAttempt: time, nextDue: time + DAY + Math.floor(this.random() * 3600000),
           manualAfter: time + Math.min(3600000, 300000 * (2 ** Math.min(s.failures || 0, 4))) };
       });
-      if (!reserved) return { updated: false, reason: "Downloads are disabled or the next check is not due yet." };
+      if (!reserved) return { updated: false, reason };
       this.controller = new AbortController();
       try {
         const envelope = await DTURelease.download(DTURelease.origin(this.config.origin) + "current.json",
@@ -179,8 +203,9 @@
         await this.notify().catch(() => {});
         return { updated: true, reason: "Verified course data activated." };
       } catch (error) {
-        await this.cache.change(s => ({ ...s, failures: Math.min(10, (s.failures || 0) + 1),
-          error: "Update failed; previous or bundled data remains available. " + error.message }));
+        // A consent change or cache clear during the attempt supersedes it; it is not a host failure.
+        await this.cache.change(s => s.epoch !== state.epoch ? s : { ...s, failures: Math.min(10, (s.failures || 0) + 1),
+          error: "Update failed; previous or bundled data remains available. " + error.message });
         await this.notify().catch(() => {});
         return { updated: false, reason: error.message };
       }

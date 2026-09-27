@@ -5,17 +5,19 @@ const path = require("node:path");
 const vm = require("node:vm");
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
-async function background() {
-  const h = { permissions: {}, host: true, network: 0, preferences: [], tabs: [], checks: 0 };
+async function background(initial = {}) {
+  const h = { permissions: {}, host: true, network: 0, preferences: [], tabs: [], checks: 0, alarms: [], ...initial };
   const events = {};
   const event = name => ({ addListener: fn => { events[name] = fn; } });
   let options;
   class Engine {
     constructor(o) {
       options = o; this.config = o.config;
-      this.cache = { state: async () => ({ consented: h.consented !== false, automatic: false }) };
+      this.cache = { state: async () => ({ consented: h.consented !== false, automatic: Boolean(h.automatic),
+        nextDue: h.nextDue || 0, manualAfter: 0 }) };
     }
     configured() { return true; }
+    consentDecisionPending() { return Promise.resolve(Boolean(h.pending)); }
     preferences(...args) { h.preferences.push(args); return Promise.resolve(); }
     check() { h.checks++; return Promise.resolve(); }
   }
@@ -23,7 +25,9 @@ async function background() {
     runtime: { id: "test", getURL: p => "moz-extension://test/" + p,
       getManifest: () => ({ version: "2.6.0" }), onMessage: event("message"),
       onStartup: event("startup"), onInstalled: event("installed") },
-    alarms: { onAlarm: event("alarm"), create() {}, clear() {} },
+    alarms: { onAlarm: event("alarm"), get: (name, cb) => cb(h.alarm),
+      create: (name, info) => { h.alarms.push(info.when); h.alarm = { name, scheduledTime: info.when }; },
+      clear: () => { h.alarm = undefined; } },
     permissions: { onRemoved: event("removed"), contains: (_, cb) => cb(h.host),
       getAll: cb => {
         if (h.permissionError) chrome.runtime.lastError = { message: "API failure" };
@@ -77,16 +81,35 @@ test("revoking download permission disables preferences; unrelated telemetry doe
   await tick(); assert.deepEqual(h.preferences, [[false, false], [false, false]]);
 });
 
-test("consent page opens only for installation or extension update without current consent", async () => {
+test("consent page opens only for installation or extension update without a recorded choice", async () => {
   const h = await background();
-  h.consented = false;
+  h.pending = true;
   h.events.installed({ reason: "chrome_update" });
   await tick(); assert.equal(h.tabs.length, 0); assert.equal(h.checks, 0);
   h.events.installed({ reason: "update" });
   await tick(); assert.equal(h.tabs.length, 1); assert.equal(h.tabs[0].active, true);
-  h.consented = true;
+  // Accepting or declining under the current disclosure is not prompted again on later updates.
+  h.pending = false;
   h.events.installed({ reason: "update" });
   await tick(); assert.equal(h.tabs.length, 1);
+});
+
+test("worker restarts do not postpone a pending automatic check", async () => {
+  const soon = Date.now() + 30000;
+  const kept = await background({ automatic: true, alarm: { name: "dtu-course-data-check", scheduledTime: soon } });
+  assert.deepEqual(kept.alarms, []); assert.equal(kept.alarm.scheduledTime, soon);
+  const due = Date.now() + 86400000;
+  const late = await background({ automatic: true, nextDue: due, alarm: { name: "dtu-course-data-check", scheduledTime: due + 86400000 } });
+  assert.deepEqual(late.alarms, [due]);
+  const missing = await background({ automatic: true });
+  assert.equal(missing.alarms.length, 1); assert(missing.alarm.scheduledTime >= Date.now() + 59000);
+  // After the one-shot alarm fires, the next check is scheduled again.
+  missing.alarm = undefined;
+  missing.events.alarm({ name: "dtu-course-data-check" });
+  await tick(); await tick();
+  assert.equal(missing.checks, 1); assert.equal(missing.alarms.length, 2);
+  const manual = await background({ automatic: false, alarm: { name: "dtu-course-data-check", scheduledTime: soon } });
+  assert.equal(manual.alarm, undefined);
 });
 
 test("consent UI requests only download-related permissions and preserves refusal", async () => {
