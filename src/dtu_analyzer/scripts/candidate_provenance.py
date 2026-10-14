@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 
 PROMOTION_FILES = ("extension/db/data.json", "data/coursenumbers.txt", "data/coursedic.json")
+# Data refreshed outside promotion; updating it must not invalidate pending candidates
+LIVE_DATA_FILES = {"extension/db/data.json", "extension/db/similar.json"}
 
 
 def sha256(content):
@@ -24,7 +26,7 @@ def runtime_hash(root):
                 "pyproject.toml", "requirements.txt", ".github/workflows/scrape.yml",
                 ".github/workflows/promote-course-data.yml").split("\0")
     files = {p: sha256((Path(root) / p).read_bytes()) for p in sorted(filter(None, paths))
-             if p != "extension/db/data.json"}
+             if p not in LIVE_DATA_FILES}
     return sha256(json.dumps(files, sort_keys=True).encode())
 
 

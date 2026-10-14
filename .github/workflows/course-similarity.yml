@@ -1,0 +1,88 @@
+name: Build Course Similarity
+
+# Collects course descriptions and builds extension/db/similar.json with
+# EmbeddingGemma 2. The output is uploaded for review; commit it by hand once
+# the report's sample neighbours look right.
+
+on:
+  workflow_dispatch:
+    inputs:
+      top_k:
+        description: 'Neighbours stored per course'
+        required: false
+        default: '10'
+
+permissions:
+  contents: read
+
+jobs:
+  build-similarity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      MAX_CONCURRENT: "2"
+      TOP_K: ${{ inputs.top_k }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch keeps the install small; the runner has no GPU
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[similarity]"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium
+
+      - name: Authenticate and get cookie
+        env:
+          DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
+          DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
+        run: dtu-auth
+
+      - name: Collect course descriptions
+        run: dtu-scrape-details --output dist/similarity/course_details.json
+
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-embeddinggemma-2
+
+      - name: Build similar courses
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: >-
+          dtu-build-similarity --details dist/similarity/course_details.json
+          --output dist/similarity/similar.json --report dist/similarity/report.md
+          --top-k "$TOP_K"
+
+      - name: Summarise
+        if: success()
+        run: cat dist/similarity/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload similarity data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-similarity
+          path: dist/similarity/
+          retention-days: 30
+          if-no-files-found: warn

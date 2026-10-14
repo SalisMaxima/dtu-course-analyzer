@@ -69,6 +69,11 @@ An alternative Firefox version is also available [here](https://addons.mozilla.o
 - Selections persist locally and stay synchronized across extension tabs
 - Compare grades, pass rate, rating, workload, lazy score, and participant counts
 
+**Similar Courses:**
+- Course pages list courses with the most similar descriptions, with their rating and workscore percentiles
+- Courses marked "Not applicable together with" are excluded, since DTU treats them as equivalent
+- See [docs/course-similarity.md](docs/course-similarity.md) for how the list is built
+
 **Metrics Calculated:**
 All metrics are calculated based on historical data (higher is better):
 - **Average grade**: Mean grade across all exam instances

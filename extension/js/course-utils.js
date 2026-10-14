@@ -157,6 +157,24 @@
     });
   }
 
+  // Neighbours from db/similar.json that the bundled dataset can describe
+  function getSimilarCourses(similar, db, courseId, limit = 5) {
+    const entries = similar && similar.courses && similar.courses[courseId];
+    if (!Array.isArray(entries) || !db) return [];
+    return entries
+      .filter((entry) => Array.isArray(entry) && isValidCourseId(entry[0])
+        && entry[0] !== courseId && Object.hasOwn(db, entry[0]))
+      .slice(0, limit)
+      .map(([id, score]) => ({ id, score: Number(score), course: db[id] }));
+  }
+
+  // name_en carries a leading course number; name (Danish) does not
+  function getCourseTitle(course, language = "en") {
+    const english = String((course && course.name_en) || "").replace(/^[0-9A-Z]{5}\s+/, "");
+    const danish = String((course && course.name) || "");
+    return language === "da" ? danish || english : english || danish;
+  }
+
   const api = {
     COMPARISON_KEY,
     GRADE_ORDER,
@@ -167,6 +185,8 @@
     getMetricColor,
     isValidCourseId,
     getCourseIdFromPath,
+    getCourseTitle,
+    getSimilarCourses,
     normalizeGrades,
     normalizeSelection,
     readSelection,

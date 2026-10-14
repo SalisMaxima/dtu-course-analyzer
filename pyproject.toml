@@ -45,6 +45,13 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.1.0",
     "mypy>=1.7.0",
+    "numpy>=1.26",
+]
+# Course similarity (dtu-build-similarity): EmbeddingGemma 2 via sentence-transformers.
+# Install a CPU-only torch first to avoid the multi-GB CUDA wheels.
+similarity = [
+    "numpy>=1.26",
+    "sentence-transformers>=5.1.0",
 ]
 
 [project.urls]
@@ -61,6 +68,8 @@ dtu-scrape-threaded = "dtu_analyzer.scrapers.threaded_scraper:main"
 dtu-validate = "dtu_analyzer.validation.validator:main"
 dtu-analyze = "dtu_analyzer.analysis.analyzer:main"
 dtu-check-updates = "dtu_analyzer.scripts.check_for_updates:main"
+dtu-scrape-details = "dtu_analyzer.scripts.scrape_course_details:main"
+dtu-build-similarity = "dtu_analyzer.scripts.build_course_similarity:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

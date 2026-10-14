@@ -34,7 +34,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "db/data.json"
+        "db/data.json",
+        "db/similar.json"
       ],
       "matches": [
         "https://kurser.dtu.dk/*"

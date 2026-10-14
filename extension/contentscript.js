@@ -19,6 +19,7 @@ const METRIC_HELP = {
   "Lazyscore percentile": "The pass-rate percentile and lower-workload percentile are combined with equal weight, then courses are ranked again. The displayed value is that final percentile, not simply the average of the two inputs. Higher indicates a combination of higher pass rates and lower reported workload — the beer-friendly score. 🍺 This score comes from the bundled course-score dataset and does not change when you switch exams.",
 };
 METRIC_HELP["Percent passed"] = METRIC_HELP["Percentage passed"];
+METRIC_HELP["Similar courses"] = "Courses whose catalogue descriptions (objectives, learning objectives and content) are closest in meaning to this one, ranked by the EmbeddingGemma 2 text-embedding model. Courses listed under ‘Not applicable together with’ are left out, because DTU treats them as equivalent. Similarity uses the course text only: check ECTS, schedule and prerequisites before choosing.";
 
 function openMetricHelp(label, explanation) {
   const dialog = document.createElement("dialog");
@@ -62,6 +63,17 @@ async function loadData() {
   }
 }
 
+// Optional similarity data - the panel works without it
+async function loadSimilar() {
+  try {
+    const response = await fetch(chrome.runtime.getURL("db/similar.json"));
+    return response.ok ? await response.json() : null;
+  } catch (e) {
+    console.info("DTU Analyzer: No similar-course data:", e.message);
+    return null;
+  }
+}
+
 // 4. UI Generation Functions
 
 // Find where to insert the stats table, with fallbacks for DTU markup changes
@@ -78,7 +90,7 @@ function findInsertionPoint() {
   return null;
 }
 
-function presentData(data, courseId, loadError) {
+function presentData(data, courseId, loadError, related = null) {
   const insertion = findInsertionPoint();
 
   // Guard clause if the page structure changes and no anchor is found
@@ -172,6 +184,10 @@ function presentData(data, courseId, loadError) {
 
   // Only offer comparison for courses the packaged dataset can actually render
   if (data) addComparisonControls(tbody, courseId);
+
+  if (data && related) {
+    addSimilarCourses(tbody, DTUAnalyzer.getSimilarCourses(related.similar, related.db, courseId));
+  }
 
   // Add Footer Link
   const link = document.createElement("a");
@@ -522,6 +538,45 @@ function addComparisonControls(tbody, courseId) {
   refresh();
 }
 
+function addSimilarCourses(tbody, items) {
+  if (!items.length) return;
+  const note = document.createElement("span");
+  note.textContent = "by course description";
+  note.style.fontSize = "0.85em";
+  note.style.color = "#666";
+  addRow(tbody, "Similar courses", note);
+
+  const language = String(document.documentElement.lang || "").toLowerCase().startsWith("da") ? "da" : "en";
+  const pageLanguage = new URLSearchParams(window.location.search).get("lang");
+  items.forEach(({ id, course }) => {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 2;
+    td.style.paddingTop = "2px";
+    td.style.paddingBottom = "2px";
+
+    const url = new URL(`/course/${id}`, window.location.origin);
+    if (pageLanguage) url.searchParams.set("lang", pageLanguage);
+    const link = document.createElement("a");
+    link.href = url.href;
+    link.textContent = `${id} ${DTUAnalyzer.getCourseTitle(course, language)}`.trim();
+    td.appendChild(link);
+
+    const metrics = [["Rating", "qualityscore"], ["Workscore", "workload"]]
+      .filter(([, key]) => Number.isFinite(Number(course[key])) && course[key] !== null)
+      .map(([label, key]) => `${label} ${Math.round(Number(course[key]))}%`);
+    if (metrics.length) {
+      const detail = document.createElement("span");
+      detail.textContent = ` · ${metrics.join(" · ")}`;
+      detail.style.fontSize = "0.85em";
+      detail.style.color = "#666";
+      td.appendChild(detail);
+    }
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  });
+}
+
 function addRow(tbody, contentLeft, value = "", unit = "", colored = false, maxVal = 1) {
   const tr = document.createElement("tr");
 
@@ -593,7 +648,7 @@ async function main() {
       return;
     }
 
-    const result = await loadData();
+    const [result, similar] = await Promise.all([loadData(), loadSimilar()]);
     if (!result.ok) {
       presentData(null, courseId, result.reason);
       return;
@@ -601,7 +656,7 @@ async function main() {
 
     const courseData = result.db[courseId];
     if (courseData) {
-      presentData(courseData, courseId);
+      presentData(courseData, courseId, undefined, similar ? { db: result.db, similar } : null);
     } else {
       console.info("DTU Analyzer: No data available for course " + courseId);
       presentData(null, courseId);

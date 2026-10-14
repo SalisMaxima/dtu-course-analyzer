@@ -180,3 +180,27 @@ test("round-trips a selection through chrome.storage", async () => {
   assert.deepEqual(await utils.readSelection(), ["11111", "22222"]);
   delete globalThis.chrome;
 });
+
+test("similar courses skip unknown, invalid and self entries and respect the limit", () => {
+  const db = {
+    "01001": { name_en: "01001 Mathematics 1a" },
+    "01005": { name_en: "01005 Advanced Engineering Mathematics 1", qualityscore: 70 },
+    "02402": { name: "Statistik" },
+    "02450": { name_en: "02450 Introduction to Machine Learning" },
+  };
+  const similar = { courses: { "01001": [["01001", 1], ["bad", 0.9], ["01005", 0.8], ["99999", 0.7], ["02402", 0.6], ["02450", 0.5]] } };
+  const result = utils.getSimilarCourses(similar, db, "01001", 2);
+  assert.deepEqual(result.map(item => item.id), ["01005", "02402"]);
+  assert.equal(result[0].score, 0.8);
+  assert.equal(result[0].course.qualityscore, 70);
+  assert.deepEqual(utils.getSimilarCourses(null, db, "01001"), []);
+  assert.deepEqual(utils.getSimilarCourses({ courses: {} }, db, "01001"), []);
+});
+
+test("course titles drop the course number and fall back across languages", () => {
+  const course = { name_en: "01001 Mathematics 1a", name: "Matematik 1a" };
+  assert.equal(utils.getCourseTitle(course, "en"), "Mathematics 1a");
+  assert.equal(utils.getCourseTitle(course, "da"), "Matematik 1a");
+  assert.equal(utils.getCourseTitle({ name_en: "42S01 Example" }, "da"), "Example");
+  assert.equal(utils.getCourseTitle({ name: "Statistik" }, "en"), "Statistik");
+});
