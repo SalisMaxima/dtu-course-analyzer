@@ -112,9 +112,8 @@ REGULAR_SEASON_OVERRIDES.update({
 
 # Explicit default exams. Many courses show a suppressed Winter-2026 histogram
 # (apparently a one-person exam) that would otherwise become the default.
-# None means: show no default and let people choose an older exam.
 DEFAULT_EXAM_OVERRIDES = {
-    course: "https://karakterer.dtu.dk/Histogram/1/" + entry if entry else None
+    course: "https://karakterer.dtu.dk/Histogram/1/" + entry
     for course, entry in {
         "02234": "02234-2/Winter-2025",
         "02289": "02289/Winter-2025",
@@ -125,8 +124,12 @@ DEFAULT_EXAM_OVERRIDES = {
         "46745": "46745/Winter-2025",
         "34721": "34721/Summer-2026",
         "34723": "34723/Summer-2026",
-        "30224": None,
     }.items()
+}
+# Show no default while the reviewed exam is still the course's latest own
+# exam and still suppressed. A newer exam restores automatic selection.
+NO_DEFAULT_WHILE_SUPPRESSED = {
+    "30224": "https://karakterer.dtu.dk/Histogram/1/30224/Summer-2026",
 }
 # Explicit course evaluations, matched to the default exam's cohort. Evaluations
 # are named by calendar month (Jan 26, semester E-25); histograms by semester (v25).

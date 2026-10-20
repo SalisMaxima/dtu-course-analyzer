@@ -91,6 +91,18 @@ def test_reviewed_no_default_keeps_predecessor_history_selectable():
     assert predecessor["identity_status"] == "manually_approved_history"
 
 
+@pytest.mark.parametrize("sources, suppressed", [
+    ([("30224", "Summer-2027"), ("30224", "Summer-2026")], "Summer-2026"),
+    ([("30224", "Summer-2026")], None),
+])
+def test_no_default_expires_once_evidence_no_longer_holds(sources, suppressed):
+    evidence = report("30224", sources, "Spring")
+    if suppressed:
+        suppress(evidence, "30224", suppressed)
+    data = build_dataset({}, [evidence])["30224"]
+    assert data["default_exam_id"] == f"https://karakterer.dtu.dk/Histogram/1/{'/'.join(sources[0])}"
+    assert "too few participants" not in data["exam_default_note"]
+
 def test_only_approved_history_removals_pass():
     evidence = report("01037", [("01037", "Summer-2026")])
     candidate = build_dataset({}, [evidence])
