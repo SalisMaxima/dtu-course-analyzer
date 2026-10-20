@@ -123,14 +123,15 @@ async def test_repair_run_scrapes_only_courses_the_source_run_did_not_deliver(so
 
     async def fake_course(session, semaphore, course):
         calls.append(course)
-        return (course, {"reviews": [1, 2]}, True)
+        reviews = [{"url": f"{course}/e26"}, {"url": f"{course}/e25"}]
+        return (course, {"reviews": reviews}, {"grades": [], "reviews": [r["url"] for r in reviews]})
     monkeypatch.setattr(scraper, "process_single_course", fake_course)
 
     assert await scraper.main_async() == 0
     assert sorted(calls) == ["01002", "01003", "01004"]
     data = json.loads((tmp_path / "data/coursedic.json").read_text())
-    assert data == {"01001": {"reviews": [1]}, "01002": {"reviews": [1, 2]},
-                    "01003": {"reviews": [1, 2]}, "01004": {"reviews": [1, 2]}}
+    assert data["01001"] == {"reviews": [1]}
+    assert {c: len(data[c]["reviews"]) for c in ("01002", "01003", "01004")} == {"01002": 2, "01003": 2, "01004": 2}
     assert not (tmp_path / "data/coursedic.partial.json").exists()
 
 

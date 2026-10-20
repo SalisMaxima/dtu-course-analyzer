@@ -119,30 +119,104 @@ async def test_course_collection_recovers_wrapper_and_collects_all_three_evaluat
     assert not scraper.auth_failed
 
 
-@pytest.mark.asyncio
-async def test_courses_dropped_by_a_transient_error_are_retried_at_the_end(monkeypatch, tmp_path):
+def course_result(course, grades=(), reviews=(), links=None, **fields):
+    """A process_single_course result; links default to the collected URLs."""
+    data = {**fields}
+    if grades:
+        data["grades"] = [{"url": u, "participants": 10} for u in grades]
+    if reviews:
+        data["reviews"] = [{"url": u, "participants": 10} for u in reviews]
+    return (course, data, links or {"grades": list(grades), "reviews": list(reviews)})
+
+
+@pytest.fixture
+def scrape_dir(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "data/coursenumbers.txt").write_text("01001,01002,01003")
     (tmp_path / "secret.txt").write_text("cookie")
     monkeypatch.setattr(scraper.config.paths, "root_dir", tmp_path)
     monkeypatch.delenv("RESUME", raising=False)
-    review = {"participants": 10}
-    attempts = {
-        # Dropped entirely on the first pass (the 41468 failure mode)
-        "01001": [None, ("01001", {"reviews": [review]}, True)],
-        # Partial first pass, complete retry
-        "01002": [("01002", {"reviews": [review]}, False), ("01002", {"reviews": [review, review]}, True)],
-        # A retry that loses evaluations must not replace earlier data
-        "01003": [("01003", {"reviews": [review]}, False), None],
-    }
+    return tmp_path
+
+
+def fake_attempts(monkeypatch, attempts):
+    """Serve each course's queued results in order and record the calls."""
     calls = []
 
     async def fake_course(session, semaphore, course):
         calls.append(course)
-        return attempts[course].pop(0)
+        result = attempts[course].pop(0)
+        return await result() if callable(result) else result
     monkeypatch.setattr(scraper, "process_single_course", fake_course)
+    return calls
+
+
+@pytest.mark.asyncio
+async def test_courses_dropped_by_a_transient_error_are_retried_at_the_end(scrape_dir, monkeypatch):
+    links = {"grades": ["g26", "g25"], "reviews": ["e26", "e25"]}
+    calls = fake_attempts(monkeypatch, {
+        # Dropped entirely on the first pass (the 41468 failure mode)
+        "01001": [None, course_result("01001", reviews=["e26"])],
+        # The retry gets the other evaluation but loses grades and names
+        "01002": [course_result("01002", grades=["g26", "g25"], reviews=["e25"], links=links, name="Kursus"),
+                  course_result("01002", reviews=["e26"], links=links)],
+        # A retry that collects nothing keeps the earlier data
+        "01003": [course_result("01003", reviews=["e26"], links=links), None],
+    })
 
     assert await scraper.main_async() == 0
     assert sorted(calls) == ["01001", "01001", "01002", "01002", "01003", "01003"]
-    data = json.loads((tmp_path / "data/coursedic.json").read_text())
-    assert {c: len(d["reviews"]) for c, d in data.items()} == {"01001": 1, "01002": 2, "01003": 1}
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01001"]["reviews"]] == ["e26"]
+    # Merged by URL in overview-page order (newest first), keeping fields the retry lacked
+    assert [r["url"] for r in data["01002"]["reviews"]] == ["e26", "e25"]
+    assert [r["url"] for r in data["01002"]["grades"]] == ["g26", "g25"]
+    assert data["01002"]["name"] == "Kursus"
+    assert [r["url"] for r in data["01003"]["reviews"]] == ["e26"]
+
+
+def test_merge_keeps_records_from_both_passes():
+    previous = {"name": "Kursus", "reviews": [{"url": "A", "n": 1}, {"url": "B", "n": 1}]}
+    retry = {"reviews": [{"url": "B", "n": 2}, {"url": "C", "n": 2}]}
+    merged = scraper.merge_course_data(previous, retry, {"grades": [], "reviews": ["C", "B", "A"]})
+    assert merged == {"name": "Kursus", "reviews": [{"url": "C", "n": 2}, {"url": "B", "n": 2}, {"url": "A", "n": 1}]}
+
+
+@pytest.mark.asyncio
+async def test_resume_collects_courses_an_aborted_run_left_incomplete(scrape_dir, monkeypatch):
+    links = {"grades": [], "reviews": ["e26", "e25"]}
+    # Expire the session only once the main loop has recorded 01001 and 01002
+    recorded = []
+    both_recorded = asyncio.Event()
+    merge = scraper.merge_course_data
+
+    def recording_merge(*args):
+        recorded.append(args)
+        if len(recorded) == 2:
+            both_recorded.set()
+        return merge(*args)
+    monkeypatch.setattr(scraper, "merge_course_data", recording_merge)
+
+    async def expire_session():
+        await both_recorded.wait()
+        scraper.auth_failed = True
+        return None
+    calls = fake_attempts(monkeypatch, {
+        "01001": [course_result("01001", reviews=["e26"])],
+        "01002": [course_result("01002", reviews=["e26"], links=links),
+                  course_result("01002", reviews=["e26", "e25"], links=links)],
+        "01003": [expire_session, course_result("01003", reviews=["e26"])],
+    })
+
+    assert await scraper.main_async() == 1
+    assert len(recorded) == 2
+    checkpoint = json.loads((scrape_dir / "data/coursedic.partial.json").read_text())
+    assert set(checkpoint) == {"01001"}
+
+    monkeypatch.setattr(scraper, "auth_failed", False)
+    monkeypatch.setenv("RESUME", "1")
+    calls.clear()
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01002", "01003"]
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01002"]["reviews"]] == ["e26", "e25"]

@@ -264,6 +264,24 @@ def parse_course_name(html: str, courseN: str, lang: str = "da") -> str | None:
     return None
 
 
+def merge_course_data(previous: dict, retry: dict, links: dict) -> dict:
+    """
+    Combine two collections of one course without losing either's records.
+
+    Grade and evaluation records are keyed by source URL and kept in
+    overview-page order (newest first), which select_best_sheet relies on.
+    Fields the retry did not collect, such as names, are kept.
+    """
+    merged = {**previous, **retry}
+    for key in ("grades", "reviews"):
+        records = {r["url"]: r for r in previous.get(key, [])}
+        records.update((r["url"], r) for r in retry.get(key, []))
+        order = [u for u in links[key] if u in records] + [u for u in records if u not in links[key]]
+        if order:
+            merged[key] = [records[u] for u in order]
+    return merged
+
+
 async def process_single_course(
     session: aiohttp.ClientSession,
     semaphore: asyncio.Semaphore,
@@ -278,9 +296,9 @@ async def process_single_course(
         courseN: 5-digit course number
 
     Returns:
-        Tuple of (courseN, data, complete) on success, None on failure.
-        complete is False when fewer evaluations were collected than the
-        overview page links to.
+        Tuple of (courseN, data, links) on success, None on failure.
+        links maps "grades" and "reviews" to the URLs the overview page
+        lists, newest first, so callers can judge and merge partial results.
     """
     async with semaphore:
         try:
@@ -357,12 +375,6 @@ async def process_single_course(
             if reviews_list:
                 crawl["reviews"] = reviews_list
 
-            complete = len(reviews_list) == len(review_links)
-            if not complete:
-                logger.warning(
-                    f"Collected {len(reviews_list)} of {len(review_links)} evaluations for {courseN}"
-                )
-
             # If no data found, return None
             if not crawl:
                 logger.debug(f"No data found for course {courseN}")
@@ -379,7 +391,7 @@ async def process_single_course(
                 if name_en:
                     crawl["name_en"] = name_en
 
-            return (courseN, crawl, complete)
+            return (courseN, crawl, {"grades": grade_links, "reviews": review_links})
 
         except Exception as e:
             logger.error(f"Error processing course {courseN}: {e}")
@@ -412,6 +424,8 @@ async def main_async():
     # re-request everything (less load on DTU, less flagging risk)
     partial_file = config.paths.course_data_file.with_name("coursedic.partial.json")
     courseDic = {}
+    # Courses missing evaluations their overview page links to
+    incomplete = set()
     if os.getenv("RESUME", "0") == "1" and partial_file.exists():
         try:
             with open(partial_file, 'r') as file:
@@ -427,10 +441,13 @@ async def main_async():
             courseDic = {}
 
     def save_checkpoint():
+        # RESUME skips every checkpointed course, so incomplete ones are left
+        # out to be collected again rather than kept as if they were done
+        checkpoint = {c: d for c, d in courseDic.items() if c not in incomplete}
         try:
             with open(partial_file, 'w') as outfile:
-                json.dump(courseDic, outfile)
-            logger.info(f"Checkpoint: {len(courseDic)} courses saved to {partial_file}")
+                json.dump(checkpoint, outfile)
+            logger.info(f"Checkpoint: {len(checkpoint)} courses saved to {partial_file}")
         except IOError as e:
             logger.warning(f"Failed to write checkpoint: {e}")
 
@@ -468,15 +485,19 @@ async def main_async():
                     result = await coro
                     completed += 1
                     if result:
-                        c_num, c_data, complete = result
-                        previous = courseDic.get(c_num, {})
-                        # A retry must never replace data with fewer evaluations
-                        if len(c_data.get("reviews", [])) >= len(previous.get("reviews", [])):
-                            courseDic[c_num] = c_data
-                        if complete:
+                        c_num, c_data, links = result
+                        # A retry adds to what an earlier pass collected
+                        c_data = merge_course_data(courseDic.get(c_num, {}), c_data, links)
+                        courseDic[c_num] = c_data
+                        collected = {r["url"] for r in c_data.get("reviews", [])}
+                        if set(links["reviews"]) <= collected:
                             incomplete.discard(c_num)
                         else:
                             incomplete.add(c_num)
+                            logger.warning(
+                                f"Collected {len(collected & set(links['reviews']))} of "
+                                f"{len(links['reviews'])} evaluations for {c_num}"
+                            )
                     if completed % CHECKPOINT_EVERY == 0:
                         save_checkpoint()
 
@@ -518,7 +539,6 @@ async def main_async():
                 return 1
             return None
 
-        incomplete = set()
         exit_code = await run_pass(courses)
         if exit_code is not None:
             return exit_code
