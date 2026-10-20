@@ -278,7 +278,9 @@ async def process_single_course(
         courseN: 5-digit course number
 
     Returns:
-        Tuple of (courseN, data) on success, None on failure
+        Tuple of (courseN, data, complete) on success, None on failure.
+        complete is False when fewer evaluations were collected than the
+        overview page links to.
     """
     async with semaphore:
         try:
@@ -355,6 +357,12 @@ async def process_single_course(
             if reviews_list:
                 crawl["reviews"] = reviews_list
 
+            complete = len(reviews_list) == len(review_links)
+            if not complete:
+                logger.warning(
+                    f"Collected {len(reviews_list)} of {len(review_links)} evaluations for {courseN}"
+                )
+
             # If no data found, return None
             if not crawl:
                 logger.debug(f"No data found for course {courseN}")
@@ -371,7 +379,7 @@ async def process_single_course(
                 if name_en:
                     crawl["name_en"] = name_en
 
-            return (courseN, crawl)
+            return (courseN, crawl, complete)
 
         except Exception as e:
             logger.error(f"Error processing course {courseN}: {e}")
@@ -440,67 +448,94 @@ async def main_async():
     logger.info(f"Starting async scrape of {len(courses)} courses with {MAX_CONCURRENT} concurrent requests...")
 
     async with aiohttp.ClientSession(connector=connector, cookies=cookies, headers=headers) as session:
-        # Create tasks for all courses (real tasks so they can be cancelled on abort)
-        tasks = [asyncio.ensure_future(process_single_course(session, semaphore, c)) for c in courses]
+        async def run_pass(pass_courses):
+            """Collect pass_courses into courseDic; return an exit code on a fatal error."""
+            # Real tasks so they can be cancelled on abort
+            tasks = [asyncio.ensure_future(process_single_course(session, semaphore, c)) for c in pass_courses]
 
-        def cancel_pending():
-            for task in tasks:
-                if not task.done():
-                    task.cancel()
+            def cancel_pending():
+                for task in tasks:
+                    if not task.done():
+                        task.cancel()
 
-        completed = 0
+            completed = 0
+            try:
+                for coro in tqdm.as_completed(tasks, total=len(pass_courses)):
+                    # First record the completed task yielded by as_completed. A
+                    # fatal flag may have been set concurrently by another task,
+                    # but this result is already available and should be included
+                    # in the checkpoint before aborting.
+                    result = await coro
+                    completed += 1
+                    if result:
+                        c_num, c_data, complete = result
+                        previous = courseDic.get(c_num, {})
+                        # A retry must never replace data with fewer evaluations
+                        if len(c_data.get("reviews", [])) >= len(previous.get("reviews", [])):
+                            courseDic[c_num] = c_data
+                        if complete:
+                            incomplete.discard(c_num)
+                        else:
+                            incomplete.add(c_num)
+                    if completed % CHECKPOINT_EVERY == 0:
+                        save_checkpoint()
 
-        # Process with progress bar
-        try:
-            for coro in tqdm.as_completed(tasks, total=len(courses)):
-                # First record the completed task yielded by as_completed. A
-                # fatal flag may have been set concurrently by another task,
-                # but this result is already available and should be included
-                # in the checkpoint before aborting.
-                result = await coro
-                completed += 1
-                if result:
-                    c_num, c_data = result
-                    courseDic[c_num] = c_data
-                if completed % CHECKPOINT_EVERY == 0:
-                    save_checkpoint()
-
-                # Then stop if another task signaled a fatal condition.
-                if timeout_occurred:
-                    logger.error(f"Stopping due to timeout on: {timeout_url}")
-                    logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
-                    cancel_pending()
-                    save_checkpoint()
-                    logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-                    return 1
-                if auth_failed:
-                    logger.error("FAILED: Session expired. Re-run dtu-auth, then RESUME=1 to continue.")
-                    cancel_pending()
-                    save_checkpoint()
-                    return 1
-        except TimeoutException as e:
-            logger.error(f"FAILED: {e}")
-            logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
-            cancel_pending()
-            save_checkpoint()
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
-        except (asyncio.CancelledError, KeyboardInterrupt):
-            logger.warning("Scrape cancelled. Saving checkpoint.")
-            cancel_pending()
-            save_checkpoint()
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
-        except Exception as e:
-            cancel_pending()
-            save_checkpoint()
-            if timeout_occurred:
-                logger.error(f"FAILED: Timeout occurred on {timeout_url}")
+                    # Then stop if another task signaled a fatal condition.
+                    if timeout_occurred:
+                        logger.error(f"Stopping due to timeout on: {timeout_url}")
+                        logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                        cancel_pending()
+                        save_checkpoint()
+                        logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                        return 1
+                    if auth_failed:
+                        logger.error("FAILED: Session expired. Re-run dtu-auth, then RESUME=1 to continue.")
+                        cancel_pending()
+                        save_checkpoint()
+                        return 1
+            except TimeoutException as e:
+                logger.error(f"FAILED: {e}")
                 logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                cancel_pending()
+                save_checkpoint()
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
                 return 1
-            logger.error(f"Task failed: {e}")
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
+            except (asyncio.CancelledError, KeyboardInterrupt):
+                logger.warning("Scrape cancelled. Saving checkpoint.")
+                cancel_pending()
+                save_checkpoint()
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                return 1
+            except Exception as e:
+                cancel_pending()
+                save_checkpoint()
+                if timeout_occurred:
+                    logger.error(f"FAILED: Timeout occurred on {timeout_url}")
+                    logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                    return 1
+                logger.error(f"Task failed: {e}")
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                return 1
+            return None
+
+        incomplete = set()
+        exit_code = await run_pass(courses)
+        if exit_code is not None:
+            return exit_code
+
+        # A transient network error can silently drop a course or some of its
+        # evaluations, and one such gap blocks publication of the whole run.
+        # Retry those courses once at the end, when the glitch has passed.
+        # This also re-requests courses that genuinely have no data.
+        retry = [c for c in courses if c not in courseDic or c in incomplete]
+        if retry:
+            logger.info(f"Retrying {len(retry)} courses without complete data")
+            exit_code = await run_pass(retry)
+            if exit_code is not None:
+                return exit_code
+            for c in retry:
+                if c in incomplete:
+                    logger.warning(f"Evaluations for {c} are still incomplete after retry")
 
     # Flags may have been set by the last tasks after the loop drained
     if timeout_occurred or auth_failed:

@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 
@@ -116,3 +117,32 @@ async def test_course_collection_recovers_wrapper_and_collects_all_three_evaluat
     assert result[0] == "01002"
     assert [r["participants"] for r in result[1]["reviews"]] == [371, 386, 419]
     assert not scraper.auth_failed
+
+
+@pytest.mark.asyncio
+async def test_courses_dropped_by_a_transient_error_are_retried_at_the_end(monkeypatch, tmp_path):
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data/coursenumbers.txt").write_text("01001,01002,01003")
+    (tmp_path / "secret.txt").write_text("cookie")
+    monkeypatch.setattr(scraper.config.paths, "root_dir", tmp_path)
+    monkeypatch.delenv("RESUME", raising=False)
+    review = {"participants": 10}
+    attempts = {
+        # Dropped entirely on the first pass (the 41468 failure mode)
+        "01001": [None, ("01001", {"reviews": [review]}, True)],
+        # Partial first pass, complete retry
+        "01002": [("01002", {"reviews": [review]}, False), ("01002", {"reviews": [review, review]}, True)],
+        # A retry that loses evaluations must not replace earlier data
+        "01003": [("01003", {"reviews": [review]}, False), None],
+    }
+    calls = []
+
+    async def fake_course(session, semaphore, course):
+        calls.append(course)
+        return attempts[course].pop(0)
+    monkeypatch.setattr(scraper, "process_single_course", fake_course)
+
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01001", "01001", "01002", "01002", "01003", "01003"]
+    data = json.loads((tmp_path / "data/coursedic.json").read_text())
+    assert {c: len(d["reviews"]) for c, d in data.items()} == {"01001": 1, "01002": 2, "01003": 1}
