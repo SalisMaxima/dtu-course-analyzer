@@ -5,7 +5,8 @@ import pytest
 
 from dtu_analyzer.scrapers import async_scraper as scraper
 from dtu_analyzer.scripts.candidate_provenance import git, write_provenance
-from dtu_analyzer.scripts.prepare_repair import main, seed_checkpoint, verify_parsers_unchanged, verify_source_run
+from dtu_analyzer.scripts.prepare_repair import (main, recollect_checkpoint, seed_checkpoint, verify_source_run,
+                                                 verify_unchanged_since)
 
 NOW = datetime(2026, 10, 20, 12, tzinfo=timezone.utc)
 
@@ -48,6 +49,8 @@ def test_accepts_a_recent_failed_run_from_this_branch():
     ({"event": "schedule"}, "123"),
     ({"head_branch": "feature"}, "123"),
     ({"status": "in_progress"}, "123"),
+    ({"conclusion": "success"}, "123"),
+    ({"conclusion": "cancelled"}, "123"),
     ({"created_at": "2026-10-12T07:12:34Z"}, "123"),
 ])
 def test_rejects_unsuitable_source_runs(change, run_id):
@@ -55,11 +58,19 @@ def test_rejects_unsuitable_source_runs(change, run_id):
         verify_source_run(source_run(**change), "owner/repo", run_id, "master", NOW)
 
 
-def test_parser_changes_since_the_source_run_require_a_full_collection(tmp_path):
+@pytest.mark.parametrize("path,message", [
+    ("src/dtu_analyzer/parsers/review_parser.py", "Collection code changed"),
+    ("src/dtu_analyzer/scrapers/async_scraper.py", "Collection code changed"),
+    ("data/coursedic.json", "dataset was promoted"),
+    ("extension/db/data.json", "dataset was promoted"),
+])
+def test_reused_data_must_match_current_collection_code_and_baseline(tmp_path, path, message):
     root = tmp_path / "repo"
-    (root / "src/dtu_analyzer/parsers").mkdir(parents=True)
-    (root / "src/dtu_analyzer/parsers/review_parser.py").write_text("# v1\n")
-    (root / "README.md").write_text("v1\n")
+    files = ["README.md", "src/dtu_analyzer/parsers/review_parser.py", "src/dtu_analyzer/scrapers/async_scraper.py",
+             "data/coursedic.json", "data/coursenumbers.txt", "extension/db/data.json"]
+    for name in files:
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        (root / name).write_text("v1\n")
     commit = ["-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qam"]
     git(root, "init", "-q")
     git(root, "add", ".")
@@ -67,13 +78,13 @@ def test_parser_changes_since_the_source_run_require_a_full_collection(tmp_path)
     source_sha = git(root, "rev-parse", "HEAD")
     (root / "README.md").write_text("v2\n")
     git(root, *commit, "Unrelated change")
-    verify_parsers_unchanged(root, source_sha)
-    (root / "src/dtu_analyzer/parsers/review_parser.py").write_text("# v2\n")
-    git(root, *commit, "Parser change")
-    with pytest.raises(ValueError, match="Parser code changed"):
-        verify_parsers_unchanged(root, source_sha)
+    verify_unchanged_since(root, source_sha)
+    (root / path).write_text("v2\n")
+    git(root, *commit, "Relevant change")
+    with pytest.raises(ValueError, match=message):
+        verify_unchanged_since(root, source_sha)
     with pytest.raises(ValueError):
-        verify_parsers_unchanged(root, "b" * 40)
+        verify_unchanged_since(root, "b" * 40)
 
 
 def test_seed_reuses_only_clean_listed_courses(source, tmp_path):
@@ -124,7 +135,7 @@ async def test_repair_run_scrapes_only_courses_the_source_run_did_not_deliver(so
     async def fake_course(session, semaphore, course):
         calls.append(course)
         reviews = [{"url": f"{course}/e26"}, {"url": f"{course}/e25"}]
-        return (course, {"reviews": reviews}, {"grades": [], "reviews": [r["url"] for r in reviews]})
+        return (course, {"reviews": reviews}, {"grades": [], "reviews": [r["url"] for r in reviews]}, [])
     monkeypatch.setattr(scraper, "process_single_course", fake_course)
 
     assert await scraper.main_async() == 0
@@ -151,3 +162,30 @@ def test_provenance_records_the_repair_source(tmp_path, monkeypatch):
     assert write_provenance(output, b"{}", root)["repaired_from_run_id"] == "39385020003"
     monkeypatch.setenv("REPAIR_RUN_ID", "")
     assert write_provenance(output, b"{}", root)["repaired_from_run_id"] is None
+
+
+def probe_report(evaluation_links):
+    return {"courses": {course: {"pages": {"info": {"content": {"evaluation_link_count": count}}}}
+                        for course, count in evaluation_links.items()}}
+
+
+def test_recollect_drops_courses_with_more_linked_evaluations_than_scraped(tmp_path, source):
+    _, course_file = source
+    raw = {"01001": {"reviews": [1, 2]}, "01002": {"reviews": [1]}, "01003": {"reviews": [1]}}
+    (tmp_path / "raw.json").write_text(json.dumps(raw))
+    # 01002 gained an evaluation after it was scraped; 01004 has none to collect
+    (tmp_path / "report.json").write_text(json.dumps(probe_report({"01001": 2, "01002": 2, "01003": 1, "01004": 0})))
+    output = tmp_path / "partial.json"
+    stale = recollect_checkpoint(tmp_path / "raw.json", tmp_path / "report.json", course_file, output)
+    assert stale == ["01002"]
+    assert json.loads(output.read_text()) == {"01001": {"reviews": [1, 2]}, "01003": {"reviews": [1]}}
+
+
+def test_recollect_writes_nothing_when_every_evaluation_was_scraped(tmp_path, source, capsys):
+    _, course_file = source
+    (tmp_path / "raw.json").write_text(json.dumps({"01001": {"reviews": [1]}}))
+    (tmp_path / "report.json").write_text(json.dumps(probe_report({"01001": 1, "01002": 0, "01003": 0, "01004": 0})))
+    assert main(["recollect", "--raw", str(tmp_path / "raw.json"), "--report", str(tmp_path / "report.json"),
+                 "--course-file", str(course_file), "--output", str(tmp_path / "partial.json")]) == 0
+    assert not (tmp_path / "partial.json").exists()
+    assert "none" in capsys.readouterr().out

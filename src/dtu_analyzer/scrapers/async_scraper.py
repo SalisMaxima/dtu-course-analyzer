@@ -296,9 +296,13 @@ async def process_single_course(
         courseN: 5-digit course number
 
     Returns:
-        Tuple of (courseN, data, links) on success, None on failure.
+        Tuple of (courseN, data, links, failed), or None when the course
+        could not be collected (overview page unavailable or an error).
         links maps "grades" and "reviews" to the URLs the overview page
         lists, newest first, so callers can judge and merge partial results.
+        failed lists linked pages that could not be downloaded, as opposed
+        to pages the parsers skip. data is empty for a course with nothing
+        to collect.
     """
     async with semaphore:
         try:
@@ -375,10 +379,12 @@ async def process_single_course(
             if reviews_list:
                 crawl["reviews"] = reviews_list
 
-            # If no data found, return None
+            links = {"grades": grade_links, "reviews": review_links}
+            failed = [url for html, url in zip([*grade_htmls, *review_htmls], [*grade_links, *review_links])
+                      if not html or isinstance(html, Exception)]
             if not crawl:
                 logger.debug(f"No data found for course {courseN}")
-                return None
+                return (courseN, {}, links, failed)
 
             # Parse course names
             if name_da_html and not isinstance(name_da_html, Exception):
@@ -391,7 +397,7 @@ async def process_single_course(
                 if name_en:
                     crawl["name_en"] = name_en
 
-            return (courseN, crawl, {"grades": grade_links, "reviews": review_links})
+            return (courseN, crawl, links, failed)
 
         except Exception as e:
             logger.error(f"Error processing course {courseN}: {e}")
@@ -424,8 +430,10 @@ async def main_async():
     # re-request everything (less load on DTU, less flagging risk)
     partial_file = config.paths.course_data_file.with_name("coursedic.partial.json")
     courseDic = {}
-    # Courses missing evaluations their overview page links to
+    # Courses missing linked evaluations or with grade pages that failed to download
     incomplete = set()
+    # Courses whose latest attempt could not be collected at all
+    uncollected = set()
     if os.getenv("RESUME", "0") == "1" and partial_file.exists():
         try:
             with open(partial_file, 'r') as file:
@@ -476,6 +484,7 @@ async def main_async():
                         task.cancel()
 
             completed = 0
+            uncollected.update(pass_courses)
             try:
                 for coro in tqdm.as_completed(tasks, total=len(pass_courses)):
                     # First record the completed task yielded by as_completed. A
@@ -485,19 +494,21 @@ async def main_async():
                     result = await coro
                     completed += 1
                     if result:
-                        c_num, c_data, links = result
+                        c_num, c_data, links, failed = result
+                        uncollected.discard(c_num)
                         # A retry adds to what an earlier pass collected
                         c_data = merge_course_data(courseDic.get(c_num, {}), c_data, links)
-                        courseDic[c_num] = c_data
-                        collected = {r["url"] for r in c_data.get("reviews", [])}
-                        if set(links["reviews"]) <= collected:
-                            incomplete.discard(c_num)
-                        else:
+                        if c_data:
+                            courseDic[c_num] = c_data
+                        # Every evaluation is required. Grade pages the parsers skip are
+                        # normal, so only grade pages that failed to download count.
+                        have = {r["url"] for key in ("grades", "reviews") for r in c_data.get(key, [])}
+                        missing = (set(links["reviews"]) | set(failed)) - have
+                        if missing:
                             incomplete.add(c_num)
-                            logger.warning(
-                                f"Collected {len(collected & set(links['reviews']))} of "
-                                f"{len(links['reviews'])} evaluations for {c_num}"
-                            )
+                            logger.warning(f"Missing {len(missing)} grade or evaluation pages for {c_num}")
+                        else:
+                            incomplete.discard(c_num)
                     if completed % CHECKPOINT_EVERY == 0:
                         save_checkpoint()
 
@@ -543,10 +554,10 @@ async def main_async():
         if exit_code is not None:
             return exit_code
 
-        # A transient network error can silently drop a course or some of its
-        # evaluations, and one such gap blocks publication of the whole run.
-        # Retry those courses once at the end, when the glitch has passed.
-        # This also re-requests courses that genuinely have no data.
+        # A transient network error can drop a course or some of its pages, and
+        # one such gap blocks publication of the whole run. Retry those courses
+        # once at the end, when the glitch has passed. This also re-requests
+        # courses that genuinely have no data, in case one only looked empty.
         retry = [c for c in courses if c not in courseDic or c in incomplete]
         if retry:
             logger.info(f"Retrying {len(retry)} courses without complete data")
@@ -554,8 +565,8 @@ async def main_async():
             if exit_code is not None:
                 return exit_code
             for c in retry:
-                if c in incomplete:
-                    logger.warning(f"Evaluations for {c} are still incomplete after retry")
+                if c in uncollected or c in incomplete:
+                    logger.warning(f"No complete data for {c} after retry")
 
     # Flags may have been set by the last tasks after the loop drained
     if timeout_occurred or auth_failed:

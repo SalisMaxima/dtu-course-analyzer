@@ -112,6 +112,28 @@ jobs:
       - name: Collect exam histories and schedule evidence
         run: python -m dtu_analyzer.scripts.probe_exam_classification --output exam-classification-report
 
+      # A course can gain an evaluation after it was scraped (especially when a
+      # repair reuses an older scrape) or lose one to a network error. Scrape just
+      # those courses again rather than block the candidate. On failure the original
+      # scrape is kept, so the candidate reports the gap and the run stays repairable.
+      - name: Re-collect courses missing linked evaluations
+        continue-on-error: true
+        env:
+          DTU_USERNAME: ${{ secrets.DTU_USERNAME }}
+          DTU_PASSWORD: ${{ secrets.DTU_PASSWORD }}
+        run: |
+          python -m dtu_analyzer.scripts.prepare_repair recollect \
+            --raw data/coursedic.json --report exam-classification-report/report.json \
+            --course-file data/coursenumbers.txt --output data/coursedic.partial.json
+          if [ -f data/coursedic.partial.json ]; then
+            cp data/coursedic.json "$RUNNER_TEMP/coursedic.before-recollect.json"
+            if ! (dtu-auth && RESUME=1 dtu-scrape && dtu-validate data/coursedic.json); then
+              cp "$RUNNER_TEMP/coursedic.before-recollect.json" data/coursedic.json
+              echo "::warning::Re-collection failed; keeping the original scrape"
+              exit 1
+            fi
+          fi
+
       - name: Build and validate candidate
         run: >-
           python -m dtu_analyzer.scripts.build_production_candidate

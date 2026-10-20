@@ -119,14 +119,14 @@ async def test_course_collection_recovers_wrapper_and_collects_all_three_evaluat
     assert not scraper.auth_failed
 
 
-def course_result(course, grades=(), reviews=(), links=None, **fields):
+def course_result(course, grades=(), reviews=(), links=None, failed=(), **fields):
     """A process_single_course result; links default to the collected URLs."""
     data = {**fields}
     if grades:
         data["grades"] = [{"url": u, "participants": 10} for u in grades]
     if reviews:
         data["reviews"] = [{"url": u, "participants": 10} for u in reviews]
-    return (course, data, links or {"grades": list(grades), "reviews": list(reviews)})
+    return (course, data, links or {"grades": list(grades), "reviews": list(reviews)}, list(failed))
 
 
 @pytest.fixture
@@ -220,3 +220,56 @@ async def test_resume_collects_courses_an_aborted_run_left_incomplete(scrape_dir
     assert sorted(calls) == ["01002", "01003"]
     data = json.loads((scrape_dir / "data/coursedic.json").read_text())
     assert [r["url"] for r in data["01002"]["reviews"]] == ["e26", "e25"]
+
+
+@pytest.mark.asyncio
+async def test_grade_pages_that_failed_to_download_are_retried(scrape_dir, monkeypatch):
+    links = {"grades": ["g26", "g25"], "reviews": ["e26"]}
+    calls = fake_attempts(monkeypatch, {
+        # Evaluations complete, but a grade page failed to download
+        "01001": [course_result("01001", grades=["g25"], reviews=["e26"], links=links, failed=["g26"]),
+                  course_result("01001", grades=["g26", "g25"], reviews=["e26"], links=links)],
+        # A grade page the parser skipped (no data, but downloaded) is not a failure
+        "01002": [course_result("01002", grades=["g25"], reviews=["e26"], links=links)],
+        "01003": [course_result("01003", reviews=["e26"])],
+    })
+
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01001", "01001", "01002", "01003"]
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01001"]["grades"]] == ["g26", "g25"]
+
+
+@pytest.mark.asyncio
+async def test_course_failing_both_passes_is_reported_but_empty_courses_are_not(scrape_dir, monkeypatch, caplog):
+    fake_attempts(monkeypatch, {
+        "01001": [None, None],
+        # A listed course with nothing to collect is normal
+        "01002": [course_result("01002"), course_result("01002")],
+        "01003": [course_result("01003", reviews=["e26"])],
+    })
+
+    with caplog.at_level("WARNING", logger="scraper"):
+        assert await scraper.main_async() == 0
+    warned = [r.getMessage() for r in caplog.records if "after retry" in r.getMessage()]
+    assert warned == ["No complete data for 01001 after retry"]
+    assert set(json.loads((scrape_dir / "data/coursedic.json").read_text())) == {"01003"}
+
+
+@pytest.mark.asyncio
+async def test_process_single_course_separates_download_failures_from_skipped_pages():
+    url = f"{scraper.BASE_URL}/course/01002/info"
+    failed_grade = "http://karakterer.dtu.dk/Histogram/1/01002/Winter-2025"
+    skipped_grade = "http://karakterer.dtu.dk/Histogram/1/01002/Summer-2025"
+    overview = f'<a href="{failed_grade}">W25</a><a href="{skipped_grade}">S25</a>'
+    responses = {
+        url: [Response(overview, url=url)],
+        failed_grade: [Response(status=503)],
+        skipped_grade: [Response("<html>Not a histogram</html>", url=skipped_grade)],
+    }
+    for language in ("da-DK", "en-GB"):
+        responses[f"{scraper.BASE_URL}/course/01002?lang={language}"] = [Response("<h2>01002 Mathematics</h2>")]
+    course, data, links, failed = await scraper.process_single_course(Session(responses), asyncio.Semaphore(1), "01002")
+    assert (course, data) == ("01002", {})
+    assert links == {"grades": [failed_grade, skipped_grade], "reviews": []}
+    assert failed == [failed_grade]
