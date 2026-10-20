@@ -13,6 +13,19 @@ from .build_chrome_beta import build_dataset
 from .candidate_provenance import write_provenance
 
 
+def feedback_collection_issues(raw, report, courses):
+    """Courses whose scrape lacks evaluations that the exam-history probe found linked."""
+    issues = []
+    for course in sorted(courses):
+        info = report.get("courses", {}).get(course, {}).get("pages", {}).get("info", {}).get("content", {})
+        review_links = info.get("evaluation_link_count")
+        if review_links is None:
+            issues.append({"course": course, "reason": "feedback_collection_evidence_missing"})
+        elif len(raw.get(course, {}).get("reviews", [])) < review_links:
+            issues.append({"course": course, "reason": "feedback_collection_incomplete"})
+    return issues
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", type=Path, required=True)
@@ -34,13 +47,7 @@ def main(argv=None):
     expected = set(filter(None, re.split(r"[,\s]+", course_bytes.decode().strip())))
     candidate = build_dataset(process_courses(raw), [report])
     issues = publication_issues(previous, candidate, report, expected, hashlib.sha256(baseline_bytes).hexdigest())
-    for course in sorted(expected):
-        info = report.get("courses", {}).get(course, {}).get("pages", {}).get("info", {}).get("content", {})
-        review_links = info.get("evaluation_link_count")
-        if review_links is None:
-            issues.append({"course": course, "reason": "feedback_collection_evidence_missing"})
-        elif len(raw.get(course, {}).get("reviews", [])) < review_links:
-            issues.append({"course": course, "reason": "feedback_collection_incomplete"})
+    issues += feedback_collection_issues(raw, report, expected)
     # Produce review artifacts even if validation fails, but never publish them.
     args.output.mkdir(parents=True)
     (args.output / "validation.json").write_text(json.dumps({

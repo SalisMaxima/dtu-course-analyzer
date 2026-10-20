@@ -16,6 +16,33 @@
    The run ID also appears in `/actions/runs/123...`; the artifact ID appears
    in the artifact link `/artifacts/456...`. These are numeric IDs, not names.
 
+## Repair a failed collection
+
+A transient network error can drop a single course and block the whole run.
+Instead of collecting everything again, run **Update Course Data** with
+`repair_run_id` set to the failed run's ID. The repair run downloads that run's
+**course-data-candidate**, reuses its scraped course data, and scrapes again
+only the courses it flagged in `validation.json`, courses it did not collect,
+and newly listed courses. Exam histories, the candidate and its validation are
+built from scratch, so a repaired candidate passes the same checks and is
+promoted the same way. Its `provenance.json` and run summary name the source run.
+
+The source run is refused unless it is a failed manual **Update Course Data**
+run in this repository and on the same branch, created within the last 7 days,
+and not itself a repair. The code that shapes scraped records
+(`src/dtu_analyzer/parsers` and `src/dtu_analyzer/scrapers/async_scraper.py`)
+must be unchanged since it ran, and no dataset may have been promoted since:
+reused feedback would otherwise roll back newer values. Repair the original
+full run again instead of chaining repairs. A run that failed before building
+its candidate (for example during scraping) has no data to reuse; run a full
+collection.
+
+Every run, repaired or not, also checks the exam-history evidence before
+building the candidate. A course whose page now links more evaluations than
+were scraped, such as one published after the scrape or one dropped by a
+network error, is scraped again after a fresh sign-in. If that fails, the
+original scrape is kept and the candidate reports the gap as before.
+
 ## Promote the reviewed artifact
 
 1. Open **Actions → Promote Course Data → Run workflow**.

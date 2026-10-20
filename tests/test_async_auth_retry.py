@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 
@@ -116,3 +117,159 @@ async def test_course_collection_recovers_wrapper_and_collects_all_three_evaluat
     assert result[0] == "01002"
     assert [r["participants"] for r in result[1]["reviews"]] == [371, 386, 419]
     assert not scraper.auth_failed
+
+
+def course_result(course, grades=(), reviews=(), links=None, failed=(), **fields):
+    """A process_single_course result; links default to the collected URLs."""
+    data = {**fields}
+    if grades:
+        data["grades"] = [{"url": u, "participants": 10} for u in grades]
+    if reviews:
+        data["reviews"] = [{"url": u, "participants": 10} for u in reviews]
+    return (course, data, links or {"grades": list(grades), "reviews": list(reviews)}, list(failed))
+
+
+@pytest.fixture
+def scrape_dir(tmp_path, monkeypatch):
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data/coursenumbers.txt").write_text("01001,01002,01003")
+    (tmp_path / "secret.txt").write_text("cookie")
+    monkeypatch.setattr(scraper.config.paths, "root_dir", tmp_path)
+    monkeypatch.delenv("RESUME", raising=False)
+    return tmp_path
+
+
+def fake_attempts(monkeypatch, attempts):
+    """Serve each course's queued results in order and record the calls."""
+    calls = []
+
+    async def fake_course(session, semaphore, course):
+        calls.append(course)
+        result = attempts[course].pop(0)
+        return await result() if callable(result) else result
+    monkeypatch.setattr(scraper, "process_single_course", fake_course)
+    return calls
+
+
+@pytest.mark.asyncio
+async def test_courses_dropped_by_a_transient_error_are_retried_at_the_end(scrape_dir, monkeypatch):
+    links = {"grades": ["g26", "g25"], "reviews": ["e26", "e25"]}
+    calls = fake_attempts(monkeypatch, {
+        # Dropped entirely on the first pass (the 41468 failure mode)
+        "01001": [None, course_result("01001", reviews=["e26"])],
+        # The retry gets the other evaluation but loses grades and names
+        "01002": [course_result("01002", grades=["g26", "g25"], reviews=["e25"], links=links, name="Kursus"),
+                  course_result("01002", reviews=["e26"], links=links)],
+        # A retry that collects nothing keeps the earlier data
+        "01003": [course_result("01003", reviews=["e26"], links=links), None],
+    })
+
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01001", "01001", "01002", "01002", "01003", "01003"]
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01001"]["reviews"]] == ["e26"]
+    # Merged by URL in overview-page order (newest first), keeping fields the retry lacked
+    assert [r["url"] for r in data["01002"]["reviews"]] == ["e26", "e25"]
+    assert [r["url"] for r in data["01002"]["grades"]] == ["g26", "g25"]
+    assert data["01002"]["name"] == "Kursus"
+    assert [r["url"] for r in data["01003"]["reviews"]] == ["e26"]
+
+
+def test_merge_keeps_records_from_both_passes():
+    previous = {"name": "Kursus", "reviews": [{"url": "A", "n": 1}, {"url": "B", "n": 1}]}
+    retry = {"reviews": [{"url": "B", "n": 2}, {"url": "C", "n": 2}]}
+    merged = scraper.merge_course_data(previous, retry, {"grades": [], "reviews": ["C", "B", "A"]})
+    assert merged == {"name": "Kursus", "reviews": [{"url": "C", "n": 2}, {"url": "B", "n": 2}, {"url": "A", "n": 1}]}
+
+
+@pytest.mark.asyncio
+async def test_resume_collects_courses_an_aborted_run_left_incomplete(scrape_dir, monkeypatch):
+    links = {"grades": [], "reviews": ["e26", "e25"]}
+    # Expire the session only once the main loop has recorded 01001 and 01002
+    recorded = []
+    both_recorded = asyncio.Event()
+    merge = scraper.merge_course_data
+
+    def recording_merge(*args):
+        recorded.append(args)
+        if len(recorded) == 2:
+            both_recorded.set()
+        return merge(*args)
+    monkeypatch.setattr(scraper, "merge_course_data", recording_merge)
+
+    async def expire_session():
+        await both_recorded.wait()
+        scraper.auth_failed = True
+        return None
+    calls = fake_attempts(monkeypatch, {
+        "01001": [course_result("01001", reviews=["e26"])],
+        "01002": [course_result("01002", reviews=["e26"], links=links),
+                  course_result("01002", reviews=["e26", "e25"], links=links)],
+        "01003": [expire_session, course_result("01003", reviews=["e26"])],
+    })
+
+    assert await scraper.main_async() == 1
+    assert len(recorded) == 2
+    checkpoint = json.loads((scrape_dir / "data/coursedic.partial.json").read_text())
+    assert set(checkpoint) == {"01001"}
+
+    monkeypatch.setattr(scraper, "auth_failed", False)
+    monkeypatch.setenv("RESUME", "1")
+    calls.clear()
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01002", "01003"]
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01002"]["reviews"]] == ["e26", "e25"]
+
+
+@pytest.mark.asyncio
+async def test_grade_pages_that_failed_to_download_are_retried(scrape_dir, monkeypatch):
+    links = {"grades": ["g26", "g25"], "reviews": ["e26"]}
+    calls = fake_attempts(monkeypatch, {
+        # Evaluations complete, but a grade page failed to download
+        "01001": [course_result("01001", grades=["g25"], reviews=["e26"], links=links, failed=["g26"]),
+                  course_result("01001", grades=["g26", "g25"], reviews=["e26"], links=links)],
+        # A grade page the parser skipped (no data, but downloaded) is not a failure
+        "01002": [course_result("01002", grades=["g25"], reviews=["e26"], links=links)],
+        "01003": [course_result("01003", reviews=["e26"])],
+    })
+
+    assert await scraper.main_async() == 0
+    assert sorted(calls) == ["01001", "01001", "01002", "01003"]
+    data = json.loads((scrape_dir / "data/coursedic.json").read_text())
+    assert [r["url"] for r in data["01001"]["grades"]] == ["g26", "g25"]
+
+
+@pytest.mark.asyncio
+async def test_course_failing_both_passes_is_reported_but_empty_courses_are_not(scrape_dir, monkeypatch, caplog):
+    fake_attempts(monkeypatch, {
+        "01001": [None, None],
+        # A listed course with nothing to collect is normal
+        "01002": [course_result("01002"), course_result("01002")],
+        "01003": [course_result("01003", reviews=["e26"])],
+    })
+
+    with caplog.at_level("WARNING", logger="scraper"):
+        assert await scraper.main_async() == 0
+    warned = [r.getMessage() for r in caplog.records if "after retry" in r.getMessage()]
+    assert warned == ["No complete data for 01001 after retry"]
+    assert set(json.loads((scrape_dir / "data/coursedic.json").read_text())) == {"01003"}
+
+
+@pytest.mark.asyncio
+async def test_process_single_course_separates_download_failures_from_skipped_pages():
+    url = f"{scraper.BASE_URL}/course/01002/info"
+    failed_grade = "http://karakterer.dtu.dk/Histogram/1/01002/Winter-2025"
+    skipped_grade = "http://karakterer.dtu.dk/Histogram/1/01002/Summer-2025"
+    overview = f'<a href="{failed_grade}">W25</a><a href="{skipped_grade}">S25</a>'
+    responses = {
+        url: [Response(overview, url=url)],
+        failed_grade: [Response(status=503)],
+        skipped_grade: [Response("<html>Not a histogram</html>", url=skipped_grade)],
+    }
+    for language in ("da-DK", "en-GB"):
+        responses[f"{scraper.BASE_URL}/course/01002?lang={language}"] = [Response("<h2>01002 Mathematics</h2>")]
+    course, data, links, failed = await scraper.process_single_course(Session(responses), asyncio.Semaphore(1), "01002")
+    assert (course, data) == ("01002", {})
+    assert links == {"grades": [failed_grade, skipped_grade], "reviews": []}
+    assert failed == [failed_grade]

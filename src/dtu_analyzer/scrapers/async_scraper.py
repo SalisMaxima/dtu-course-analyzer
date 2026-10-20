@@ -264,6 +264,24 @@ def parse_course_name(html: str, courseN: str, lang: str = "da") -> str | None:
     return None
 
 
+def merge_course_data(previous: dict, retry: dict, links: dict) -> dict:
+    """
+    Combine two collections of one course without losing either's records.
+
+    Grade and evaluation records are keyed by source URL and kept in
+    overview-page order (newest first), which select_best_sheet relies on.
+    Fields the retry did not collect, such as names, are kept.
+    """
+    merged = {**previous, **retry}
+    for key in ("grades", "reviews"):
+        records = {r["url"]: r for r in previous.get(key, [])}
+        records.update((r["url"], r) for r in retry.get(key, []))
+        order = [u for u in links[key] if u in records] + [u for u in records if u not in links[key]]
+        if order:
+            merged[key] = [records[u] for u in order]
+    return merged
+
+
 async def process_single_course(
     session: aiohttp.ClientSession,
     semaphore: asyncio.Semaphore,
@@ -278,7 +296,13 @@ async def process_single_course(
         courseN: 5-digit course number
 
     Returns:
-        Tuple of (courseN, data) on success, None on failure
+        Tuple of (courseN, data, links, failed), or None when the course
+        could not be collected (overview page unavailable or an error).
+        links maps "grades" and "reviews" to the URLs the overview page
+        lists, newest first, so callers can judge and merge partial results.
+        failed lists linked pages that could not be downloaded, as opposed
+        to pages the parsers skip. data is empty for a course with nothing
+        to collect.
     """
     async with semaphore:
         try:
@@ -355,10 +379,12 @@ async def process_single_course(
             if reviews_list:
                 crawl["reviews"] = reviews_list
 
-            # If no data found, return None
+            links = {"grades": grade_links, "reviews": review_links}
+            failed = [url for html, url in zip([*grade_htmls, *review_htmls], [*grade_links, *review_links])
+                      if not html or isinstance(html, Exception)]
             if not crawl:
                 logger.debug(f"No data found for course {courseN}")
-                return None
+                return (courseN, {}, links, failed)
 
             # Parse course names
             if name_da_html and not isinstance(name_da_html, Exception):
@@ -371,7 +397,7 @@ async def process_single_course(
                 if name_en:
                     crawl["name_en"] = name_en
 
-            return (courseN, crawl)
+            return (courseN, crawl, links, failed)
 
         except Exception as e:
             logger.error(f"Error processing course {courseN}: {e}")
@@ -404,6 +430,10 @@ async def main_async():
     # re-request everything (less load on DTU, less flagging risk)
     partial_file = config.paths.course_data_file.with_name("coursedic.partial.json")
     courseDic = {}
+    # Courses missing linked evaluations or with grade pages that failed to download
+    incomplete = set()
+    # Courses whose latest attempt could not be collected at all
+    uncollected = set()
     if os.getenv("RESUME", "0") == "1" and partial_file.exists():
         try:
             with open(partial_file, 'r') as file:
@@ -419,10 +449,13 @@ async def main_async():
             courseDic = {}
 
     def save_checkpoint():
+        # RESUME skips every checkpointed course, so incomplete ones are left
+        # out to be collected again rather than kept as if they were done
+        checkpoint = {c: d for c, d in courseDic.items() if c not in incomplete}
         try:
             with open(partial_file, 'w') as outfile:
-                json.dump(courseDic, outfile)
-            logger.info(f"Checkpoint: {len(courseDic)} courses saved to {partial_file}")
+                json.dump(checkpoint, outfile)
+            logger.info(f"Checkpoint: {len(checkpoint)} courses saved to {partial_file}")
         except IOError as e:
             logger.warning(f"Failed to write checkpoint: {e}")
 
@@ -440,67 +473,100 @@ async def main_async():
     logger.info(f"Starting async scrape of {len(courses)} courses with {MAX_CONCURRENT} concurrent requests...")
 
     async with aiohttp.ClientSession(connector=connector, cookies=cookies, headers=headers) as session:
-        # Create tasks for all courses (real tasks so they can be cancelled on abort)
-        tasks = [asyncio.ensure_future(process_single_course(session, semaphore, c)) for c in courses]
+        async def run_pass(pass_courses):
+            """Collect pass_courses into courseDic; return an exit code on a fatal error."""
+            # Real tasks so they can be cancelled on abort
+            tasks = [asyncio.ensure_future(process_single_course(session, semaphore, c)) for c in pass_courses]
 
-        def cancel_pending():
-            for task in tasks:
-                if not task.done():
-                    task.cancel()
+            def cancel_pending():
+                for task in tasks:
+                    if not task.done():
+                        task.cancel()
 
-        completed = 0
+            completed = 0
+            uncollected.update(pass_courses)
+            try:
+                for coro in tqdm.as_completed(tasks, total=len(pass_courses)):
+                    # First record the completed task yielded by as_completed. A
+                    # fatal flag may have been set concurrently by another task,
+                    # but this result is already available and should be included
+                    # in the checkpoint before aborting.
+                    result = await coro
+                    completed += 1
+                    if result:
+                        c_num, c_data, links, failed = result
+                        uncollected.discard(c_num)
+                        # A retry adds to what an earlier pass collected
+                        c_data = merge_course_data(courseDic.get(c_num, {}), c_data, links)
+                        if c_data:
+                            courseDic[c_num] = c_data
+                        # Every evaluation is required. Grade pages the parsers skip are
+                        # normal, so only grade pages that failed to download count.
+                        have = {r["url"] for key in ("grades", "reviews") for r in c_data.get(key, [])}
+                        missing = (set(links["reviews"]) | set(failed)) - have
+                        if missing:
+                            incomplete.add(c_num)
+                            logger.warning(f"Missing {len(missing)} grade or evaluation pages for {c_num}")
+                        else:
+                            incomplete.discard(c_num)
+                    if completed % CHECKPOINT_EVERY == 0:
+                        save_checkpoint()
 
-        # Process with progress bar
-        try:
-            for coro in tqdm.as_completed(tasks, total=len(courses)):
-                # First record the completed task yielded by as_completed. A
-                # fatal flag may have been set concurrently by another task,
-                # but this result is already available and should be included
-                # in the checkpoint before aborting.
-                result = await coro
-                completed += 1
-                if result:
-                    c_num, c_data = result
-                    courseDic[c_num] = c_data
-                if completed % CHECKPOINT_EVERY == 0:
-                    save_checkpoint()
-
-                # Then stop if another task signaled a fatal condition.
-                if timeout_occurred:
-                    logger.error(f"Stopping due to timeout on: {timeout_url}")
-                    logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
-                    cancel_pending()
-                    save_checkpoint()
-                    logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-                    return 1
-                if auth_failed:
-                    logger.error("FAILED: Session expired. Re-run dtu-auth, then RESUME=1 to continue.")
-                    cancel_pending()
-                    save_checkpoint()
-                    return 1
-        except TimeoutException as e:
-            logger.error(f"FAILED: {e}")
-            logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
-            cancel_pending()
-            save_checkpoint()
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
-        except (asyncio.CancelledError, KeyboardInterrupt):
-            logger.warning("Scrape cancelled. Saving checkpoint.")
-            cancel_pending()
-            save_checkpoint()
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
-        except Exception as e:
-            cancel_pending()
-            save_checkpoint()
-            if timeout_occurred:
-                logger.error(f"FAILED: Timeout occurred on {timeout_url}")
+                    # Then stop if another task signaled a fatal condition.
+                    if timeout_occurred:
+                        logger.error(f"Stopping due to timeout on: {timeout_url}")
+                        logger.error("FAILED: Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                        cancel_pending()
+                        save_checkpoint()
+                        logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                        return 1
+                    if auth_failed:
+                        logger.error("FAILED: Session expired. Re-run dtu-auth, then RESUME=1 to continue.")
+                        cancel_pending()
+                        save_checkpoint()
+                        return 1
+            except TimeoutException as e:
+                logger.error(f"FAILED: {e}")
                 logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                cancel_pending()
+                save_checkpoint()
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
                 return 1
-            logger.error(f"Task failed: {e}")
-            logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
-            return 1
+            except (asyncio.CancelledError, KeyboardInterrupt):
+                logger.warning("Scrape cancelled. Saving checkpoint.")
+                cancel_pending()
+                save_checkpoint()
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                return 1
+            except Exception as e:
+                cancel_pending()
+                save_checkpoint()
+                if timeout_occurred:
+                    logger.error(f"FAILED: Timeout occurred on {timeout_url}")
+                    logger.error("Server is rate-limiting or overloaded. Try reducing MAX_CONCURRENT.")
+                    return 1
+                logger.error(f"Task failed: {e}")
+                logger.error("Partial progress saved. Re-run with RESUME=1 to continue.")
+                return 1
+            return None
+
+        exit_code = await run_pass(courses)
+        if exit_code is not None:
+            return exit_code
+
+        # A transient network error can drop a course or some of its pages, and
+        # one such gap blocks publication of the whole run. Retry those courses
+        # once at the end, when the glitch has passed. This also re-requests
+        # courses that genuinely have no data, in case one only looked empty.
+        retry = [c for c in courses if c not in courseDic or c in incomplete]
+        if retry:
+            logger.info(f"Retrying {len(retry)} courses without complete data")
+            exit_code = await run_pass(retry)
+            if exit_code is not None:
+                return exit_code
+            for c in retry:
+                if c in uncollected or c in incomplete:
+                    logger.warning(f"No complete data for {c} after retry")
 
     # Flags may have been set by the last tasks after the loop drained
     if timeout_occurred or auth_failed:
