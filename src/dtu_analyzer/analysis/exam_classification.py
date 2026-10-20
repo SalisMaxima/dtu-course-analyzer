@@ -7,7 +7,7 @@ Keep unknown periods and mixed schedules visible instead of guessing.
 import re
 from .course_history_reviews import (NEW_COURSES, REVIEWED_NPE, history_review,
     EXCLUDED_HISTORY, PREFERRED_SOURCES, REGULAR_SEASON_OVERRIDES, REGULAR_EXAM_OVERRIDES,
-    reviewed_broken_histogram)
+    DEFAULT_EXAM_OVERRIDES, NO_DEFAULT_NOTE, reviewed_broken_histogram)
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -130,6 +130,7 @@ def classify_course(record: dict) -> dict:
     record = dict(record)
     record.pop("history_status", None)
     record.pop("default_selection_note", None)
+    record.pop("no_default_note", None)
     schedule = record.get("schedule", {})
     periods = schedule.get("periods", [])
     reasons = []
@@ -222,6 +223,16 @@ def classify_course(record: dict) -> dict:
             break
     if primary and primary.get("reason", "").startswith("maintainer_reviewed"):
         record["default_selection_note"] = "Regular exam selected using maintainer-reviewed historical offering information."
+    if record.get("course") in DEFAULT_EXAM_OVERRIDES:
+        chosen = DEFAULT_EXAM_OVERRIDES[record["course"]]
+        if chosen is None:
+            primary = None
+            record["no_default_note"] = NO_DEFAULT_NOTE
+        # A reviewed default that is no longer collected falls back to inference.
+        for exam in exams:
+            if exam.get("url") == chosen and exam["display_eligible"] and not exam.get("error"):
+                primary = exam
+                record["default_selection_note"] = "Default exam chosen by maintainer review."
     if not exams:
         reasons.append("no_histogram_links")
     if not exams and record.get("course") in NEW_COURSES:

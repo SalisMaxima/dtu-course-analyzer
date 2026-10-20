@@ -4,17 +4,21 @@ Not connected to the legacy Actions workflow. Any lost course/history requires
 review; no percentage threshold silently permits losses.
 """
 
+import hashlib
 import json
 import os
 from pathlib import Path
 import tempfile
 
-from .course_history_reviews import NEW_COURSES, REVIEWED_NPE, EXCLUDED_HISTORY, reviewed_broken_histogram
+from .course_history_reviews import (NEW_COURSES, REVIEWED_NPE, EXCLUDED_HISTORY, reviewed_broken_histogram,
+    APPROVED_HISTORY_REMOVALS, REMOVED_COURSES, ACCEPTED_REFRESH_BASELINE_SHA256, ACCEPTED_REFRESH_COURSES)
 from ..scripts.build_chrome_beta import build_dataset
 
 
-def publication_issues(previous, candidate, report, expected_courses):
+def publication_issues(previous, candidate, report, expected_courses, baseline_sha256=None):
     issues = []
+    # Maintainer-accepted refreshes apply only to the exact baseline they were reviewed against.
+    refresh = ACCEPTED_REFRESH_COURSES if baseline_sha256 == ACCEPTED_REFRESH_BASELINE_SHA256 else set()
     def flag(course, reason):
         issues.append({"course": course, "reason": reason})
 
@@ -26,7 +30,7 @@ def publication_issues(previous, candidate, report, expected_courses):
         flag(None, "collection_not_completed_successfully")
     for course in sorted(expected - records.keys()):
         flag(course, "course_not_collected")
-    for course in sorted((expected | previous.keys()) - candidate.keys()):
+    for course in sorted((expected - candidate.keys()) | (previous.keys() - candidate.keys() - REMOVED_COURSES.keys())):
         flag(course, "course_missing_from_candidate")
     for course, record in records.items():
         if record.get("status") in {None, "pending", "error"} or record.get("errors"):
@@ -34,7 +38,7 @@ def publication_issues(previous, candidate, report, expected_courses):
         if not record.get("schedule", {}).get("raw"):
             flag(course, "schedule_evidence_missing")
         exams = record.get("exams", [])
-        if not exams and course not in NEW_COURSES | REVIEWED_NPE:
+        if not exams and course not in NEW_COURSES | REVIEWED_NPE | refresh:
             state = record.get("pages", {}).get("info", {}).get("content", {}).get("state")
             if state != "no_published_results":
                 flag(course, "absence_of_results_unconfirmed")
@@ -49,16 +53,20 @@ def publication_issues(previous, candidate, report, expected_courses):
                 if exam.get("result_counts", {}).get("all_categories_retained") is False:
                     flag(course, "source_categories_lost")
     for course, old in previous.items():
+        if course in REMOVED_COURSES and course not in candidate:
+            continue
         new = candidate.get(course, {})
         old_ids = {e["id"] for e in old.get("exam_history", [])
-                   if e.get("histogram_course") not in EXCLUDED_HISTORY.get(course, set())}
+                   if e.get("histogram_course") not in EXCLUDED_HISTORY.get(course, set())
+                   and e["id"] not in APPROVED_HISTORY_REMOVALS.get(course, set())}
         new_ids = {e["id"] for e in new.get("exam_history", [])}
-        if old_ids - new_ids:
+        if old_ids - new_ids and course not in refresh:
             flag(course, "previous_exam_history_lost")
         excluded_default = any(e.get("id") == old.get("default_exam_id")
                                and e.get("histogram_course") in EXCLUDED_HISTORY.get(course, set())
                                for e in old.get("exam_history", []))
-        if old.get("default_exam_id") and not new.get("default_exam_id") and not excluded_default:
+        if (old.get("default_exam_id") and not new.get("default_exam_id") and not excluded_default
+                and course not in refresh):
             flag(course, "previous_default_lost")
         for key in ("review_participants", "qualityscore", "workload", "lazyscore"):
             if key in old and key not in new:
@@ -81,8 +89,10 @@ def publish_candidate(destination, candidate, report, expected_courses):
     Intended for a single writer. The caller must serialize production runs.
     """
     destination = Path(destination)
-    previous = json.loads(destination.read_text())
-    issues = publication_issues(previous, candidate, report, expected_courses)
+    baseline = destination.read_bytes()
+    previous = json.loads(baseline)
+    issues = publication_issues(previous, candidate, report, expected_courses,
+                                hashlib.sha256(baseline).hexdigest())
     if issues:
         raise ValueError(json.dumps(issues))
     temporary = None

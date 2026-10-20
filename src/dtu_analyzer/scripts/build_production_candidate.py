@@ -1,6 +1,7 @@
 """Build and validate an isolated exam-history candidate for later promotion."""
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -32,7 +33,7 @@ def main(argv=None):
     previous = json.loads(baseline_bytes)
     expected = set(filter(None, re.split(r"[,\s]+", course_bytes.decode().strip())))
     candidate = build_dataset(process_courses(raw), [report])
-    issues = publication_issues(previous, candidate, report, expected)
+    issues = publication_issues(previous, candidate, report, expected, hashlib.sha256(baseline_bytes).hexdigest())
     for course in sorted(expected):
         info = report.get("courses", {}).get(course, {}).get("pages", {}).get("info", {}).get("content", {})
         review_links = info.get("evaluation_link_count")

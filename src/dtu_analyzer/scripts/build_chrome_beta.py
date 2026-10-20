@@ -65,7 +65,8 @@ def build_dataset(base, reports):
         data["history_collected_at"] = record.get("collected_at", "")
         data["exam_default_note"] = (
             record.get("default_selection_note", "Latest regular exam inferred from the current schedule. Historical schedules may differ.")
-            if primary else "New course: no historical exam results expected."
+            if primary else record["no_default_note"] if record.get("no_default_note")
+            else "New course: no historical exam results expected."
             if record.get("history_status") == "new_course_no_history_expected"
             else "No prior exam was found during manual review. Availability is unknown."
             if record.get("history_status") == "reviewed_no_prior_exam_found"

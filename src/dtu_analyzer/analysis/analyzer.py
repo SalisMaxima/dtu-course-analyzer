@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 # Import from our modules
 from ..config import config
+from .course_history_reviews import REVIEW_SHEET_OVERRIDES
 from ..utils.logger import setup_logger
 
 logger = setup_logger('analyzer', 'analyzer.log')
@@ -193,6 +194,10 @@ def process_courses(courseDic: Dict) -> Dict:
                 continue
 
             sheet = select_best_sheet(sheets)
+            pinned = REVIEW_SHEET_OVERRIDES.get(courseN) if categoryN == "reviews" else None
+            if pinned:
+                # A reviewed evaluation that is no longer collected falls back to selection.
+                sheet = next((s for s in sheets if s.get("url", "").rstrip("/").endswith(pinned)), sheet)
             if sheet is None:
                 continue
 
