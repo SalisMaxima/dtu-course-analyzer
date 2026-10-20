@@ -36,6 +36,8 @@ def write_provenance(output, baseline_bytes, root=Path(".")):
         "repository": os.environ.get("GITHUB_REPOSITORY"),
         "run_id": os.environ.get("GITHUB_RUN_ID"),
         "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+        # Set when raw scrape data was reused from an earlier failed run
+        "repaired_from_run_id": os.environ.get("REPAIR_RUN_ID") or None,
         "source_sha": git(root, "rev-parse", "HEAD"),
         "runtime_sha256": runtime_hash(root),
         "files": {
