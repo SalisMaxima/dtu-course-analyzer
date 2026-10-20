@@ -27,6 +27,12 @@ def extract_course_number(link: str) -> str | None:
     return match.group(1) if match else None
 
 
+def parse_result_count(text: str | None) -> int | None:
+    """Read the total from the results heading, e.g. '1556 courses match your search'."""
+    match = re.match(r'\s*(\d+)\b', text or '')
+    return int(match.group(1)) if match else None
+
+
 def get_course_numbers() -> bool:
     """
     Fetch all DTU course numbers from the search page.
@@ -77,6 +83,14 @@ def get_course_numbers() -> bool:
                 page.screenshot(path=str(screenshot_path))
                 logger.warning(f"Screenshot saved to {screenshot_path}")
 
+            # The first response is a stub that reloads itself, and the results table
+            # then streams in. The selector above matches on the first row, so wait
+            # until the whole results document is parsed before reading it.
+            page.wait_for_load_state("domcontentloaded")
+            stated = parse_result_count(page.evaluate(
+                "() => document.querySelector('.panel-heading .pull-right')?.textContent"
+            ))
+
             # Extract all links that look like /course/12345
             logger.info("Extracting course links...")
             links = page.evaluate("""
@@ -90,7 +104,11 @@ def get_course_numbers() -> bool:
                     course_numbers.add(course_number)
 
             count = len(course_numbers)
-            logger.info(f"Found {count} unique courses.")
+            logger.info(f"Found {count} unique courses; page reports {stated}.")
+
+            if count != stated:
+                logger.error("Course count does not match the page total; refusing to save a partial list.")
+                return False
 
             if count > 0:
                 with open(config.paths.course_numbers_file, 'w') as f:
