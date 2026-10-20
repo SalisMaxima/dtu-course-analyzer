@@ -7,7 +7,7 @@ Keep unknown periods and mixed schedules visible instead of guessing.
 import re
 from .course_history_reviews import (NEW_COURSES, REVIEWED_NPE, history_review,
     EXCLUDED_HISTORY, PREFERRED_SOURCES, REGULAR_SEASON_OVERRIDES, REGULAR_EXAM_OVERRIDES,
-    reviewed_broken_histogram)
+    DEFAULT_EXAM_OVERRIDES, NO_DEFAULT_WHILE_SUPPRESSED, NO_DEFAULT_NOTE, reviewed_broken_histogram)
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -130,6 +130,7 @@ def classify_course(record: dict) -> dict:
     record = dict(record)
     record.pop("history_status", None)
     record.pop("default_selection_note", None)
+    record.pop("no_default_note", None)
     schedule = record.get("schedule", {})
     periods = schedule.get("periods", [])
     reasons = []
@@ -222,6 +223,19 @@ def classify_course(record: dict) -> dict:
             break
     if primary and primary.get("reason", "").startswith("maintainer_reviewed"):
         record["default_selection_note"] = "Regular exam selected using maintainer-reviewed historical offering information."
+    chosen = DEFAULT_EXAM_OVERRIDES.get(record.get("course"))
+    # A reviewed default that is no longer collected falls back to inference.
+    for exam in exams:
+        if chosen and exam.get("url") == chosen and exam["display_eligible"] and not exam.get("error"):
+            primary = exam
+            record["default_selection_note"] = "Default exam chosen by maintainer review."
+    own = [e for e in exams if e.get("histogram_course") == record.get("course")
+           and e["period"].get("year") is not None and not e.get("error")]
+    latest = max(own, key=lambda e: (e["period"]["year"], e["period"]["season"] == "winter"), default=None)
+    if (latest and latest.get("url") == NO_DEFAULT_WHILE_SUPPRESSED.get(record.get("course"))
+            and latest.get("distribution_status") == "suppressed"):
+        primary = None
+        record["no_default_note"] = NO_DEFAULT_NOTE
     if not exams:
         reasons.append("no_histogram_links")
     if not exams and record.get("course") in NEW_COURSES:
