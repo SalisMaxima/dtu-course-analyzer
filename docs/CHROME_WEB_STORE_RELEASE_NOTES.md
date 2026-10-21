@@ -9,6 +9,14 @@ Simply install the extension and visit any course page, for example `http://kurs
 - Workload and Lazyscore based on student evaluations
 - Color-coded stats: green is good
 
+**New in Version 2.5.1:**
+- Updated course data (October 2026), including summer 2026 exam results and newly listed courses.
+
+**New in Version 2.5.0:**
+- Updated bundled course data with reviewed exam histories.
+- Exam selection on course pages to inspect available historical grade distributions.
+- Clearer handling of suppressed grades and uncertain exam histories.
+
 **New in Version 2.4.0:**
 - Grade distribution histograms on DTU course pages.
 - Feedback sample-size confidence labels.

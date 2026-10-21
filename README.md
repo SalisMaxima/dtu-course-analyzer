@@ -1,6 +1,9 @@
 # DTU Course Analyzer
 
-**Version 2.5.0** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+**Version 2.5.1** - A browser extension that analyzes and scores courses on kurser.dtu.dk with comprehensive grade distributions and course evaluations.
+
+**New in 2.5.1:**
+- Updated course data (October 2026), including summer 2026 exam results and newly listed courses
 
 **New in 2.5.0:**
 - Updated bundled course data with reviewed exam histories
