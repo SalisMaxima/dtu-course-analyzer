@@ -207,3 +207,15 @@ def test_legacy_provenance_without_baselines_is_rejected(candidate, tmp_path):
     path.write_text(json.dumps(metadata))
     assert promote(candidate, tmp_path) == 1
     assert (root / "extension/db/data.json").read_bytes() == original
+
+
+def test_promotion_imports_without_scraper_dependencies():
+    # The Promote Course Data job installs no packages, only PYTHONPATH=src
+    import subprocess, sys
+    from pathlib import Path
+    code = ("import sys; sys.modules['playwright'] = None; "
+            "import dtu_analyzer.scripts.promote_course_data")
+    src = Path(__file__).resolve().parents[1] / "src"
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                            env={"PYTHONPATH": str(src)})
+    assert result.returncode == 0, result.stderr
